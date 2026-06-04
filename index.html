@@ -212,6 +212,23 @@
             <button style="background:var(--success); color:white; border:none; padding:12px; border-radius:5px; flex: 1; font-weight:bold; cursor:pointer;" onclick="payAll()">✓ PAGAR TUDO</button>
             <button style="background:#7f8c8d; color:white; border:none; padding:12px; border-radius:5px; flex: 1; font-weight:bold; cursor:pointer;" onclick="notPaid()">❌ Não pagou</button>
         </div>
+        
+        <!-- SECCIÓN DE EDICIÓN AGREGADA -->
+        <div style="margin: 15px 0; border-top: 1px dashed #ccc; padding-top: 10px;">
+            <label style="font-size:0.85rem; font-weight:bold; display:block;">Editar Nome:</label>
+            <input type="text" id="m-name" class="input-num">
+            <label style="font-size:0.85rem; font-weight:bold; display:block; margin-top:8px;">Editar Dias de entrega:</label>
+            <div class="checkbox-group" id="m-days">
+                <label><input type="checkbox" value="Segunda-feira"> Seg</label>
+                <label><input type="checkbox" value="Terça-feira"> Ter</label>
+                <label><input type="checkbox" value="Quarta-feira"> Qua</label>
+                <label><input type="checkbox" value="Quinta-feira"> Qui</label>
+                <label><input type="checkbox" value="Sexta-feira"> Sex</label>
+                <label><input type="checkbox" value="Sábado"> Sáb</label>
+            </div>
+        </div>
+        <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
+
         <input type="number" step="0.01" id="v-add" class="input-num" placeholder="Adicionar nova dívida (+)">
         <input type="number" step="0.01" id="v-sub" class="input-num" placeholder="Pagar uma parte (-)">
         <button onclick="saveManagement()" style="width:100%; padding:10px; margin-top:10px; background:var(--primary); color:white; border:none; font-weight:bold; cursor:pointer;">Guardar Alterações</button>
@@ -622,7 +639,23 @@
         }
     }
 
-    function openClientManagementModal(id) { targetId = id; let c = clients.find(x => x.id === id); document.getElementById('cname').innerText = c.name; document.getElementById('cbalance').innerText = c.balance.toFixed(2) + "€"; document.getElementById('v-add').value = ''; document.getElementById('v-sub').value = ''; document.getElementById('m-manage').style.display = 'flex'; }
+    // ACTUALIZADO PARA CARGAR LOS VALORES EN LOS CAMPOS DE EDICIÓN
+    function openClientManagementModal(id) { 
+        targetId = id; 
+        let c = clients.find(x => x.id === id); 
+        document.getElementById('cname').innerText = c.name; 
+        document.getElementById('cbalance').innerText = c.balance.toFixed(2) + "€"; 
+        
+        // Cargar Nombre y Checks actuales
+        document.getElementById('m-name').value = c.name;
+        document.querySelectorAll('#m-days input').forEach(cb => {
+            cb.checked = c.days.includes(cb.value);
+        });
+
+        document.getElementById('v-add').value = ''; 
+        document.getElementById('v-sub').value = ''; 
+        document.getElementById('m-manage').style.display = 'flex'; 
+    }
     
     function payAll() { 
         let c = clients.find(x => x.id === targetId);
@@ -638,8 +671,17 @@
         renderClients();
     }
     
+    // ACTUALIZADO PARA PROCESAR EL CAMBIO DE NOMBRE Y DÍAS DE ENTREGA
     function saveManagement() { 
         let c = clients.find(x => x.id === targetId); 
+        
+        // Guardar cambios de información básica
+        const nuevoNombre = document.getElementById('m-name').value.trim();
+        if(!nuevoNombre) return alert("Por favor, introduza um nome válido.");
+        c.name = nuevoNombre;
+        c.days = Array.from(document.querySelectorAll('#m-days input:checked')).map(i => i.value);
+
+        // Lógica de deudas existente
         const addedInput = parseFloat(document.getElementById('v-add').value) || 0;
         if (addedInput > 0) { c.balance += addedInput; logAction(c.name, 'add', addedInput); }
         const paymentInput = parseFloat(document.getElementById('v-sub').value) || 0;
@@ -647,10 +689,11 @@
             const realPaid = paymentInput > c.balance ? c.balance : paymentInput; addPaymentToDaily(realPaid); logAction(c.name, 'pay', realPaid); c.balance -= realPaid;
         }
         if(c.balance < 0) c.balance = 0; 
+        
         c.lastModified = getTodayString(); localStorage.setItem('clients', JSON.stringify(clients)); document.getElementById('m-manage').style.display = 'none'; renderClients(); 
     }
     
-    function deleteClient() { let c = clients.find(x => x.id === targetId); if (confirm(`Eliminar "${c.name}"?`)) { clients = clients.filter(x => x.id !== targetId); localStorage.setItem('clients', JSON.stringify(clients)); document.getElementById('m-manage').style.display = 'none'; renderClients(); } }
+    function deleteClient() { let c = clients.find(x => x.id !== targetId); if (confirm(`Eliminar "${c.name}"?`)) { clients = clients.filter(x => x.id !== targetId); localStorage.setItem('clients', JSON.stringify(clients)); document.getElementById('m-manage').style.display = 'none'; renderClients(); } }
 
 
     // ==================== LÓGICA: CONTROL DE JORNADA ====================
