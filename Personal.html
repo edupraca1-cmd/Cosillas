@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Panel Personal</title>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --danger: #ef4444;
+            --danger-bg: #fef2f2;
+            --danger-border: #fca5a5;
+            --danger-text: #991b1b;
+            --info: #3b82f6;
+            --info-dark: #1d4ed8;
+            --border: #e5e7eb;
+            --nav-bg: #2c3e50;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            padding-bottom: 20px;
+        }
+
+        /* Navegación por Pestañas */
+        .navbar {
+            display: flex;
+            justify-content: space-around;
+            background-color: var(--nav-bg);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #bdc3c7;
+            padding: 14px 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+            transition: all 0.2s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: #ffffff;
+            border-bottom: 3px solid #2ecc71;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 12px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Estilos Comunes de Tarjetas */
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        h1 { font-size: 18px; text-align: center; margin: 8px 0 15px 0; color: var(--primary-dark); }
+        h2 { margin-top: 0; color: #2c3e50; font-size: 1.2rem; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px; }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; font-size: 0.9rem; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        
+        /* --- ESTILOS: FINANZAS --- */
+        .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: center; margin-bottom: 12px; }
+        .metric-box { padding: 10px 4px; border-radius: 10px; border: 1px solid #e5e7eb; background: white; }
+        .metric-title { font-size: 10px; text-transform: uppercase; font-weight: bold; }
+        .metric-value { font-size: 14px; font-weight: bold; margin-top: 2px; }
+        .cycle-list { display: flex; flex-direction: column; gap: 8px; }
+        details.cycle-card { background: var(--card-bg); border-radius: 10px; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        summary { padding: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; font-size: 14px; outline: none; }
+        summary::-webkit-details-marker { display: none; }
+        .summary-right { display: flex; align-items: center; gap: 8px; }
+        .breakdown-table { width: 100%; border-top: 1px solid var(--border); padding: 6px 12px; background: #fafafa; box-sizing: border-box; }
+        .row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #f0f0f0; font-size: 13px; }
+        .row:last-child { border-bottom: none; font-weight: bold; background: #f3f4f6; padding: 8px 6px; border-radius: 5px; margin-top: 4px; }
+        .item-left { display: flex; align-items: center; gap: 10px; }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; border-radius: 4px; }
+        .row.checked span { text-decoration: line-through; opacity: 0.4; }
+        .row.checked input.monto-input { opacity: 0.4; }
+        input.monto-input { width: 75px; text-align: right; border: none; border-bottom: 1px solid #d1d5db; background: transparent; font-size: 13px; font-weight: 600; padding: 2px 4px; color: #374151; }
+        input.monto-input:focus { border-bottom: 2px solid var(--primary); outline: none; background: #fff; }
+        .positivo { color: #059669; }
+        .negativo { color: #4b5563; }
+        .btn-reset-finanzas { display: block; width: 100%; background-color: #e5e7eb; color: #4b5563; border: none; padding: 8px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-top: 15px; }
+
+        /* --- ESTILOS: GASOLINA --- */
+        .kpi-card { background: #2c3e50; color: white; text-align: center; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .kpi-value { font-size: 1.8rem; font-weight: bold; margin-top: 5px; color: #2ecc71; }
+        .btn-gasolina { width: 100%; background: #3498db; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; margin-top: 15px; cursor: pointer; }
+        .btn-gasolina:active { background: #2980b9; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #ecf0f1; color: #2c3e50; }
+        .clear-btn { background: #e74c3c; margin-top: 30px; font-size: 0.8rem; padding: 8px; color: white; border: none; width: 100%; border-radius: 6px; cursor: pointer; }
+        .mes-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee; font-size: 0.95rem; }
+        .mes-item:last-child { border: none; }
+
+        /* --- ESTILOS: ALCANCÍA --- */
+        .alcancia-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; box-sizing: border-box; }
+        .pig-emoji { font-size: 80px; margin: 0; transition: transform 0.1s ease; }
+        .pig-bounce { transform: scale(1.15); }
+        .balance-display { font-size: 42px; font-weight: bold; color: #2ec4b6; margin: 20px 0; background: #e6f9f8; padding: 10px; border-radius: 10px; }
+        .button-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+        .btn-coin { color: white; border: none; padding: 12px; font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+        .btn-add { background-color: #ff9f1c; }
+        .btn-add:hover { background-color: #e78e0b; }
+        .btn-sub { background-color: #94a3b8; }
+        .btn-sub:hover { background-color: #64748b; }
+        .btn-coin:active { transform: scale(0.95); }
+        .btn-reset-alcancia { background-color: #e71d36; color: white; border: none; padding: 10px 20px; font-size: 14px; border-radius: 8px; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .btn-reset-alcancia:hover { background-color: #c51227; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <button class="tab-btn active" onclick="switchTab('tab-finanzas')">📊 Finanzas</button>
+        <button class="tab-btn" onclick="switchTab('tab-gasolina')">⛽ Gasolina</button>
+        <button class="tab-btn" onclick="switchTab('tab-alcancia')">🐷 Alcancía</button>
+    </nav>
+
+    <div id="tab-finanzas" class="tab-content active">
+        <h1>📊 Mi Control Financiero</h1>
+        <div class="metrics">
+            <div class="metric-box" id="box-saldo-actual">
+                <div class="metric-title" id="title-saldo-actual">Saldo Actual</div>
+                <div class="metric-value" id="saldo-actual-real">0.00 €</div>
+            </div>
+            <div class="metric-box" id="box-meta-final">
+                <div class="metric-title" id="title-meta-final">Proyección (Nov)</div>
+                <div class="metric-value" id="meta-final">0.00 €</div>
+            </div>
+        </div>
+        <div class="cycle-list" id="contenedor-ciclos"></div>
+        <button class="btn-reset-finanzas" onclick="reiniciarDatosFinanzas()">🔄 Restablecer valores de fábrica</button>
+    </div>
+
+    <div id="tab-gasolina" class="tab-content">
+        <div class="kpi-card">
+            <div>Gasto Gasolina (Mes Actual)</div>
+            <div class="kpi-value" id="gasto-mes">0.00 €</div>
+        </div>
+        <div class="card">
+            <h2>Resumen de Gastos por Mes</h2>
+            <div id="historial-mensual"></div>
+        </div>
+        <div class="card">
+            <h2>Nuevo Registro</h2>
+            <label>Kilometraje actual (Km):</label>
+            <input type="number" id="odometro" step="0.1" placeholder="Ej. 122474">
+            <label>Litros repostados (L):</label>
+            <input type="number" id="litros" step="0.01" placeholder="0 si es el punto inicial">
+            <label>Coste total (€):</label>
+            <input type="number" id="coste" step="0.01" placeholder="0 si es el punto inicial">
+            <button class="btn-gasolina" onclick="agregarRegistroGasolina()">Registrar Repostaje</button>
+        </div>
+        <div class="card">
+            <h2>Historial de Repostajes</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Km Total</th>
+                            <th>Km Recorridos</th>
+                            <th>Litros</th>
+                            <th>Coste</th>
+                            <th>Consumo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-historial"></tbody>
+                </table>
+            </div>
+            <button class="clear-btn" onclick="borrarTodoGasolina()">Borrar todos los datos de gasolina</button>
+        </div>
+    </div>
+
+    <div id="tab-alcancia" class="tab-content">
+        <div class="alcancia-card">
+            <div id="pig" class="pig-emoji">🐷</div>
+            <h1>Mi Alcancía</h1>
+            <div class="balance-display" id="total-balance">0.00 €</div>
+            <div class="button-grid">
+                <button class="btn-coin btn-sub" onclick="modificarSaldoAlcancia(-1.00)">-1.00 €</button>
+                <button class="btn-coin btn-sub" onclick="modificarSaldoAlcancia(-5.00)">-5.00 €</button>
+                <button class="btn-coin btn-add" onclick="modificarSaldoAlcancia(1.00)">+1.00 €</button>
+                <button class="btn-coin btn-add" onclick="modificarSaldoAlcancia(5.00)">+5.00 €</button>
+            </div>
+            <button class="btn-reset-alcancia" onclick="vaciarAlcancia()">Vaciar Alcancía</button>
+        </div>
+    </div>
+
+    <script>
+        // --- LÓGICA DE PESTAÑAS ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // --- LÓGICA: FINANZAS ---
+        const datosPorDefecto = [
+            {
+                id: 1, nombre: "22 May - 21 Jun",
+                items: [
+                    { desc: "Saldo Inicial Cuenta", valor: 1686.86, checked: true },
+                    { desc: "Limpieza de terrenos", valor: -1200.00, checked: false },
+                    { desc: "Cuota del carro", valor: -140.98, checked: false },
+                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
+                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
+                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
+                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
+                    { desc: "Teléfono", valor: -10.00, checked: false },
+                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false }
+                ]
+            },
+            {
+                id: 2, nombre: "22 Jun - 21 Jul",
+                items: [
+                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
+                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
+                    { desc: "Cuota del carro", valor: -140.98, checked: false },
+                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
+                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
+                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
+                    { desc: "Crédito del banco", valor: -30.18, checked: false },
+                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
+                    { desc: "Tarjeta de Crédito", valor: -222.99, checked: false },
+                    { desc: "Impuesto Único (IUC)", valor: -111.46, checked: false },
+                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
+                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
+                    { desc: "Ocio", valor: -20.00, checked: false },
+                    { desc: "Teléfono", valor: -10.00, checked: false },
+                    { desc: "Corte de cabello", valor: -9.00, checked: false },
+                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
+                    { desc: "Google One", valor: -1.99, checked: false }
+                ]
+            },
+            {
+                id: 3, nombre: "22 Jul - 21 Ago",
+                items: [
+                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
+                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
+                    { desc: "Cuota del carro", valor: -140.98, checked: false },
+                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
+                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
+                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
+                    { desc: "Crédito del banco", valor: -30.18, checked: false },
+                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
+                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
+                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
+                    { desc: "Ocio", valor: -20.00, checked: false },
+                    { desc: "Teléfono", valor: -10.00, checked: false },
+                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
+                    { desc: "Google One", valor: -1.99, checked: false }
+                ]
+            },
+            {
+                id: 4, nombre: "22 Ago - 21 Sep",
+                items: [
+                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
+                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
+                    { desc: "Cuota del carro", valor: -140.98, checked: false },
+                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
+                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
+                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
+                    { desc: "Crédito del banco", valor: -30.18, checked: false },
+                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
+                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
+                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
+                    { desc: "Ocio", valor: -20.00, checked: false },
+                    { desc: "Teléfono", valor: -10.00, checked: false },
+                    { desc: "Corte de cabello", valor: -9.00, checked: false },
+                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
+                    { desc: "Google One", valor: -1.99, checked: false }
+                ]
+            },
+            {
+                id: 5, nombre: "22 Sep - 21 Oct",
+                items: [
+                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
+                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
+                    { desc: "Cuota del carro", valor: -140.98, checked: false },
+                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
+                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
+                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
+                    { desc: "Crédito del banco", valor: -30.18, checked: false },
+                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
+                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
+                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
+                    { desc: "Ocio", valor: -20.00, checked: false },
+                    { desc: "Teléfono", valor: -10.00, checked: false },
+                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
+                    { desc: "Google One", valor: -1.99, checked: false }
+                ]
+            },
+            {
+                id: 6, nombre: "22 Oct - 21 Nov",
+                items: [
+                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
+                    { desc: "Devolución Préstamo (Gabriela)", valor: -1100.00, checked: false },
+                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
+                    { desc: "Cuota del carro", valor: -140.98, checked: false },
+                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
+                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
+                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
+                    { desc: "Crédito del banco", valor: -30.18, checked: false },
+                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
+                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
+                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
+                    { desc: "Ocio", valor: -20.00, checked: false },
+                    { desc: "Teléfono", valor: -10.00, checked: false },
+                    { desc: "Corte de cabello", valor: -9.00, checked: false },
+                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
+                    { desc: "Google One", valor: -1.99, checked: false }
+                ]
+            }
+        ];
+
+        let datosFinancieros = JSON.parse(localStorage.getItem('datosFinancieros_v11')) || datosPorDefecto;
+
+        function inicializarFinanzas() {
+            let htmlBase = "";
+            datosFinancieros.forEach(ciclo => {
+                let filas = "";
+                if (ciclo.id > 1) {
+                    filas += `
+                        <div class="row" style="color: #6b7280; padding-left: 28px;">
+                            <span>Saldo acumulado anterior</span>
+                            <span id="arrastre-c${ciclo.id}">0.00 €</span>
+                        </div>
+                    `;
+                }
+
+                ciclo.items.forEach((item, index) => {
+                    filas += `
+                        <div class="row ${item.checked ? 'checked' : ''}">
+                            <div class="item-left">
+                                <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck(${ciclo.id}, ${index}, this)">
+                                <span>${item.desc}</span>
+                            </div>
+                            <input type="number" 
+                                   class="monto-input ${item.valor >= 0 ? 'positivo' : 'negativo'}" 
+                                   value="${item.valor}" 
+                                   step="0.01" 
+                                   inputmode="decimal"
+                                   oninput="actualizarMonto(${ciclo.id}, ${index}, this.value)">
+                        </div>
+                    `;
+                });
+
+                filas += `
+                    <div class="row" style="padding-left: 28px;">
+                        <span>SALDO PROYECTADO AL CIERRE</span>
+                        <span id="cierre-val-c${ciclo.id}">0.00 €</span>
+                    </div>
+                `;
+
+                htmlBase += `
+                    <details class="cycle-card" id="details-c${ciclo.id}">
+                        <summary>
+                            <span>📅 ${ciclo.nombre}</span>
+                            <div class="summary-right">
+                                <span id="resumen-cierre-c${ciclo.id}" style="font-weight:bold;">0.00 €</span>
+                                <span style="color: #9ca3af; font-size: 11px;">▼</span>
+                            </div>
+                        </summary>
+                        <div class="breakdown-table">
+                            ${filas}
+                        </div>
+                    </details>
+                `;
+            });
+
+            document.getElementById("contenedor-ciclos").innerHTML = htmlBase;
+            recalcularTodoFinanzas();
+        }
+
+        function toggleCheck(cicloId, itemIndex, checkbox) {
+            const ciclo = datosFinancieros.find(c => c.id === cicloId);
+            ciclo.items[itemIndex].checked = checkbox.checked;
+            
+            const row = checkbox.closest('.row');
+            if (checkbox.checked) {
+                row.classList.add('checked');
+            } else {
+                row.classList.remove('checked');
+            }
+            recalcularTodoFinanzas();
+            guardarDatosFinanzas();
+        }
+
+        function actualizarMonto(cicloId, itemIndex, nuevoValor) {
+            datosFinancieros.find(c => c.id === cicloId).items[itemIndex].valor = parseFloat(nuevoValor) || 0;
+            recalcularTodoFinanzas();
+            guardarDatosFinanzas();
+        }
+
+        function recalcularTodoFinanzas() {
+            let saldoAcumulado = 0;
+            let saldoActualReal = 0; 
+
+            datosFinancieros.forEach(ciclo => {
+                if (ciclo.id > 1) {
+                    const arrastreEl = document.getElementById(`arrastre-c${ciclo.id}`);
+                    if(arrastreEl) arrastreEl.innerText = saldoAcumulado.toFixed(2) + " €";
+                }
+
+                let subtotalMes = 0;
+                ciclo.items.forEach(item => { 
+                    subtotalMes += item.valor; 
+                    if (item.checked) {
+                        saldoActualReal += item.valor;
+                    }
+                });
+
+                saldoAcumulado = (ciclo.id === 1) ? subtotalMes : (saldoAcumulado + subtotalMes);
+
+                const resumenCierre = document.getElementById(`resumen-cierre-c${ciclo.id}`);
+                const cierreVal = document.getElementById(`cierre-val-c${ciclo.id}`);
+                
+                if(resumenCierre) resumenCierre.innerText = saldoAcumulado.toFixed(2) + " €";
+                if(cierreVal) cierreVal.innerText = saldoAcumulado.toFixed(2) + " €";
+
+                if (saldoAcumulado < 0) {
+                    if(resumenCierre) resumenCierre.style.color = "var(--danger)";
+                    if(cierreVal) cierreVal.style.color = "var(--danger)";
+                } else {
+                    if(resumenCierre) resumenCierre.style.color = "var(--primary)";
+                    if(cierreVal) cierreVal.style.color = "#111827";
+                }
+            });
+
+            const boxActual = document.getElementById("box-saldo-actual");
+            const titleActual = document.getElementById("title-saldo-actual");
+            const valueActual = document.getElementById("saldo-actual-real");
+            valueActual.innerText = saldoActualReal.toFixed(2) + " €";
+            
+            if (saldoActualReal < 0) {
+                boxActual.style.background = "var(--danger-bg)";
+                boxActual.style.borderColor = "var(--danger-border)";
+                titleActual.style.color = "var(--danger-text)";
+                valueActual.style.color = "var(--danger)";
+            } else {
+                boxActual.style.background = "#eff6ff";
+                boxActual.style.borderColor = "#bfdbfe";
+                titleActual.style.color = "#1e40af";
+                valueActual.style.color = "var(--info-dark)";
+            }
+
+            const boxMeta = document.getElementById("box-meta-final");
+            const titleMeta = document.getElementById("title-meta-final");
+            const valueMeta = document.getElementById("meta-final");
+            valueMeta.innerText = saldoAcumulado.toFixed(2) + " €";
+
+            if (saldoAcumulado < 0) {
+                boxMeta.style.background = "var(--danger-bg)";
+                boxMeta.style.borderColor = "var(--danger-border)";
+                titleMeta.style.color = "var(--danger-text)";
+                valueMeta.style.color = "var(--danger)";
+            } else {
+                boxMeta.style.background = "#ecfdf5";
+                boxMeta.style.borderColor = "#a7f3d0";
+                titleMeta.style.color = "#065f46";
+                valueMeta.style.color = "var(--primary-dark)";
+            }
+        }
+
+        function guardarDatosFinanzas() {
+            localStorage.setItem('datosFinancieros_v11', JSON.stringify(datosFinancieros));
+        }
+
+        function reiniciarDatosFinanzas() {
+            if (confirm("¿Estás seguro de que quieres restablecer todos los ciclos?")) {
+                localStorage.removeItem('datosFinancieros_v11');
+                datosFinancieros = JSON.parse(JSON.stringify(datosPorDefecto));
+                inicializarFinanzas();
+            }
+        }
+
+        // --- LÓGICA: GASOLINA ---
+        const NOMBRES_MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        function agregarRegistroGasolina() {
+            let odomInput = document.getElementById('odometro');
+            let litrosInput = document.getElementById('litros');
+            let costeInput = document.getElementById('coste');
+            
+            let odom = parseFloat(odomInput.value);
+            let litros = parseFloat(litrosInput.value);
+            let coste = parseFloat(costeInput.value);
+
+            if (isNaN(odom) || isNaN(litros) || isNaN(coste)) {
+                alert("Por favor, introduce valores válidos en todos los campos.");
+                return;
+            }
+
+            let historial = JSON.parse(localStorage.getItem('historial_consumo')) || [];
+            let consumoText = "Base";
+            let distanciaText = "Base";
+
+            if (historial.length > 0) {
+                let ultimo = historial[historial.length - 1];
+                let distancia = odom - ultimo.odometro;
+                
+                if (distancia <= 0) {
+                    alert("El kilometraje debe ser mayor que el del registro anterior.");
+                    return;
+                }
+                
+                distanciaText = distancia.toFixed(1) + " km";
+
+                if (litros > 0) {
+                    let calc = (litros / distancia) * 100;
+                    consumoText = calc.toFixed(2) + " L/100km";
+                } else {
+                    consumoText = "N/A";
+                }
+            }
+
+            let ahora = new Date();
+            let nuevo = {
+                fechaTxt: ahora.toLocaleDateString(),
+                mes: ahora.getMonth(),
+                ano: ahora.getFullYear(),
+                odometro: odom,
+                distancia: distanciaText,
+                litros: litros,
+                coste: coste,
+                consumo: consumoText
+            };
+
+            historial.push(nuevo);
+            localStorage.setItem('historial_consumo', JSON.stringify(historial));
+            
+            odomInput.value = "";
+            litrosInput.value = "";
+            costeInput.value = "";
+            
+            cargarHistorialGasolina();
+        }
+
+        function cargarHistorialGasolina() {
+            let historial = JSON.parse(localStorage.getItem('historial_consumo')) || [];
+            let tabla = document.getElementById('tabla-historial');
+            let contenedorMeses = document.getElementById('historial-mensual');
+            
+            if(!tabla || !contenedorMeses) return;
+
+            tabla.innerHTML = "";
+            contenedorMeses.innerHTML = "";
+
+            let ahora = new Date();
+            let mesActual = ahora.getMonth();
+            let anoActual = ahora.getFullYear();
+            let totalMesActual = 0;
+
+            let resumenMeses = {};
+
+            for (let i = historial.length - 1; i >= 0; i--) {
+                let reg = historial[i];
+                let costeVal = reg.coste || 0;
+                
+                if (reg.mes === mesActual && reg.ano === anoActual) {
+                    totalMesActual += costeVal;
+                }
+
+                let claveMes = `${reg.ano}-${reg.mes}`;
+                if (!resumenMeses[claveMes]) {
+                    resumenMeses[claveMes] = {
+                        nombre: `${NOMBRES_MESES[reg.mes]} ${reg.ano}`,
+                        total: 0
+                    };
+                }
+                resumenMeses[claveMes].total += costeVal;
+
+                let fila = `<tr>
+                    <td>${reg.fechaTxt}</td>
+                    <td>${reg.odometro.toLocaleString()}</td>
+                    <td><strong>${reg.distancia || "---"}</strong></td>
+                    <td>${reg.litros} L</td>
+                    <td>${costeVal.toFixed(2)} €</td>
+                    <td><strong>${reg.consumo}</strong></td>
+                </tr>`;
+                tabla.innerHTML += fila;
+            }
+
+            let clavesOrdenadas = Object.keys(resumenMeses).sort().reverse();
+            
+            if (clavesOrdenadas.length === 0) {
+                contenedorMeses.innerHTML = "<p style='color:#7f8c8d; margin:0; font-size:0.9rem;'>No hay datos acumulados todavía.</p>";
+            } else {
+                clavesOrdenadas.forEach(clave => {
+                    let item = resumenMeses[clave];
+                    let HTMLMes = `<div class="mes-item">
+                        <span>${item.nombre}</span>
+                        <strong>${item.total.toFixed(2)} €</strong>
+                    </div>`;
+                    contenedorMeses.innerHTML += HTMLMes;
+                });
+            }
+
+            document.getElementById('gasto-mes').innerText = totalMesActual.toFixed(2) + " €";
+        }
+
+        function borrarTodoGasolina() {
+            if (confirm("¿Seguro que quieres borrar todo el historial de gasolina?")) {
+                localStorage.removeItem('historial_consumo');
+                cargarHistorialGasolina();
+            }
+        }
+
+        // --- LÓGICA: ALCANCÍA ---
+        let saldoAlcancia = parseFloat(localStorage.getItem('saldoGuardado')) || 0;
+        const balanceEl = document.getElementById('total-balance');
+        const pigEl = document.getElementById('pig');
+
+        function modificarSaldoAlcancia(cantidad) {
+            saldoAlcancia += cantidad;
+            if (saldoAlcancia < 0) {
+                saldoAlcancia = 0;
+            }
+            saldoAlcancia = Math.round(saldoAlcancia * 100) / 100; 
+            guardarYActualizarAlcancia();
+            
+            if(pigEl) {
+                pigEl.classList.add('pig-bounce');
+                setTimeout(() => pigEl.classList.remove('pig-bounce'), 100);
+            }
+        }
+
+        function vaciarAlcancia() {
+            if (confirm('¿Seguro que quieres vaciar la alcancía?')) {
+                saldoAlcancia = 0;
+                guardarYActualizarAlcancia();
+            }
+        }
+
+        function guardarYActualizarAlcancia() {
+            localStorage.setItem('saldoGuardado', saldoAlcancia);
+            actualizarPantallaAlcancia();
+        }
+
+        function actualizarPantallaAlcancia() {
+            if(balanceEl) balanceEl.textContent = `${saldoAlcancia.toFixed(2)} €`;
+        }
+
+        // --- INICIALIZACIÓN GLOBAL ---
+        document.addEventListener("DOMContentLoaded", () => {
+            inicializarFinanzas();
+            cargarHistorialGasolina();
+            actualizarPantallaAlcancia();
+        });
+    </script>
+</body>
+</html>
