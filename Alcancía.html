@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Alcancía Virtual</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .alcancia-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 350px;
+            width: 100%;
+        }
+
+        .pig-emoji {
+            font-size: 80px;
+            margin: 0;
+            transition: transform 0.1s ease;
+        }
+
+        .pig-bounce {
+            transform: scale(1.15);
+        }
+
+        h1 {
+            color: #333;
+            margin: 10px 0;
+            font-size: 24px;
+        }
+
+        .balance-display {
+            font-size: 42px;
+            font-weight: bold;
+            color: #2ec4b6;
+            margin: 20px 0;
+            background: #e6f9f8;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-coin {
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        /* Botones de suma */
+        .btn-add {
+            background-color: #ff9f1c;
+        }
+        .btn-add:hover {
+            background-color: #e78e0b;
+        }
+
+        /* Botones de resta */
+        .btn-sub {
+            background-color: #94a3b8;
+        }
+        .btn-sub:hover {
+            background-color: #64748b;
+        }
+
+        .btn-coin:active {
+            transform: scale(0.95);
+        }
+
+        .btn-reset {
+            background-color: #e71d36;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .btn-reset:hover {
+            background-color: #c51227;
+        }
+    </style>
+</head>
+<body>
+
+<div class="alcancia-card">
+    <div id="pig" class="pig-emoji">🐷</div>
+    <h1>Mi Alcancía</h1>
+    
+    <div class="balance-display" id="total-balance">$0.00</div>
+    
+    <div class="button-grid">
+        <button class="btn-coin btn-sub" onclick="modificarSaldo(-1.00)">-$1.00</button>
+        <button class="btn-coin btn-sub" onclick="modificarSaldo(-5.00)">-$5.00</button>
+        <button class="btn-coin btn-add" onclick="modificarSaldo(1.00)">+$1.00</button>
+        <button class="btn-coin btn-add" onclick="modificarSaldo(5.00)">+$5.00</button>
+    </div>
+    
+    <button class="btn-reset" onclick="vaciarAlcancia()">Vaciar Alcancía</button>
+</div>
+
+<script>
+    let saldo = parseFloat(localStorage.getItem('saldoGuardado')) || 0;
+    
+    const balanceEl = document.getElementById('total-balance');
+    const pigEl = document.getElementById('pig');
+
+    actualizarPantalla();
+
+    function modificarSaldo(cantidad) {
+        saldo += cantidad;
+        
+        // Evita saldos negativos
+        if (saldo < 0) {
+            saldo = 0;
+        }
+        
+        saldo = Math.round(saldo * 100) / 100; 
+        
+        guardarYActualizar();
+        
+        pigEl.classList.add('pig-bounce');
+        setTimeout(() => pigEl.classList.remove('pig-bounce'), 100);
+    }
+
+    function vaciarAlcancia() {
+        if (confirm('¿Seguro que quieres vaciar la alcancía?')) {
+            saldo = 0;
+            guardarYActualizar();
+        }
+    }
+
+    function guardarYActualizar() {
+        localStorage.setItem('saldoGuardado', saldo);
+        actualizarPantalla();
+    }
+
+    function actualizarPantalla() {
+        balanceEl.textContent = `$${saldo.toFixed(2)}`;
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Control Financiero</title>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --danger: #ef4444;
+            --danger-bg: #fef2f2;
+            --danger-border: #fca5a5;
+            --danger-text: #991b1b;
+            --info: #3b82f6;
+            --info-dark: #1d4ed8;
+            --border: #e5e7eb;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 12px;
+        }
+        h1 { font-size: 18px; text-align: center; margin: 8px 0; color: var(--primary-dark); }
+        .container { display: flex; flex-direction: column; gap: 12px; }
+        
+        .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: center; }
+        .metric-box { padding: 10px 4px; border-radius: 10px; border: 1px solid #e5e7eb; transition: all 0.3s ease; }
+        .metric-title { font-size: 10px; text-transform: uppercase; font-weight: bold; }
+        .metric-value { font-size: 14px; font-weight: bold; margin-top: 2px; }
+        
+        .cycle-list { display: flex; flex-direction: column; gap: 8px; }
+        details.cycle-card { background: var(--card-bg); border-radius: 10px; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        summary { padding: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; font-size: 14px; outline: none; }
+        summary::-webkit-details-marker { display: none; }
+        .summary-right { display: flex; align-items: center; gap: 8px; }
+        
+        .breakdown-table { width: 100%; border-top: 1px solid var(--border); padding: 6px 12px; background: #fafafa; box-sizing: border-box; }
+        .row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #f0f0f0; font-size: 13px; }
+        .row:last-child { border-bottom: none; font-weight: bold; background: #f3f4f6; padding: 8px 6px; border-radius: 5px; margin-top: 4px; }
+        
+        .item-left { display: flex; align-items: center; gap: 10px; }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; border-radius: 4px; }
+        
+        .row.checked span { text-decoration: line-through; opacity: 0.4; }
+        .row.checked input.monto-input { opacity: 0.4; }
+        
+        input.monto-input {
+            width: 75px; text-align: right; border: none; border-bottom: 1px solid #d1d5db;
+            background: transparent; font-size: 13px; font-weight: 600; padding: 2px 4px; color: #374151;
+        }
+        input.monto-input:focus { border-bottom: 2px solid var(--primary); outline: none; background: #fff; }
+        .positivo { color: #059669; }
+        .negativo { color: #4b5563; }
+        
+        .btn-reset { display: block; width: 100%; background-color: #e5e7eb; color: #4b5563; border: none; padding: 8px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <h1>📊 Mi Control Financiero</h1>
+
+    <div class="container">
+        <div class="metrics">
+            <div class="metric-box" id="box-saldo-actual">
+                <div class="metric-title" id="title-saldo-actual">Saldo Actual</div>
+                <div class="metric-value" id="saldo-actual-real">0.00 €</div>
+            </div>
+            <div class="metric-box" id="box-meta-final">
+                <div class="metric-title" id="title-meta-final">Proyección (Nov)</div>
+                <div class="metric-value" id="meta-final">0.00 €</div>
+            </div>
+        </div>
+
+        <div class="cycle-list" id="contenedor-ciclos"></div>
+        
+        <button class="btn-reset" onclick="reiniciarDatos()">🔄 Restablecer valores de fábrica</button>
+    </div>
+
+    <script>
+        const datosPorDefecto = [
+            {
+                id: 1, nombre: "22 May - 21 Jun",
+                items: [
+                    { desc: "Saldo Inicial Cuenta", valor: 1686.86, checked: true },
+                    { desc: "Limpieza de terrenos", valor: -1200.00, checked: false },
+                    { desc: "Cuota del carro", valor: -140.98, checked: false },
+                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
+                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
+                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
+                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
+                    { desc: "Teléfono", valor: -10.00, checked: false },
+                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false }
+                ]
+            },
+            {
+                id: 2, nombre: "22 Jun - 21 Jul",
+                items: [
+                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
+                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
+                    { desc: "Cuota del carro", valor: -140.98, checked: false },
+                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
+                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
+                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
+                    { desc: "Crédito del banco", valor: -30.18, checked: false },
+                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
+                    { desc: "Tarjeta de Crédito", valor: -222.99, checked: false },
+                    { desc: "Impuesto Único (IUC)", valor: -111.46, checked: false },
+                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
+                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
+                    { desc: "Ocio", valor: -20.00, checked: false },
+                    { desc: "Teléfono", valor: -10.00, checked: false },
+                    { desc: "Corte de cabello", valor: -9.00, checked: false },
+                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
+                    { desc: "Google One", valor: -1.99, checked: false }
+                ]
+            },
+            {
+                id: 3, nombre: "22 Jul - 21 Ago",
+                items: [
+                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
+                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
+                    { desc: "Cuota del carro", valor: -140.98, checked: false },
+                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
+                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
+                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
+                    { desc: "Crédito del banco", valor: -30.18, checked: false },
+                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
+                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
+                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
+                    { desc: "Ocio", valor: -20.00, checked: false },
+                    { desc: "Teléfono", valor: -10.00, checked: false },
+                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
+                    { desc: "Google One", valor: -1.99, checked: false }
+                ]
+            },
+            {
+                id: 4, nombre: "22 Ago - 21 Sep",
+                items: [
+                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
+                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
+                    { desc: "Cuota del carro", valor: -140.98, checked: false },
+                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
+                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
+                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
+                    { desc: "Crédito del banco", valor: -30.18, checked: false },
+                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
+                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
+                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
+                    { desc: "Ocio", valor: -20.00, checked: false },
+                    { desc: "Teléfono", valor: -10.00, checked: false },
+                    { desc: "Corte de cabello", valor: -9.00, checked: false },
+                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
+                    { desc: "Google One", valor: -1.99, checked: false }
+                ]
+            },
+            {
+                id: 5, nombre: "22 Sep - 21 Oct",
+                items: [
+                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
+                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
+                    { desc: "Cuota del carro", valor: -140.98, checked: false },
+                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
+                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
+                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
+                    { desc: "Crédito del banco", valor: -30.18, checked: false },
+                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
+                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
+                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
+                    { desc: "Ocio", valor: -20.00, checked: false },
+                    { desc: "Teléfono", valor: -10.00, checked: false },
+                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
+                    { desc: "Google One", valor: -1.99, checked: false }
+                ]
+            },
+            {
+                id: 6, nombre: "22 Oct - 21 Nov",
+                items: [
+                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
+                    { desc: "Devolución Préstamo (Gabriela)", valor: -1100.00, checked: false },
+                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
+                    { desc: "Cuota del carro", valor: -140.98, checked: false },
+                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
+                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
+                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
+                    { desc: "Crédito del banco", valor: -30.18, checked: false },
+                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
+                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
+                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
+                    { desc: "Ocio", valor: -20.00, checked: false },
+                    { desc: "Teléfono", valor: -10.00, checked: false },
+                    { desc: "Corte de cabello", valor: -9.00, checked: false },
+                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
+                    { desc: "Google One", valor: -1.99, checked: false }
+                ]
+            }
+        ];
+
+        let datosFinancieros = JSON.parse(localStorage.getItem('datosFinancieros_v11')) || datosPorDefecto;
+
+        function inicializarAplicacion() {
+            let htmlBase = "";
+            datosFinancieros.forEach(ciclo => {
+                let filas = "";
+                if (ciclo.id > 1) {
+                    filas += `
+                        <div class="row" style="color: #6b7280; padding-left: 28px;">
+                            <span>Saldo acumulado anterior</span>
+                            <span id="arrastre-c${ciclo.id}">0.00 €</span>
+                        </div>
+                    `;
+                }
+
+                ciclo.items.forEach((item, index) => {
+                    filas += `
+                        <div class="row ${item.checked ? 'checked' : ''}">
+                            <div class="item-left">
+                                <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck(${ciclo.id}, ${index}, this)">
+                                <span>${item.desc}</span>
+                            </div>
+                            <input type="number" 
+                                   class="monto-input ${item.valor >= 0 ? 'positivo' : 'negativo'}" 
+                                   value="${item.valor}" 
+                                   step="0.01" 
+                                   inputmode="decimal"
+                                   oninput="actualizarMonto(${ciclo.id}, ${index}, this.value)">
+                        </div>
+                    `;
+                });
+
+                filas += `
+                    <div class="row" style="padding-left: 28px;">
+                        <span>SALDO PROYECTADO AL CIERRE</span>
+                        <span id="cierre-val-c${ciclo.id}">0.00 €</span>
+                    </div>
+                `;
+
+                htmlBase += `
+                    <details class="cycle-card" id="details-c${ciclo.id}">
+                        <summary>
+                            <span>📅 ${ciclo.nombre}</span>
+                            <div class="summary-right">
+                                <span id="resumen-cierre-c${ciclo.id}" style="font-weight:bold;">0.00 €</span>
+                                <span style="color: #9ca3af; font-size: 11px;">▼</span>
+                            </div>
+                        </summary>
+                        <div class="breakdown-table">
+                            ${filas}
+                        </div>
+                    </details>
+                `;
+            });
+
+            document.getElementById("contenedor-ciclos").innerHTML = htmlBase;
+            recalcularTodo();
+        }
+
+        function toggleCheck(cicloId, itemIndex, checkbox) {
+            const ciclo = datosFinancieros.find(c => c.id === cicloId);
+            ciclo.items[itemIndex].checked = checkbox.checked;
+            
+            const row = checkbox.closest('.row');
+            if (checkbox.checked) {
+                row.classList.add('checked');
+            } else {
+                row.classList.remove('checked');
+            }
+            recalcularTodo();
+            guardarDatos();
+        }
+
+        function actualizarMonto(cicloId, itemIndex, nuevoValor) {
+            datosFinancieros.find(c => c.id === cicloId).items[itemIndex].valor = parseFloat(nuevoValor) || 0;
+            recalcularTodo();
+            guardarDatos();
+        }
+
+        function recalcularTodo() {
+            let saldoAcumulado = 0;
+            let saldoActualReal = 0; 
+
+            datosFinancieros.forEach(ciclo => {
+                if (ciclo.id > 1) {
+                    document.getElementById(`arrastre-c${ciclo.id}`).innerText = saldoAcumulado.toFixed(2) + " €";
+                }
+
+                let subtotalMes = 0;
+                ciclo.items.forEach(item => { 
+                    subtotalMes += item.valor; 
+                    if (item.checked) {
+                        saldoActualReal += item.valor;
+                    }
+                });
+
+                saldoAcumulado = (ciclo.id === 1) ? subtotalMes : (saldoAcumulado + subtotalMes);
+
+                const resumenCierre = document.getElementById(`resumen-cierre-c${ciclo.id}`);
+                const cierreVal = document.getElementById(`cierre-val-c${ciclo.id}`);
+                
+                resumenCierre.innerText = saldoAcumulado.toFixed(2) + " €";
+                cierreVal.innerText = saldoAcumulado.toFixed(2) + " €";
+
+                if (saldoAcumulado < 0) {
+                    resumenCierre.style.color = "var(--danger)";
+                    cierreVal.style.color = "var(--danger)";
+                } else {
+                    resumenCierre.style.color = "var(--primary)";
+                    cierreVal.style.color = "#111827";
+                }
+            });
+
+            const boxActual = document.getElementById("box-saldo-actual");
+            const titleActual = document.getElementById("title-saldo-actual");
+            const valueActual = document.getElementById("saldo-actual-real");
+            valueActual.innerText = saldoActualReal.toFixed(2) + " €";
+            
+            if (saldoActualReal < 0) {
+                boxActual.style.background = "var(--danger-bg)";
+                boxActual.style.borderColor = "var(--danger-border)";
+                titleActual.style.color = "var(--danger-text)";
+                valueActual.style.color = "var(--danger)";
+            } else {
+                boxActual.style.background = "#eff6ff";
+                boxActual.style.borderColor = "#bfdbfe";
+                titleActual.style.color = "#1e40af";
+                valueActual.style.color = "var(--info-dark)";
+            }
+
+            const boxMeta = document.getElementById("box-meta-final");
+            const titleMeta = document.getElementById("title-meta-final");
+            const valueMeta = document.getElementById("meta-final");
+            valueMeta.innerText = saldoAcumulado.toFixed(2) + " €";
+
+            if (saldoAcumulado < 0) {
+                boxMeta.style.background = "var(--danger-bg)";
+                boxMeta.style.borderColor = "var(--danger-border)";
+                titleMeta.style.color = "var(--danger-text)";
+                valueMeta.style.color = "var(--danger)";
+            } else {
+                boxMeta.style.background = "#ecfdf5";
+                boxMeta.style.borderColor = "#a7f3d0";
+                titleMeta.style.color = "#065f46";
+                valueMeta.style.color = "var(--primary-dark)";
+            }
+        }
+
+        function guardarDatos() {
+            localStorage.setItem('datosFinancieros_v11', JSON.stringify(datosFinancieros));
+        }
+
+        function reiniciarDatos() {
+            if (confirm("¿Estás seguro de que quieres restablecer todos los ciclos?")) {
+                localStorage.removeItem('datosFinancieros_v11');
+                datosFinancieros = JSON.parse(JSON.stringify(datosPorDefecto));
+                inicializarAplicacion();
+            }
+        }
+
+        inicializarAplicacion();
+    </script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Horas Semanal</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 450px;
+            margin: 20px auto;
+            padding: 15px;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 8px;
+        }
+        .status {
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            font-size: 1.1rem;
+        }
+        .btn {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        .btn-in { background-color: #2ecc71; color: white; }
+        .btn-in:hover { background-color: #27ae60; }
+        .btn-out { background-color: #e74c3c; color: white; }
+        .btn-out:hover { background-color: #c0392b; }
+        .btn-reset { background-color: #7f8c8d; color: white; margin-top: 15px; }
+        .btn-reset:hover { background-color: #95a5a6; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #f2f2f2;
+        }
+        th { color: #7f8c8d; font-size: 0.9rem; }
+        .total {
+            font-size: 1.3rem;
+            font-weight: bold;
+            text-align: right;
+            margin-top: 20px;
+            color: #2c3e50;
+        }
+        .overtime {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: right;
+            margin-top: 5px;
+            color: #27ae60;
+            background-color: #e8f8f5;
+            padding: 8px;
+            border-radius: 6px;
+            display: inline-block;
+            float: right;
+            clear: both;
+        }
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Registro de Jornada</h2>
+        <div id="status" class="status">Fuera del trabajo</div>
+        <button id="btnIn" class="btn btn-in">Registrar Entrada</button>
+        <button id="btnOut" class="btn btn-out" style="display:none;">Registrar Salida</button>
+    </div>
+
+    <div class="card">
+        <h2>Horas Acumuladas (Lunes a Sábado)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Día</th>
+                    <th>Horas Trabajadas</th>
+                </tr>
+            </thead>
+            <tbody id="daysTable">
+                <!-- Se genera dinámicamente -->
+            </tbody>
+        </table>
+        
+        <div class="clearfix" style="margin-top: 20px;">
+            <div class="total" id="weeklyTotal">Total Semana: 0.00 hrs</div>
+            <div class="overtime" id="weeklyOvertime" style="display:none;">Horas Extra: 0.00 hrs</div>
+        </div>
+
+        <button id="btnReset" class="btn btn-reset">Restablecer Semana</button>
+    </div>
+
+    <script>
+        const dayNames = { 1: "Lunes", 2: "Martes", 3: "Miércoles", 4: "Jueves", 5: "Viernes", 6: "Sábado" };
+        const REGULAR_HOURS_LIMIT = 40;
+        
+        let data = JSON.parse(localStorage.getItem('workTimeData')) || {
+            hours: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
+            startTime: null,
+            entryDay: null,
+            status: 'OUT'
+        };
+
+        function saveData() {
+            localStorage.setItem('workTimeData', JSON.stringify(data));
+            updateUI();
+        }
+
+        function updateUI() {
+            const statusEl = document.getElementById('status');
+            const btnIn = document.getElementById('btnIn');
+            const btnOut = document.getElementById('btnOut');
+            
+            if (data.status === 'IN') {
+                const timeStr = new Date(data.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                statusEl.innerText = `Trabajando (Entrada: ${timeStr})`;
+                statusEl.style.color = '#2ecc71';
+                btnIn.style.display = 'none';
+                btnOut.style.display = 'block';
+            } else {
+                statusEl.innerText = "Fuera del trabajo";
+                statusEl.style.color = '#e74c3c';
+                btnIn.style.display = 'block';
+                btnOut.style.display = 'none';
+            }
+
+            const tbody = document.getElementById('daysTable');
+            tbody.innerHTML = '';
+            let total = 0;
+            
+            for (let i = 1; i <= 6; i++) {
+                const hrs = data.hours[i] || 0;
+                total += hrs;
+                tbody.innerHTML += `<tr><td>${dayNames[i]}</td><td><strong>${hrs.toFixed(2)}</strong> hrs</td></tr>`;
+            }
+            
+            document.getElementById('weeklyTotal').innerText = `Total Semana: ${total.toFixed(2)} hrs`;
+
+            // Cálculo y visualización de Horas Extra
+            const overtimeEl = document.getElementById('weeklyOvertime');
+            if (total > REGULAR_HOURS_LIMIT) {
+                const overtime = total - REGULAR_HOURS_LIMIT;
+                overtimeEl.innerText = `Horas Extra: +${overtime.toFixed(2)} hrs`;
+                overtimeEl.style.display = 'block';
+            } else {
+                overtimeEl.style.display = 'none';
+            }
+        }
+
+        document.getElementById('btnIn').addEventListener('click', () => {
+            let currentDay = new Date().getDay();
+            if (currentDay === 0) currentDay = 1;
+
+            data.status = 'IN';
+            data.startTime = new Date().getTime();
+            data.entryDay = currentDay;
+            saveData();
+        });
+
+        document.getElementById('btnOut').addEventListener('click', () => {
+            if (data.status === 'IN') {
+                const endTime = new Date().getTime();
+                const diffMs = endTime - data.startTime;
+                const diffHrs = diffMs / (1000 * 60 * 60);
+                
+                const targetDay = data.entryDay || new Date().getDay();
+                
+                if (targetDay >= 1 && targetDay <= 6) {
+                    data.hours[targetDay] = (data.hours[targetDay] || 0) + diffHrs;
+                }
+                
+                data.status = 'OUT';
+                data.startTime = null;
+                data.entryDay = null;
+                saveData();
+            }
+        });
+
+        document.getElementById('btnReset').addEventListener('click', () => {
+            if (confirm('¿Quieres borrar todas las horas e iniciar una nueva semana?')) {
+                data = {
+                    hours: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
+                    startTime: null,
+                    entryDay: null,
+                    status: 'OUT'
+                };
+                saveData();
+            }
+        });
+
+        updateUI();
+    </script>
+</body>
+</html>
