@@ -1,23 +1,20 @@
 const CACHE_NAME = 'padaria-v1';
 const ASSETS = [
-  'index.html',
-  'manifest.json'
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
-// Instalar y guardar en caché
-self.addEventListener('install', e => {
+// Instala y guarda la app en el teléfono
+self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
 });
 
-// Responder desde la caché si no hay internet
-self.addEventListener('fetch', e => {
+// Carga la app desde la memoria interna si estás sin conexión
+self.addEventListener('fetch', (e) => {
   e.respondWith(
-    caches.match(e.request).then(response => {
-      return response || fetch(e.request);
-    })
+    caches.match(e.request).then((response) => response || fetch(e.request))
   );
 });
