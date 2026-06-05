@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Padaria Vicente - Painel Total</title>
-    <link class="cite-back" manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json">
     <script>
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-          .then(() => console.log('Service Worker Registrado'));
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => console.log('Service Worker Registrado con Éxito'))
+          .catch(err => console.error('Error al registrar el SW:', err));
       }
     </script>
     <style>
@@ -530,7 +531,6 @@
     let currentClientTab = 'ruta';
     let targetId = null;
     
-    // Nueva estructura diaria para controlar recibidos y agregados independientemente
     let dailyData = JSON.parse(localStorage.getItem('dailyData') || '{"date":"","received":0,"added":0}');
     if (dailyData.amount !== undefined) { 
         dailyData.received = dailyData.amount; dailyData.added = 0; delete dailyData.amount; 
@@ -811,7 +811,7 @@
         if (currentCalcTotal > 0) {
             c.balance += currentCalcTotal;
             logAction(c.name, 'add', currentCalcTotal);
-            addDebtToDaily(currentCalcTotal); // Suma al Fiados do Dia
+            addDebtToDaily(currentCalcTotal);
             
             productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
             localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
@@ -840,7 +840,7 @@
         if (addedInput > 0) { 
             c.balance += addedInput; 
             logAction(c.name, 'add', addedInput); 
-            addDebtToDaily(addedInput); // Suma al Fiados do Dia
+            addDebtToDaily(addedInput);
         }
         const paymentInput = parseFloat(document.getElementById('v-sub').value) || 0;
         if (paymentInput > 0) {
