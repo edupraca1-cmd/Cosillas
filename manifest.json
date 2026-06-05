@@ -1,7 +1,7 @@
 {
   "name": "Padaria Vicente",
   "short_name": "Padaria",
-  "start_url": "index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#8B5A2B",
   "theme_color": "#5D3A1A",
