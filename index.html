@@ -34,7 +34,7 @@
         .calc-header h3 { font-size: 13px; color: #666; margin-bottom: 3px; text-transform: uppercase; }
         .big-total { font-size: 3rem; font-weight: bold; color: #000; line-height: 1; }
         .btn-clear-client { position: absolute; top: 12px; right: 12px; background: var(--danger); border: none; color: white; padding: 6px 10px; font-size: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; }
-        .products-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-bottom: 140px; }
+        .products-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-bottom: 155px; }
         .product-card { position: relative; background: #fff; border-radius: 12px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; display: flex; flex-direction: column; justify-content: space-between; min-height: 140px; }
         .product-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 8px; padding-right: 20px; }
         .product-name { font-weight: bold; font-size: 13px; line-height: 1.2; color: #222; }
@@ -52,7 +52,7 @@
         .btn-plus { background-color: var(--success); }
         .qty-badge { position: absolute; top: 6px; right: 6px; background: #000; color: white; padding: 2px 6px; border-radius: 8px; font-size: 11px; font-weight: bold; }
         .qty-badge.zero { display: none; }
-        .calc-footer { position: absolute; bottom: 60px; left: 0; right: 0; background: #fff; padding: 10px 15px; box-shadow: 0 -3px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 8px; }
+        .calc-footer { position: absolute; bottom: 60px; left: 0; right: 0; background: #fff; padding: 10px 15px; box-shadow: 0 -3px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 6px; }
         .switches-grid { display: flex; justify-content: center; }
         .switch-container { display: flex; align-items: center; background: #f5f5f5; padding: 6px 15px; border-radius: 20px; border: 1px solid #ddd; }
         .switch { position: relative; display: inline-block; width: 42px; height: 22px; }
@@ -69,7 +69,7 @@
         .btn-clear { background-color: #757575; max-width: 85px; line-height: 1.2; }
 
         /* ==================== ESTILOS: CLIENTES ==================== */
-        .daily-summary { background: var(--primary-dark); color: white; padding: 10px 12px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border-radius: 8px; margin-bottom: 10px; }
+        .daily-summary { background: var(--primary-dark); color: white; padding: 10px 12px; font-size: 0.85rem; display: flex; flex-direction: column; align-items: stretch; gap: 6px; border-radius: 8px; margin-bottom: 10px; height: auto; }
         .daily-summary b { color: var(--accent); font-size: 1rem; }
         .summary-btns { display: flex; gap: 4px; }
         .reset-day-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; cursor: pointer; }
@@ -111,22 +111,44 @@
 </head>
 <body>
 <div class="phone">
+    
+    <!-- VISTA 1: CALCULADORA -->
     <section id="view-calculadora" class="app-view active-view">
         <div class="calc-header">
             <button class="btn-clear-client" onclick="limparClienteAtual()">🗑️ Limpar</button>
             <h3>Total Cliente</h3>
             <p id="total-cliente" class="big-total">0.00 €</p>
+            
+            <!-- CAMBIO A DAR -->
+            <div style="margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 0.95rem; border-top: 1px dashed #ddd; padding-top: 8px;">
+                <span style="color: #555; font-weight: bold;">Recebido:</span>
+                <input type="number" step="0.01" id="dinheiro-recebido" oninput="calcularTroco()" placeholder="0.00" style="width: 75px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-weight: bold;">
+                <span style="font-weight: bold; margin-left: 5px; color: var(--success);" id="calc-troco">Troco: 0.00 €</span>
+            </div>
         </div>
+        
         <div class="products-list" id="products-container"></div>
+        
         <div class="calc-footer">
-            <div class="switches-grid">
-                <div class="switch-container">
+            <!-- RECUERDO ÚLTIMOS 3 / SWITCH PRECIO / BOTÓN DESHACER -->
+            <div class="switches-grid" style="display: flex; align-items: center; justify-content: space-between; width: 100%; background: #f5f5f5; padding: 6px 10px; border-radius: 12px; border: 1px solid #ddd;">
+                <div id="calc-history-list" style="font-size: 10px; color: #555; display: flex; flex-direction: column; line-height: 1.2; text-align: left; min-width: 85px;">
+                    <span style="font-weight: bold; color: #777; margin-bottom: 1px;">Últimos 3:</span>
+                    <span id="hist-1">-</span>
+                    <span id="hist-2">-</span>
+                    <span id="hist-3">-</span>
+                </div>
+                
+                <div class="switch-container" style="border: none; padding: 0; background: transparent;">
                     <label class="switch">
                         <input type="checkbox" id="switch-br" onchange="updatePricesDisplay()">
                         <span class="slider"></span>
                     </label>
                 </div>
+                
+                <button onclick="deshacerUltimoTotal()" style="background: #f39c12; color: white; border: none; padding: 6px 10px; font-size: 11px; font-weight: bold; border-radius: 6px; cursor: pointer;">↩ Desfazer</button>
             </div>
+            
             <div class="calc-daily-summary">Total Diário: <span id="total-diario">0.00 €</span></div>
             <div class="calc-footer-actions">
                 <button class="btn-action btn-clear" id="btn-clear-daily" onclick="handleClearClick()">Limpar<br>Diário</button>
@@ -135,14 +157,22 @@
         </div>
     </section>
 
+    <!-- VISTA 2: CLIENTES -->
     <section id="view-clientes" class="app-view">
         <div class="daily-summary">
-            <span>Cobrado hoje: <b id="today-earnings">0.00€</b></span>
-            <div class="summary-btns">
-                <button class="reset-day-btn" onclick="openHistoryModal()">Histórico</button>
-                <button class="reset-day-btn" onclick="resetDailyEarnings()">Zerar</button>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Fiados Recebidos: <b id="today-earnings">0.00€</b></span>
+                <div class="summary-btns">
+                    <button class="reset-day-btn" onclick="openHistoryModal()">Histórico</button>
+                    <button class="reset-day-btn" onclick="resetDailyEarnings()">Zerar</button>
+                </div>
+            </div>
+            <div style="font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 4px; display: flex; justify-content: space-between;">
+                <span>Total em Dívidas:</span>
+                <b id="total-debts" style="color: #FFCDD2; font-size: 0.9rem;">0.00€</b>
             </div>
         </div>
+        
         <div class="nav-tabs">
             <div class="tab active" id="tab-ruta" onclick="switchClientTab('ruta')">Hoje (<span id="day-name"></span>)</div>
             <div class="tab" id="tab-todos" onclick="switchClientTab('todos')">Todos</div>
@@ -151,6 +181,7 @@
         <button class="fixed-add-btn" onclick="openAddModal()">+</button>
     </section>
 
+    <!-- VISTA 3: JORNADA -->
     <section id="view-jornada" class="app-view">
         <div class="hours-card">
             <h2>Registro de Jornada</h2>
@@ -181,6 +212,7 @@
         </div>
     </section>
 
+    <!-- NAVEGACIÓN INFERIOR -->
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="switchView('calculadora', this)">
             <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 14h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2zm-4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2zm-4 8H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2z"/></svg>
@@ -198,13 +230,19 @@
 
 </div>
 
+<!-- MODAL GESTIÓN COMPRA + CUENTA FIADO -->
 <div class="modal" id="m-manage">
     <div class="modal-content">
         <h3 id="cname">Cliente</h3>
-        <p>Dívida Atual: <b id="cbalance" style="color:var(--danger); font-size:1.2rem;">0.00€</b></p>
+        <div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #eee; font-size: 0.9rem; display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; justify-content: space-between;"><span>Dívida Registada:</span> <b id="cbalance" style="color:var(--danger);">0.00€</b></div>
+            <div style="display: flex; justify-content: space-between; color: var(--primary);"><span>Compra na Calculadora:</span> <b id="m-calc-total">0.00€</b></div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px dashed #ccc; padding-top: 5px; font-weight: bold; font-size: 1rem;"><span>Total Combinado:</span> <b id="m-combined-total" style="color:var(--success);">0.00€</b></div>
+        </div>
+        
         <div style="display: flex; gap: 8px; margin: 10px 0;">
-            <button style="background:var(--success); color:white; border:none; padding:12px; border-radius:5px; flex: 1; font-weight:bold; cursor:pointer;" onclick="payAll()">✓ PAGAR TUDO</button>
-            <button style="background:#7f8c8d; color:white; border:none; padding:12px; border-radius:5px; flex: 1; font-weight:bold; cursor:pointer;" onclick="notPaid()">❌ Não pagou</button>
+            <button style="background:var(--success); color:white; border:none; padding:12px; border-radius:5px; flex: 1; font-weight:bold; cursor:pointer; font-size: 0.85rem;" onclick="payAll()">✓ PAGAR TUDO</button>
+            <button style="background:#7f8c8d; color:white; border:none; padding:12px; border-radius:5px; flex: 1; font-weight:bold; cursor:pointer; font-size: 0.85rem;" onclick="notPaid()">❌ Não pagou / Acumular</button>
         </div>
         
         <div style="margin: 15px 0; border-top: 1px dashed #ccc; padding-top: 10px;">
@@ -230,6 +268,7 @@
     </div>
 </div>
 
+<!-- MODAL CREAR NUEVO CLIENTE -->
 <div class="modal" id="m-add">
     <div class="modal-content">
         <h3>Novo Cliente</h3>
@@ -251,6 +290,7 @@
     </div>
 </div>
 
+<!-- MODAL CALENDARIO / HISTORIAL -->
 <div class="modal" id="m-history">
     <div class="modal-content" style="padding: 15px;">
         <div class="cal-header">
@@ -265,6 +305,7 @@
         <button onclick="document.getElementById('m-history').style.display='none'" style="width:100%; padding:10px; margin-top:8px; cursor:pointer; font-weight:bold;">Fechar</button>
     </div>
 </div>
+
 <script>
     // --- CONTROL DE NAVEGACIÓN ---
     function switchView(viewId, element) {
@@ -274,7 +315,7 @@
         element.classList.add('active');
     }
 
-    // ==================== LOGICA: CALCULADORA ====================
+    // ==================== LÓGICA: CALCULADORA ====================
     const originalProductsOrder = [
         { id: 'pcg', name: 'Pão Caseiro Grande', normal: 2.60, special: 2.40, isLargeVolume: false },
         { id: 'pcg_fat', name: 'Pão Caseiro Grande Fatiado', normal: 2.85, special: 2.65, isLargeVolume: false },
@@ -296,6 +337,7 @@
     let cart = {};
     let totalDiario = parseFloat(localStorage.getItem('totalDiario')) || 0;
     let popularity = JSON.parse(localStorage.getItem('padaria_popularity')) || {};
+    let calcHistory = JSON.parse(localStorage.getItem('calcHistory')) || [];
 
     productsData.forEach(p => cart[p.id] = 0);
 
@@ -366,12 +408,30 @@
         let total = 0;
         productsData.forEach(p => { total += cart[p.id] * getCalculatedPrice(p); });
         document.getElementById('total-cliente').innerText = total.toFixed(2) + ' €';
+        calcularTroco();
         return total;
+    }
+
+    function calcularTroco() {
+        const total = parseFloat(document.getElementById('total-cliente').innerText) || 0;
+        const recebido = parseFloat(document.getElementById('dinheiro-recebido').value) || 0;
+        const troco = recebido - total;
+        
+        if (recebido <= 0 || troco < 0) {
+            document.getElementById('calc-troco').innerText = "Troco: 0.00 €";
+            document.getElementById('calc-troco').style.color = "var(--danger)";
+        } else {
+            document.getElementById('calc-troco').innerText = `Troco: ${troco.toFixed(2)} €`;
+            document.getElementById('calc-troco').style.color = "var(--success)";
+        }
     }
 
     function limparClienteAtual() {
         productsData.forEach(p => cart[p.id] = 0);
         document.getElementById('total-cliente').innerText = '0.00 €';
+        document.getElementById('dinheiro-recebido').value = '';
+        document.getElementById('calc-troco').innerText = 'Troco: 0.00 €';
+        document.getElementById('calc-troco').style.color = "var(--success)";
         renderProducts();
     }
 
@@ -380,12 +440,39 @@
         if (totalCliente === 0) return;
         totalDiario += totalCliente;
         localStorage.setItem('totalDiario', totalDiario);
+        
+        calcHistory.unshift(totalCliente);
+        if (calcHistory.length > 3) calcHistory.pop();
+        localStorage.setItem('calcHistory', JSON.stringify(calcHistory));
+        updateHistoryUI();
+
         productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
         localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
         limparClienteAtual();
         sortProducts();
         renderProducts();
         document.getElementById('view-calculadora').scrollTo(0, 0);
+    }
+
+    function updateHistoryUI() {
+        document.getElementById('hist-1').innerText = calcHistory[0] ? `1°: ${calcHistory[0].toFixed(2)} €` : '-';
+        document.getElementById('hist-2').innerText = calcHistory[1] ? `2°: ${calcHistory[1].toFixed(2)} €` : '-';
+        document.getElementById('hist-3').innerText = calcHistory[2] ? `3°: ${calcHistory[2].toFixed(2)} €` : '-';
+    }
+
+    function deshacerUltimoTotal() {
+        if (calcHistory.length === 0) {
+            alert("Nenhum valor para desfazer no histórico.");
+            return;
+        }
+        let valorADesfazer = calcHistory.shift();
+        totalDiario = Math.max(0, totalDiario - valorADesfazer);
+        localStorage.setItem('totalDiario', totalDiario);
+        localStorage.setItem('calcHistory', JSON.stringify(calcHistory));
+        
+        document.getElementById('total-diario').innerText = totalDiario.toFixed(2) + ' €';
+        updateHistoryUI();
+        alert(`Removido: -${valorADesfazer.toFixed(2)} € do Total Diário.`);
     }
 
     let pressTimer, isLongPress = false;
@@ -405,18 +492,21 @@
     }, 500);
 
     function resetDiario() {
-        if (confirm('Tem a certeza de que deseja limpar o Total Diário?')) {
+        if (confirm('Tem a certeza de que deseja limpar o Total Diário y o histórico recente?')) {
             totalDiario = 0; localStorage.removeItem('totalDiario');
+            calcHistory = []; localStorage.removeItem('calcHistory');
             document.getElementById('total-diario').innerText = '0.00 €';
+            updateHistoryUI();
         }
     }
 
     function resetFabrica() {
         if (confirm('⚠️ ATENÇÃO: Deseja repor as definições de FÁBRICA?')) {
-            totalDiario = 0; popularity = {};
-            localStorage.removeItem('totalDiario'); localStorage.removeItem('padaria_popularity');
+            totalDiario = 0; popularity = {}; calcHistory = [];
+            localStorage.removeItem('totalDiario'); localStorage.removeItem('padaria_popularity'); localStorage.removeItem('calcHistory');
             productsData = [...originalProductsOrder]; limparClienteAtual();
             document.getElementById('total-diario').innerText = '0.00 €';
+            updateHistoryUI();
             alert('Aplicação reiniciada com sucesso!');
         }
     }
@@ -446,7 +536,6 @@
             opt.value = v; opt.innerText = v; selectVillage.appendChild(opt);
         });
 
-        // CORRECCIÓN RELVA DO BOI: Sincroniza siempre las aldeas nuevas con el orden guardado
         if(villageOrder.length === 0) {
             villageOrder = [...masterVillages];
         } else {
@@ -469,6 +558,8 @@
 
     function updateEarningsDisplay() {
         document.getElementById('today-earnings').innerText = dailyData.amount.toFixed(2) + "€";
+        let totalDebts = clients.reduce((sum, c) => sum + (c.balance || 0), 0);
+        document.getElementById('total-debts').innerText = totalDebts.toFixed(2) + "€";
     }
 
     function addPaymentToDaily(val) {
@@ -495,7 +586,7 @@
         grid.innerHTML = '';
         const year = currentCalDate.getFullYear();
         const month = currentCalDate.getMonth();
-        const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Octubro", "Novembro", "Dezembro"];
         monthYearLabel.innerText = `${meses[month]} ${year}`;
         const diasCc = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
         diasCc.forEach(d => { grid.innerHTML += `<div class="cal-day-name">${d}</div>`; });
@@ -532,7 +623,7 @@
             if (isPay) totalCobradoDia += l.amount;
             logBox.innerHTML += `<div class="history-item"><b>${l.name}</b> <small style="color:#757575; float:right;">${l.time}</small><br><span style="color:${color}; font-weight:bold;">${isPay?'🟢':'🔴'} ${sign}: ${l.amount.toFixed(2)}€</span></div>`;
         });
-        logBox.innerHTML += `<div style="padding:10px; background:#E8F5E9; font-weight:bold; text-align:center; font-size:0.9rem; color:#2E7D32;">💰 Total Cobrado: ${totalCobradoDia.toFixed(2)}€</div>`;
+        logBox.innerHTML += `<div style="padding:10px; background:#E8F5E9; font-weight:bold; text-align:center; font-size:0.9rem; color:#2E7D32;">💰 Total Fiados Recebidos: ${totalCobradoDia.toFixed(2)}€</div>`;
     }
 
     function clearFullHistory() {
@@ -566,7 +657,9 @@
         clients.push({ id: Date.now(), name, village, days, balance, lastModified: balance > 0 ? getTodayString() : "" });
         if (balance > 0) { logAction(name, 'add', balance); }
         localStorage.setItem('clients', JSON.stringify(clients));
-        document.getElementById('m-add').style.display = 'none'; renderClients();
+        document.getElementById('m-add').style.display = 'none'; 
+        updateEarningsDisplay();
+        renderClients();
     }
 
     function renderClients() {
@@ -643,6 +736,12 @@
         document.getElementById('cname').innerText = c.name; 
         document.getElementById('cbalance').innerText = c.balance.toFixed(2) + "€"; 
         
+        let currentCalcTotal = parseFloat(document.getElementById('total-cliente').innerText) || 0;
+        document.getElementById('m-calc-total').innerText = currentCalcTotal.toFixed(2) + "€";
+        
+        let combinedTotal = c.balance + currentCalcTotal;
+        document.getElementById('m-combined-total').innerText = combinedTotal.toFixed(2) + "€";
+
         document.getElementById('m-name').value = c.name;
         document.querySelectorAll('#m-days input').forEach(cb => {
             cb.checked = c.days.includes(cb.value);
@@ -653,17 +752,56 @@
         document.getElementById('m-manage').style.display = 'flex'; 
     }
     
+    // OPCIÓN 1: PAGAR DEUDA + COMPRA -> VA TODO JUNTO A FIADOS RECEBIDOS (0€ AL TOTAL DIARIO)
     function payAll() { 
         let c = clients.find(x => x.id === targetId);
-        if (c.balance > 0) { addPaymentToDaily(c.balance); logAction(c.name, 'pay', c.balance); }
-        c.balance = 0; c.lastModified = getTodayString(); localStorage.setItem('clients', JSON.stringify(clients)); document.getElementById('m-manage').style.display = 'none'; renderClients(); 
+        let currentCalcTotal = parseFloat(document.getElementById('total-cliente').innerText) || 0;
+        let combinedTotal = c.balance + currentCalcTotal;
+
+        if (combinedTotal > 0) { 
+            addPaymentToDaily(combinedTotal); 
+            logAction(c.name, 'pay', combinedTotal); 
+        }
+        
+        if (currentCalcTotal > 0) {
+            productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
+            localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
+        }
+
+        c.balance = 0; 
+        c.lastModified = getTodayString(); 
+        
+        limparClienteAtual();
+        sortProducts();
+        renderProducts();
+
+        localStorage.setItem('clients', JSON.stringify(clients)); 
+        document.getElementById('m-manage').style.display = 'none'; 
+        updateEarningsDisplay();
+        renderClients(); 
     }
 
+    // OPCIÓN 1: NO PAGÓ -> SE ACUMULA TODO A LA DEUDA DEL CLIENTE (0€ AL TOTAL DIARIO)
     function notPaid() {
         let c = clients.find(x => x.id === targetId);
+        let currentCalcTotal = parseFloat(document.getElementById('total-cliente').innerText) || 0;
+        
+        if (currentCalcTotal > 0) {
+            c.balance += currentCalcTotal;
+            logAction(c.name, 'add', currentCalcTotal);
+            
+            productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
+            localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
+        }
+        
         c.lastModified = getTodayString();
+        limparClienteAtual();
+        sortProducts();
+        renderProducts();
+
         localStorage.setItem('clients', JSON.stringify(clients));
         document.getElementById('m-manage').style.display = 'none';
+        updateEarningsDisplay();
         renderClients();
     }
     
@@ -683,16 +821,20 @@
         }
         if(c.balance < 0) c.balance = 0; 
         
-        c.lastModified = getTodayString(); localStorage.setItem('clients', JSON.stringify(clients)); document.getElementById('m-manage').style.display = 'none'; renderClients(); 
+        c.lastModified = getTodayString(); 
+        localStorage.setItem('clients', JSON.stringify(clients)); 
+        document.getElementById('m-manage').style.display = 'none'; 
+        updateEarningsDisplay();
+        renderClients(); 
     }
     
-    // CORRECCIÓN ELIMINAR: Corregido para que localice correctamente al cliente asignado aunque sea el único en la lista
     function deleteClient() { 
         let c = clients.find(x => x.id === targetId); 
         if (c && confirm(`Eliminar "${c.name}"?`)) { 
             clients = clients.filter(x => x.id !== targetId); 
             localStorage.setItem('clients', JSON.stringify(clients)); 
             document.getElementById('m-manage').style.display = 'none'; 
+            updateEarningsDisplay();
             renderClients(); 
         } 
     }
@@ -815,6 +957,7 @@
         renderProducts();
         initClientLogic();
         updateHoursUI();
+        updateHistoryUI();
     };
 </script>
 </body>
