@@ -120,7 +120,6 @@
 <body>
 <div class="phone">
     
-    <!-- VISTA 1: CALCULADORA -->
     <section id="view-calculadora" class="app-view active-view">
         <div class="calc-header">
             <button class="btn-clear-client" onclick="limparClienteAtual()">🗑️ Limpar</button>
@@ -163,12 +162,12 @@
         </div>
     </section>
 
-    <!-- VISTA 2: CLIENTES -->
     <section id="view-clientes" class="app-view">
         <div class="daily-summary">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span>Fiados Recebidos: <b id="today-earnings">0.00€</b></span>
                 <div class="summary-btns">
+                    <button class="reset-day-btn" onclick="anularUltimoMovimentoRapido()" style="background:#e67e22; font-weight:bold;">Desfazer Último</button>
                     <button class="reset-day-btn" onclick="openHistoryModal()">Histórico</button>
                     <button class="reset-day-btn" onclick="resetDailyEarnings()">Zerar</button>
                 </div>
@@ -187,7 +186,6 @@
         <button class="fixed-add-btn" onclick="openAddModal()">+</button>
     </section>
 
-    <!-- VISTA 3: JORNADA -->
     <section id="view-jornada" class="app-view">
         <div class="hours-card">
             <h2>Registro de Jornada</h2>
@@ -218,7 +216,6 @@
         </div>
     </section>
 
-    <!-- NAVEGACIÓN INFERIOR -->
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="switchView('calculadora', this)">
             <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 14h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2zm-4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2zm-4 8H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2z"/></svg>
@@ -236,7 +233,6 @@
 
 </div>
 
-<!-- MODAL GESTIÓN COMPRA -->
 <div class="modal" id="m-manage">
     <div class="modal-content">
         <h3 id="cname">Cliente</h3>
@@ -266,6 +262,8 @@
         </div>
         <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
 
+        <input type="number" step="0.01" id="v-correct" class="input-num" placeholder="Corrigir Saldo Total (Substituir)" style="border:2px solid #f39c12; background:#FFFDE7; font-weight:bold;">
+        
         <input type="number" step="0.01" id="v-add" class="input-num" placeholder="Adicionar nova dívida (+)">
         <input type="number" step="0.01" id="v-sub" class="input-num" placeholder="Pagar uma parte (-)">
         <button onclick="saveManagement()" style="width:100%; padding:10px; margin-top:10px; background:var(--primary); color:white; border:none; font-weight:bold; cursor:pointer;">Guardar Alterações</button>
@@ -274,7 +272,6 @@
     </div>
 </div>
 
-<!-- MODAL CREAR NUEVO CLIENTE -->
 <div class="modal" id="m-add">
     <div class="modal-content">
         <h3>Novo Cliente</h3>
@@ -291,12 +288,17 @@
             <label><input type="checkbox" value="Sábado"> Sáb</label>
         </div>
         <input type="number" step="0.01" id="n-balance" placeholder="Dívida Inicial (€)" class="input-num" style="border:2px solid var(--danger); background:#FFF5F5; margin-top:15px; font-weight:bold;">
+        
+        <label style="font-size:0.85rem; font-weight:bold; display:flex; align-items:center; gap:6px; margin: 8px 2px 0 2px; color:#333; cursor:pointer;">
+            <input type="checkbox" id="n-add-to-daily" checked style="width:16px; height:16px; cursor:pointer;">
+            Somar a Fiados do Dia
+        </label>
+
         <button onclick="registerClient()" style="width:100%; padding:10px; margin-top:15px; background:var(--success); color:white; border:none; font-weight:bold; cursor:pointer;">GUARDAR REGISTO</button>
         <button onclick="document.getElementById('m-add').style.display='none'" style="width:100%; padding:10px; margin-top:5px; cursor:pointer;">Cancelar</button>
     </div>
 </div>
 
-<!-- MODAL CALENDARIO -->
 <div class="modal" id="m-history">
     <div class="modal-content" style="padding: 15px;">
         <div class="cal-header">
@@ -404,8 +406,8 @@
     function updatePricesDisplay() {
         productsData.forEach(p => {
             const currentPrice = getCalculatedPrice(p);
-            if (document.getElementById(`price-${p.id}`)) document.getElementById(`price-${p.id}`).innerText = `Preço Un.: ${currentPrice.toFixed(2)} €`;
-            if (document.getElementById(`subtotal-${p.id}`)) document.getElementById(`subtotal-${p.id}`).innerText = `Total: ${(cart[p.id] * currentPrice).toFixed(2)} €`;
+            if (document.getElementById('price-' + p.id)) document.getElementById('price-' + p.id).innerText = `Preço Un.: ${currentPrice.toFixed(2)} €`;
+            if (document.getElementById('subtotal-' + p.id)) document.getElementById('subtotal-' + p.id).innerText = `Total: ${(cart[p.id] * currentPrice).toFixed(2)} €`;
         });
         calcularTotalCliente();
     }
@@ -588,11 +590,12 @@
         }
     }
 
-    function logAction(clientName, type, amount) {
+    // MODIFICADO: AHORA SOPORTA EL FLAG 'isDaily' PARA EVITAR CORRUPCIÓN DE LOS TOTALES AL ANULAR
+    function logAction(clientName, type, amount, isDaily = true) {
         const d = new Date();
         const dateFormatted = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
         const timeFormatted = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-        logs.unshift({ date: dateFormatted, time: timeFormatted, name: clientName, type: type, amount: amount });
+        logs.unshift({ date: dateFormatted, time: timeFormatted, name: clientName, type: type, amount: amount, isDaily: isDaily });
         localStorage.setItem('transactionLogs', JSON.stringify(logs));
     }
 
@@ -625,23 +628,98 @@
     function selectCalendarDate(dateStr) { selectedDateStr = dateStr; renderCalendar(); }
 
     function renderDayLogs() {
-        document.getElementById('selected-date-title').innerText = `Movimentos de ${selectedDateStr}`;
+        document.getElementById('selected-date-title').innerText = `Movimentos do dia`;
         const logBox = document.getElementById('history-log');
         logBox.innerHTML = '';
-        const dayLogs = logs.filter(l => l.date === selectedDateStr);
-        if (dayLogs.length === 0) {
+        
+        let count = 0;
+        let totalCobradoDia = 0;
+        
+        logs.forEach((l, idx) => {
+            if (l.date !== selectedDateStr) return;
+            count++;
+            
+            let typeText = '';
+            let color = '';
+            let icon = '';
+            
+            if (l.type === 'pay') {
+                typeText = '✓ Pagou';
+                color = 'var(--success)';
+                icon = '🟢';
+                totalCobradoDia += l.amount;
+            } else if (l.type === 'add') {
+                typeText = l.isDaily === false ? '➔ Dívida Inicial (+)' : '➔ Dívida (+)';
+                color = 'var(--danger)';
+                icon = '🔴';
+            } else if (l.type === 'correction') {
+                typeText = '🛠 Corr. Saldo';
+                color = '#f39c12';
+                icon = '🔵';
+            }
+            
+            logBox.innerHTML += `
+                <div class="history-item" style="position: relative; padding-right: 65px; min-height: 38px; display: flex; flex-direction: column; justify-content: center;">
+                    <div><b>${l.name}</b> <small style="color:#757575; float:right; margin-right:5px;">${l.time}</small></div>
+                    <span style="color:${color}; font-weight:bold;">${icon} ${typeText}: ${l.amount.toFixed(2)}€</span>
+                    <button onclick="anularMovimento(${idx})" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: var(--danger); color: white; border: none; padding: 5px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer;">Anular</button>
+                </div>`;
+        });
+        
+        if (count === 0) {
             logBox.innerHTML = '<p style="text-align:center; color:#757575; padding:15px; margin:0; font-size:0.85rem;">Nenhum movimento neste dia.</p>';
             return;
         }
-        let totalCobradoDia = 0;
-        dayLogs.forEach(l => {
-            const isPay = l.type === 'pay';
-            const sign = isPay ? '✓ Pagou' : '➔ Dívida (+)';
-            const color = isPay ? 'var(--success)' : 'var(--danger)';
-            if (isPay) totalCobradoDia += l.amount;
-            logBox.innerHTML += `<div class="history-item"><b>${l.name}</b> <small style="color:#757575; float:right;">${l.time}</small><br><span style="color:${color}; font-weight:bold;">${isPay?'🟢':'🔴'} ${sign}: ${l.amount.toFixed(2)}€</span></div>`;
-        });
         logBox.innerHTML += `<div style="padding:10px; background:#E8F5E9; font-weight:bold; text-align:center; font-size:0.9rem; color:#2E7D32;">💰 Total Fiados Recebidos: ${totalCobradoDia.toFixed(2)}€</div>`;
+    }
+
+    // MODIFICADO: AHORA FILTRA ADECUADAMENTE SI EL REGISTRO AFECTABA O NO A LOS FILTROS DIARIOS (isDaily)
+    function anularMovimento(index) {
+        if (index < 0 || index >= logs.length) return;
+        let l = logs[index];
+        
+        if (!confirm(`Deseja anular o movimento de "${l.name}" de ${l.amount.toFixed(2)}€? Saldo e totais serão corrigidos.`)) {
+            return;
+        }
+        
+        let c = clients.find(x => x.name === l.name);
+        if (c) {
+            if (l.type === 'pay') {
+                c.balance += l.amount; 
+            } else if (l.type === 'add') {
+                c.balance = Math.max(0, c.balance - l.amount); 
+            }
+            c.lastModified = ""; 
+        }
+        
+        const d = new Date();
+        const todayFormatted = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        if (l.date === todayFormatted && l.isDaily !== false) {
+            if (l.type === 'pay') {
+                dailyData.received = Math.max(0, dailyData.received - l.amount);
+            } else if (l.type === 'add') {
+                dailyData.added = Math.max(0, dailyData.added - l.amount);
+            }
+            localStorage.setItem('dailyData', JSON.stringify(dailyData));
+            updateEarningsDisplay();
+        }
+        
+        logs.splice(index, 1);
+        localStorage.setItem('transactionLogs', JSON.stringify(logs));
+        localStorage.setItem('clients', JSON.stringify(clients));
+        
+        renderCalendar();
+        renderClients();
+    }
+
+    // NUEVA FUNCIÓN: ACCIÓN RÁPIDA DE DESFAZER SIN ENTRAR AL HISTÓRICO
+    function anularUltimoMovimentoRapido() {
+        if (logs.length === 0) {
+            alert("Nenhum movimento registrado para anular.");
+            return;
+        }
+        // El elemento 0 siempre es el más reciente de toda la aplicación
+        anularMovimento(0);
     }
 
     function clearFullHistory() {
@@ -663,22 +741,31 @@
         document.getElementById('n-name').value = ''; document.getElementById('n-balance').value = '';
         document.getElementById('n-village').selectedIndex = 0;
         document.querySelectorAll('#n-days input').forEach(cb => cb.checked = false);
+        document.getElementById('n-add-to-daily').checked = true; // Por defecto seleccionado
         document.getElementById('m-add').style.display = 'flex';
     }
 
     function switchClientTab(t) { currentClientTab = t; document.getElementById('tab-ruta').classList.toggle('active', t==='ruta'); document.getElementById('tab-todos').classList.toggle('active', t==='todos'); renderClients(); }
     function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
 
+    // MODIFICADO: AHORA EVALÚA EL CHECKBOX ANTES DE SUMAR EL VALOR A LOS TOTALES DEL DÍA
     function registerClient() {
         const name = document.getElementById('n-name').value.trim();
         const village = document.getElementById('n-village').value;
         const days = Array.from(document.querySelectorAll('#n-days input:checked')).map(i => i.value);
         const balance = parseFloat(document.getElementById('n-balance').value) || 0;
         if(!name) return alert("Por favor, introduza un nome.");
+        
+        // Obtener estado del nuevo checkbox
+        const addToDaily = document.getElementById('n-add-to-daily').checked;
+
         clients.push({ id: Date.now(), name, village, days, balance, lastModified: balance > 0 ? getTodayString() : "" });
         if (balance > 0) { 
-            logAction(name, 'add', balance);
-            addDebtToDaily(balance);
+            // Se envía 'addToDaily' como parámetro para saber si el log debe afectar los totales si se anula
+            logAction(name, 'add', balance, addToDaily);
+            if (addToDaily) {
+                addDebtToDaily(balance);
+            }
         }
         localStorage.setItem('clients', JSON.stringify(clients));
         document.getElementById('m-add').style.display = 'none'; 
@@ -773,6 +860,7 @@
 
         document.getElementById('v-add').value = ''; 
         document.getElementById('v-sub').value = ''; 
+        document.getElementById('v-correct').value = ''; 
         document.getElementById('m-manage').style.display = 'flex'; 
     }
     
@@ -836,19 +924,29 @@
         c.name = nuevoNombre;
         c.days = Array.from(document.querySelectorAll('#m-days input:checked')).map(i => i.value);
 
-        const addedInput = parseFloat(document.getElementById('v-add').value) || 0;
-        if (addedInput > 0) { 
-            c.balance += addedInput; 
-            logAction(c.name, 'add', addedInput); 
-            addDebtToDaily(addedInput);
+        const correctInput = document.getElementById('v-correct').value.trim();
+        if (correctInput !== "") {
+            const newBal = parseFloat(correctInput);
+            if (!isNaN(newBal) && newBal >= 0) {
+                logAction(c.name, 'correction', newBal);
+                c.balance = newBal;
+            }
+        } else {
+            const addedInput = parseFloat(document.getElementById('v-add').value) || 0;
+            if (addedInput > 0) { 
+                c.balance += addedInput; 
+                logAction(c.name, 'add', addedInput); 
+                addDebtToDaily(addedInput);
+            }
+            const paymentInput = parseFloat(document.getElementById('v-sub').value) || 0;
+            if (paymentInput > 0) {
+                const realPaid = paymentInput > c.balance ? c.balance : paymentInput; 
+                addPaymentToDaily(realPaid); 
+                logAction(c.name, 'pay', realPaid); 
+                c.balance -= realPaid;
+            }
         }
-        const paymentInput = parseFloat(document.getElementById('v-sub').value) || 0;
-        if (paymentInput > 0) {
-            const realPaid = paymentInput > c.balance ? c.balance : paymentInput; 
-            addPaymentToDaily(realPaid); 
-            logAction(c.name, 'pay', realPaid); 
-            c.balance -= realPaid;
-        }
+        
         if(c.balance < 0) c.balance = 0; 
         
         c.lastModified = getTodayString(); 
