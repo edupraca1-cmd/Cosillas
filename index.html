@@ -3,1090 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Padaria Vicente - Painel Total</title>
-    <link rel="manifest" href="manifest.json">
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-          .then(() => console.log('Service Worker Registrado con Éxito'))
-          .catch(err => console.error('Error al registrar el SW:', err));
-      }
-    </script>
+    <title>Painel de Gestão - Padaria</title>
     <style>
-        :root { 
-            --primary: #8B5A2B; 
-            --primary-dark: #5D3A1A;
-            --success: #4CAF50; 
-            --danger: #C62828; 
-            --accent: #FFEB3B; 
-            --bg-light: #EFEBE9;
+        :root {
+            --primary: #4a3728;
+            --accent: #ff9800;
+            --bg: #f5f0eb;
+            --card-bg: #ffffff;
+            --text: #3e2723;
+            --muted: #7d6c63;
         }
-        * { box-sizing: border-box; font-family: sans-serif; margin: 0; padding: 0; }
-        body { background: var(--bg-light); margin: 0; display: flex; justify-content: center; user-select: none; }
-        
-        /* Contenedor Principal estilo Móvil */
-        .phone { width: 100%; max-width: 450px; background: white; height: 100vh; display: flex; flex-direction: column; position: relative; overflow: hidden; }
-        
-        /* Vistas de la Aplicación */
-        .app-view { display: none; flex: 1; flex-direction: column; height: calc(100vh - 60px); overflow-y: auto; padding: 12px; }
-        .app-view.active-view { display: flex; }
 
-        /* Menú de Navegación Inferior */
-        .bottom-nav { height: 60px; background: var(--primary-dark); display: flex; border-top: 2px solid var(--primary); z-index: 1000; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 0.75rem; font-weight: bold; gap: 4px; }
-        .nav-item.active { color: var(--accent); background: rgba(255,255,255,0.05); }
-        .nav-item svg { width: 22px; height: 22px; fill: currentColor; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
 
-        /* CALCULADORA */
-        .calc-header { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 3px 8px rgba(0,0,0,0.08); margin-bottom: 15px; text-align: center; border: 2px solid var(--primary); position: relative; }
-        .calc-header h3 { font-size: 13px; color: #666; margin-bottom: 3px; text-transform: uppercase; }
-        .big-total { font-size: 3rem; font-weight: bold; color: #000; line-height: 1; }
-        .btn-clear-client { position: absolute; top: 12px; right: 12px; background: var(--danger); border: none; color: white; padding: 6px 10px; font-size: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; }
-        .products-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-bottom: 155px; }
-        .product-card { position: relative; background: #fff; border-radius: 12px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; display: flex; flex-direction: column; justify-content: space-between; min-height: 140px; }
-        .product-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 8px; padding-right: 20px; }
-        .product-name { font-weight: bold; font-size: 13px; line-height: 1.2; color: #222; }
-        .product-meta { display: flex; flex-direction: column; gap: 1px; margin-top: 4px; }
-        .product-price { color: #666; font-size: 12px; font-weight: bold; }
-        .product-subtotal { color: var(--primary); font-size: 12px; font-weight: bold; }
-        .product-subtotal.zero { display: none; }
-        .card-buttons { display: flex; gap: 4px; width: 100%; }
-        .btn { border: none; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .btn-normal-layout .btn { flex: 1; height: 40px; font-size: 20px; }
-        .btn-double-layout { flex-direction: column; gap: 4px; }
-        .btn-row { display: flex; gap: 4px; width: 100%; }
-        .btn-row .btn { flex: 1; height: 32px; font-size: 13px; }
-        .btn-minus { background-color: var(--danger); }
-        .btn-plus { background-color: var(--success); }
-        .qty-badge { position: absolute; top: 6px; right: 6px; background: #000; color: white; padding: 2px 6px; border-radius: 8px; font-size: 11px; font-weight: bold; }
-        .qty-badge.zero { display: none; }
-        .calc-footer { position: absolute; bottom: 60px; left: 0; right: 0; background: #fff; padding: 10px 15px; box-shadow: 0 -3px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column; gap: 6px; }
-        .switches-grid { display: flex; justify-content: center; }
-        .switch-container { display: flex; align-items: center; background: #f5f5f5; padding: 6px 15px; border-radius: 20px; border: 1px solid #ddd; }
-        .switch { position: relative; display: inline-block; width: 42px; height: 22px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 22px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--primary); }
-        input:checked + .slider:before { transform: translateX(20px); }
-        .calc-daily-summary { text-align: center; font-size: 13px; color: #555; }
-        .calc-daily-summary span { font-weight: bold; color: var(--success); font-size: 16px; }
-        .calc-footer-actions { display: flex; gap: 8px; }
-        .btn-action { border: none; color: white; padding: 12px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; text-align: center; }
-        .btn-next { background-color: var(--primary); flex: 2; font-size: 15px; }
-        .btn-clear { background-color: #757575; max-width: 85px; line-height: 1.2; }
+        body {
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-        /* CLIENTES */
-        .daily-summary { background: var(--primary-dark); color: white; padding: 10px 12px; font-size: 0.85rem; display: flex; flex-direction: column; align-items: stretch; gap: 6px; border-radius: 8px; margin-bottom: 10px; height: auto; }
-        .daily-summary b { color: var(--accent); font-size: 1rem; }
-        .summary-btns { display: flex; gap: 4px; }
-        .reset-day-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; cursor: pointer; }
-        .nav-tabs { display: flex; background: var(--primary); border-radius: 6px; margin-bottom: 10px; overflow: hidden; }
-        .tab { flex: 1; padding: 10px; color: white; text-align: center; cursor: pointer; opacity: 0.6; font-weight: bold; font-size: 0.9rem; }
-        .tab.active { opacity: 1; background: rgba(0,0,0,0.15); border-bottom: 3px solid var(--accent); }
-        .client-list-container { flex: 1; overflow-y: auto; padding-bottom: 60px; }
-        .village-group { margin-bottom: 8px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: #fdfdfd; }
-        .village-header { background: #eee; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
-        .client-card { background: white; padding: 10px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
-        .drag-handle { cursor: grab; padding: 5px; font-size: 1.1rem; color: #999; }
-        .dragging { opacity: 0.5; background: #f0f0f0; }
-        .fixed-add-btn { position: absolute; bottom: 75px; right: 15px; background: var(--primary); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 99; }
+        /* Contenedor vista móvil */
+        .phone {
+            width: 100%;
+            max-width: 412px;
+            height: 90vh;
+            max-height: 850px;
+            background-color: var(--bg);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
 
-        /* Modales */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000; padding: 15px; }
-        .modal-content { background: white; padding: 15px; width: 100%; max-width: 400px; border-radius: 10px; max-height: 80vh; overflow-y: auto; }
-        .input-num { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 0.95rem; }
-        .checkbox-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-top: 5px; font-size: 0.8rem; }
-        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: bold; font-size: 0.9rem; }
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 0.8rem; }
-        .cal-day-name { font-weight: bold; color: #757575; }
-        .cal-cell { padding: 6px 0; border-radius: 4px; cursor: pointer; position: relative; font-weight: 500; }
-        .cal-cell.has-data::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: var(--primary); border-radius: 50%; }
-        .cal-cell.selected { background: var(--primary); color: white; }
-        .history-item { padding: 6px; border-bottom: 1px solid #eee; font-size: 0.8rem; }
+        @media (max-width: 412px) {
+            .phone {
+                height: 100vh;
+                max-height: none;
+            }
+        }
 
-        /* JORNADA */
-        .hours-card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); margin-bottom: 12px; border: 1px solid #e0e0e0; }
-        .hours-card h2 { margin-top: 0; font-size: 1rem; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 6px; }
-        .status { font-weight: bold; text-align: center; margin: 10px 0; font-size: 1rem; }
-        .btn-job { padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: bold; width: 100%; }
-        .hours-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.9rem; }
-        .hours-table th, .hours-table td { padding: 8px; text-align: left; border-bottom: 1px solid #f2f2f2; }
-        .hours-table th { color: #7f8c8d; font-size: 0.8rem; }
-        .total-hours { font-size: 1.1rem; font-weight: bold; text-align: right; margin-top: 10px; color: #2c3e50; }
-        .overtime { font-size: 1rem; font-weight: bold; text-align: right; margin-top: 4px; color: var(--success); background-color: #e8f8f5; padding: 6px; border-radius: 4px; display: inline-block; float: right; clear: both; }
+        /* Contenedor de vistas */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+
+        .app-view {
+            display: none;
+        }
+
+        .active-view {
+            display: block;
+        }
+
+        h2 {
+            color: var(--primary);
+            margin-bottom: 16px;
+            font-size: 1.4rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 6px;
+        }
+
+        h3 {
+            color: var(--primary);
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        /* Formularios y Botones */
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: var(--text);
+            background: #fff;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #3a2b20;
+        }
+
+        .hint {
+            font-size: 0.85rem;
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        /* Menú Inferior de Navegación */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 65px;
+            background: var(--card-bg);
+            display: flex;
+            border-top: 1px solid #e0dcd8;
+            z-index: 10;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-item svg {
+            width: 22px;
+            height: 22px;
+            margin-bottom: 4px;
+            fill: currentColor;
+        }
+
+        .nav-item.active {
+            color: var(--accent);
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
+
 <div class="phone">
-    
-    <section id="view-calculadora" class="app-view active-view">
-        <div class="calc-header">
-            <button class="btn-clear-client" onclick="limparClienteAtual()">🗑️ Limpar</button>
-            <h3>Total Cliente</h3>
-            <p id="total-cliente" class="big-total">0.00 €</p>
-            
-            <div style="margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 0.95rem; border-top: 1px dashed #ddd; padding-top: 8px;">
-                <span style="color: #555; font-weight: bold;">Recebido:</span>
-                <input type="number" step="0.01" id="dinheiro-recebido" oninput="calcularTroco()" placeholder="0.00" style="width: 75px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-weight: bold;">
-                <span style="font-weight: bold; margin-left: 5px; color: var(--success);" id="calc-troco">Troco: 0.00 €</span>
+    <div class="content">
+        
+        <!-- 1. PESTAÑA: CALCULADORA -->
+        <section id="view-calculadora" class="app-view active-view">
+            <h2>Calculadora de Pão</h2>
+            <div class="card">
+                <p class="hint">Insere os dados de distribuição para calcular os totais.</p>
+                <!-- Aquí mantiene el HTML interno de tu calculadora actual -->
             </div>
-        </div>
-        
-        <div class="products-list" id="products-container"></div>
-        
-        <div class="calc-footer">
-            <div class="switches-grid" style="display: flex; align-items: center; justify-content: space-between; width: 100%; background: #f5f5f5; padding: 6px 10px; border-radius: 12px; border: 1px solid #ddd;">
-                <div id="calc-history-list" style="font-size: 10px; color: #555; display: flex; flex-direction: column; line-height: 1.2; text-align: left; min-width: 85px;">
-                    <span style="font-weight: bold; color: #777; margin-bottom: 1px;">Últimos 3:</span>
-                    <span id="hist-1">-</span>
-                    <span id="hist-2">-</span>
-                    <span id="hist-3">-</span>
+        </section>
+
+        <!-- 2. PESTAÑA: ENCOMENDAS -->
+        <section id="view-encomendas" class="app-view">
+            <h2>Encomendas</h2>
+            <div class="card">
+                <p class="hint">Gestão e registo de encomendas para a rota de distribuição.</p>
+                <!-- Próximamente: Contenido específico para pedidos de clientes -->
+            </div>
+        </section>
+
+        <!-- 3. PESTAÑA: FIADOS -->
+        <section id="view-fiados" class="app-view">
+            <h2>Fiados e Clientes</h2>
+            
+            <!-- Bloque de Hoy -->
+            <div class="card">
+                <h3>Hoje</h3>
+                <div id="lista-fiados-hoje">
+                    <p class="hint">Carregando contas pendentes de hoje...</p>
+                </div>
+            </div>
+
+            <!-- Bloque del Día Siguiente -->
+            <div class="card" style="border-top: 3px solid var(--accent);">
+                <h3>Amanhã</h3>
+                <div id="lista-fiados-amanha">
+                    <p class="hint">Previsão e notas de saldos para a distribuição de amanhã.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. PESTAÑA: JORNADA (Formato 24h) -->
+        <section id="view-jornada" class="app-view">
+            <h2>Registo de Jornada</h2>
+            
+            <div class="card">
+                <h3>Horário de Trabalho</h3>
+                <div class="form-group" style="display: flex; gap: 12px; margin-bottom: 16px;">
+                    <div style="flex: 1;">
+                        <label for="hora-inicio">Hora de Entrada:</label>
+                        <input type="time" id="hora-inicio" class="form-control" value="06:00">
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="hora-fim">Hora de Saída:</label>
+                        <input type="time" id="hora-fim" class="form-control" value="14:00">
+                    </div>
                 </div>
                 
-                <div class="switch-container" style="border: none; padding: 0; background: transparent;">
-                    <label class="switch">
-                        <input type="checkbox" id="switch-br" onchange="updatePricesDisplay()">
-                        <span class="slider"></span>
-                    </label>
-                </div>
+                <button onclick="calcularJornada()" class="btn-primary" style="width: 100%;">Calcular Tempo Total</button>
                 
-                <button onclick="deshacerUltimoTotal()" style="background: #f39c12; color: white; border: none; padding: 6px 10px; font-size: 11px; font-weight: bold; border-radius: 6px; cursor: pointer;">↩ Desfazer</button>
-            </div>
-            
-            <div class="calc-daily-summary">Total Diário: <span id="total-diario">0.00 €</span></div>
-            <div class="calc-footer-actions">
-                <button class="btn-action btn-clear" id="btn-clear-daily" onclick="handleClearClick()">Limpar<br>Diário</button>
-                <button class="btn-action btn-next" onclick="guardarCliente()">Próximo Cliente ✓</button>
-            </div>
-        </div>
-    </section>
-
-    <section id="view-clientes" class="app-view">
-        <div class="daily-summary">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span>Fiados Recebidos: <b id="today-earnings">0.00€</b></span>
-                <div class="summary-btns">
-                    <button class="reset-day-btn" onclick="anularUltimoMovimentoRapido()" style="background:#e67e22; font-weight:bold;">Desfazer Último</button>
-                    <button class="reset-day-btn" onclick="openHistoryModal()">Histórico</button>
-                    <button class="reset-day-btn" onclick="resetDailyEarnings()">Zerar</button>
+                <div id="resultado-jornada" style="margin-top: 20px; font-size: 1.2rem; font-weight: bold; text-align: center; color: var(--primary);">
+                    Total: 00:00 h
                 </div>
             </div>
-            <div style="font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 4px; display: flex; justify-content: space-between;">
-                <span>Fiados do Dia:</span>
-                <b id="today-added-debts" style="color: #FFCDD2; font-size: 0.9rem;">0.00€</b>
-            </div>
-        </div>
-        
-        <div class="nav-tabs">
-            <div class="tab active" id="tab-ruta" onclick="switchClientTab('ruta')">Hoje (<span id="day-name"></span>)</div>
-            <div class="tab" id="tab-todos" onclick="switchClientTab('todos')">Todos</div>
-        </div>
-        <div class="client-list-container" id="list"></div>
-        <button class="fixed-add-btn" onclick="openAddModal()">+</button>
-    </section>
+        </section>
 
-    <section id="view-jornada" class="app-view">
-        <div class="hours-card">
-            <h2>Registro de Jornada</h2>
-            <div id="status" class="status">Fuera del trabajo</div>
-            <button id="btnIn" class="btn-job btn-plus" style="color:white;">Registrar Entrada</button>
-            <div id="active-actions" style="display:none; flex-direction:column; gap:8px;">
-                <div style="display:flex; gap:8px;">
-                    <button id="btnPause" class="btn-job" style="background-color:#f39c12; color:white; flex:1;">Pausar</button>
-                    <button id="btnResume" class="btn-job" style="display:none; background-color:#2980b9; color:white; flex:1;">Reanudar</button>
-                </div>
-                <button id="btnOut" class="btn-job btn-minus" style="color:white;">Registrar Salida</button>
-            </div>
-        </div>
-        <div class="hours-card">
-            <h2>Horas Acumuladas (Lunes a Sábado)</h2>
-            <table class="hours-table">
-                <thead>
-                    <tr><th>Día</th><th>Trabajado</th><th>Pausas</th></tr>
-                </thead>
-                <tbody id="daysTable"></tbody>
-            </table>
-            <div style="margin-top: 15px; overflow: hidden;">
-                <div class="total-hours" id="weeklyTotal">Total Semana: 0.00 hrs</div>
-                <div class="total-hours" id="weeklyPauses" style="font-size: 0.95rem; color: #7f8c8d;">Total Pausas: 0.00 hrs</div>
-                <div class="overtime" id="weeklyOvertime" style="display:none;">Horas Extra: 0.00 hrs</div>
-            </div>
-            <button id="btnReset" class="btn-job" style="background-color:#7f8c8d; color:white; margin-top:15px;">Restablecer Semana</button>
-        </div>
-    </section>
+    </div>
 
+    <!-- NAVEGACIÓN INFERIOR REORDENADA -->
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="switchView('calculadora', this)">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 14h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2zm-4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2zm-4 8H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2z"/></svg>
-            Calculadora
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+            <span>Calculadora</span>
         </div>
-        <div class="nav-item" onclick="switchView('clientes', this)">
-            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-            Clientes
+        
+        <div class="nav-item" onclick="switchView('encomendas', this)">
+            <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03L21.42 4.5c.17-.31.08-.69-.22-.87-.29-.17-.67-.09-.85.2L16.55 9H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63z"/></svg>
+            <span>Encomendas</span>
         </div>
+        
+        <div class="nav-item" onclick="switchView('fiados', this)">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 1.34 5 3s1.34 3 8 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            <span>Fiados</span>
+        </div>
+        
         <div class="nav-item" onclick="switchView('jornada', this)">
-            <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
-            Jornada
+            <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+            <span>Jornada</span>
         </div>
     </nav>
 
 </div>
 
-<div class="modal" id="m-manage">
-    <div class="modal-content">
-        <h3 id="cname">Cliente</h3>
-        <div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #eee; font-size: 0.9rem; display: flex; flex-direction: column; gap: 5px;">
-            <div style="display: flex; justify-content: space-between;"><span>Dívida Registada:</span> <b id="cbalance" style="color:var(--danger);">0.00€</b></div>
-            <div style="display: flex; justify-content: space-between; color: var(--primary);"><span>Compra na Calculadora:</span> <b id="m-calc-total">0.00€</b></div>
-            <div style="display: flex; justify-content: space-between; border-top: 1px dashed #ccc; padding-top: 5px; font-weight: bold; font-size: 1rem;"><span>Total Combinado:</span> <b id="m-combined-total" style="color:var(--success);">0.00€</b></div>
-        </div>
-        
-        <div style="display: flex; gap: 8px; margin: 10px 0;">
-            <button style="background:var(--success); color:white; border:none; padding:12px; border-radius:5px; flex: 1; font-weight:bold; cursor:pointer; font-size: 0.85rem;" onclick="payAll()">✓ PAGAR TUDO</button>
-            <button style="background:#7f8c8d; color:white; border:none; padding:12px; border-radius:5px; flex: 1; font-weight:bold; cursor:pointer; font-size: 0.85rem;" onclick="notPaid()">❌ Não pagou / Acumular</button>
-        </div>
-        
-        <div style="margin: 15px 0; border-top: 1px dashed #ccc; padding-top: 10px;">
-            <label style="font-size:0.85rem; font-weight:bold; display:block;">Editar Nome:</label>
-            <input type="text" id="m-name" class="input-num">
-            <label style="font-size:0.85rem; font-weight:bold; display:block; margin-top:8px;">Editar Dias de entrega:</label>
-            <div class="checkbox-group" id="m-days">
-                <label><input type="checkbox" value="Segunda-feira"> Seg</label>
-                <label><input type="checkbox" value="Terça-feira"> Ter</label>
-                <label><input type="checkbox" value="Quarta-feira"> Qua</label>
-                <label><input type="checkbox" value="Quinta-feira"> Qui</label>
-                <label><input type="checkbox" value="Sexta-feira"> Sex</label>
-                <label><input type="checkbox" value="Sábado"> Sáb</label>
-            </div>
-        </div>
-        <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
-
-        <input type="number" step="0.01" id="v-correct" class="input-num" placeholder="Corrigir Saldo Total (Substituir)" style="border:2px solid #f39c12; background:#FFFDE7; font-weight:bold;">
-        
-        <input type="number" step="0.01" id="v-add" class="input-num" placeholder="Adicionar nova dívida (+)">
-        <input type="number" step="0.01" id="v-sub" class="input-num" placeholder="Pagar uma parte (-)">
-        <button onclick="saveManagement()" style="width:100%; padding:10px; margin-top:10px; background:var(--primary); color:white; border:none; font-weight:bold; cursor:pointer;">Guardar Alterações</button>
-        <button style="background:var(--danger); color:white; border:none; padding:10px; border-radius:5px; width:100%; font-weight:bold; margin-top:15px; cursor:pointer;" onclick="deleteClient()">🗑 Eliminar Cliente</button>
-        <button onclick="document.getElementById('m-manage').style.display='none'" style="width:100%; padding:10px; margin-top:10px; cursor:pointer;">Fechar</button>
-    </div>
-</div>
-
-<div class="modal" id="m-add">
-    <div class="modal-content">
-        <h3>Novo Cliente</h3>
-        <input type="text" id="n-name" placeholder="Nome" class="input-num">
-        <label style="font-size:0.85rem; font-weight:bold; display:block; margin-top:10px;">Aldeia:</label>
-        <select id="n-village" class="input-num"></select>
-        <label style="font-size:0.85rem; font-weight:bold; display:block; margin-top:10px;">Dias de entrega:</label>
-        <div class="checkbox-group" id="n-days">
-            <label><input type="checkbox" value="Segunda-feira"> Seg</label>
-            <label><input type="checkbox" value="Terça-feira"> Ter</label>
-            <label><input type="checkbox" value="Quarta-feira"> Qua</label>
-            <label><input type="checkbox" value="Quinta-feira"> Qui</label>
-            <label><input type="checkbox" value="Sexta-feira"> Sex</label>
-            <label><input type="checkbox" value="Sábado"> Sáb</label>
-        </div>
-        <input type="number" step="0.01" id="n-balance" placeholder="Dívida Inicial (€)" class="input-num" style="border:2px solid var(--danger); background:#FFF5F5; margin-top:15px; font-weight:bold;">
-        
-        <label style="font-size:0.85rem; font-weight:bold; display:flex; align-items:center; gap:6px; margin: 8px 2px 0 2px; color:#333; cursor:pointer;">
-            <input type="checkbox" id="n-add-to-daily" checked style="width:16px; height:16px; cursor:pointer;">
-            Somar a Fiados do Dia
-        </label>
-
-        <button onclick="registerClient()" style="width:100%; padding:10px; margin-top:15px; background:var(--success); color:white; border:none; font-weight:bold; cursor:pointer;">GUARDAR REGISTO</button>
-        <button onclick="document.getElementById('m-add').style.display='none'" style="width:100%; padding:10px; margin-top:5px; cursor:pointer;">Cancelar</button>
-    </div>
-</div>
-
-<div class="modal" id="m-history">
-    <div class="modal-content" style="padding: 15px;">
-        <div class="cal-header">
-            <button onclick="changeMonth(-1)" style="padding:5px 10px; background:#eee; border:none; font-weight:bold; cursor:pointer;">◀</button>
-            <span id="cal-month-year"></span>
-            <button onclick="changeMonth(1)" style="padding:5px 10px; background:#eee; border:none; font-weight:bold; cursor:pointer;">▶</button>
-        </div>
-        <div class="cal-grid" id="calendar-grid"></div>
-        <h4 id="selected-date-title" style="margin: 15px 0 5px 0; border-top: 1px solid #ddd; padding-top: 10px;">Movimentos do dia</h4>
-        <div id="history-log" style="max-height: 22vh; overflow-y: auto; border: 1px solid #ddd; background: #fafafa; border-radius: 5px; margin-bottom: 10px;"></div>
-        <button onclick="clearFullHistory()" style="width:100%; padding:8px; background:var(--danger); color:white; border:none; font-weight:bold; cursor:pointer; border-radius:4px; font-size:0.85rem;">🗑 Limpar Todo o Histórico</button>
-        <button onclick="document.getElementById('m-history').style.display='none'" style="width:100%; padding:10px; margin-top:8px; cursor:pointer; font-weight:bold;">Fechar</button>
-    </div>
-</div>
-
 <script>
-    // --- CONTROL DE NAVEGACIÓN ---
-    function switchView(viewId, element) {
-        document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active-view'));
-        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-        document.getElementById('view-' + viewId).classList.add('active-view');
-        element.classList.add('active');
-    }
-
-    // ==================== LÓGICA: CALCULADORA ====================
-    const originalProductsOrder = [
-        { id: 'pcg', name: 'Pão Grande Caseiro', normal: 2.60, special: 2.40, isLargeVolume: false },
-        { id: 'pcg_fat', name: 'Pão Grande Caseiro Fatiado', normal: 2.85, special: 2.65, isLargeVolume: false },
-        { id: 'pcp', name: 'Pão Pequeno Caseiro', normal: 1.70, special: 1.60, isLargeVolume: false },
-        { id: 'pcp_fat', name: 'Pão Pequeno Caseiro Fatiado', normal: 1.95, special: 1.85, isLargeVolume: false },
-        { id: 'pmg', name: 'Pão Grande Mistura', normal: 1.90, special: 1.80, isLargeVolume: false },
-        { id: 'pmg_fat', name: 'Pão Grande Mistura Fatiado', normal: 2.15, special: 2.05, isLargeVolume: false },
-        { id: 'pmp', name: 'Pão Pequeno Mistura', normal: 1.30, special: 1.20, isLargeVolume: false },
-        { id: 'pmp_fat', name: 'Pão Pequeno Mistura Fatiado', normal: 1.55, special: 1.45, isLargeVolume: false },
-        { id: 'miu', name: 'Bolas, Paposecos, Bicos', normal: 0.30, special: 0.28, isLargeVolume: true },
-        { id: 'bda', name: 'Bolas de Água', normal: 0.35, special: 0.35, isLargeVolume: true },
-        { id: 'pch', name: 'Pão com Chouriço', normal: 1.80, special: 1.80, isLargeVolume: false },
-        { id: 'spt', name: 'Saco Pão Triturado', normal: 8.00, special: 8.00, isLargeVolume: false },
-        { id: 'cap', name: 'Capeludas', normal: 0.85, special: 0.75, isLargeVolume: true },
-        { id: 'pin', name: 'Pão Integral', normal: 0.90, special: 0.80, isLargeVolume: false }
-    ];
-
-    let productsData = [...originalProductsOrder];
-    let cart = {};
-    let totalDiario = parseFloat(localStorage.getItem('totalDiario')) || 0;
-    let popularity = JSON.parse(localStorage.getItem('padaria_popularity')) || {};
-    let calcHistory = JSON.parse(localStorage.getItem('calcHistory')) || [];
-
-    productsData.forEach(p => cart[p.id] = 0);
-
-    function sortProducts() {
-        productsData.sort((a, b) => {
-            const popA = popularity[a.id] || 0; const popB = popularity[b.id] || 0;
-            if (popB !== popA) return popB - popA;
-            return (a.isLargeVolume ? 1 : 0) - (b.isLargeVolume ? 1 : 0);
-        });
-    }
-
-    function getCalculatedPrice(p) {
-        return document.getElementById('switch-br').checked ? p.special : p.normal;
-    }
-
-    function renderProducts() {
-        const container = document.getElementById('products-container');
-        container.innerHTML = '';
-        productsData.forEach(p => {
-            const currentPrice = getCalculatedPrice(p); const qty = cart[p.id]; const itemSubtotal = qty * currentPrice;
-            const badgeClass = qty > 0 ? 'qty-badge' : 'qty-badge zero';
-            const subtotalClass = qty > 0 ? 'product-subtotal' : 'product-subtotal zero';
-            const card = document.createElement('div'); card.className = 'product-card';
-            let buttonsHtml = p.isLargeVolume ? `
-                <div class="card-buttons btn-double-layout">
-                    <div class="btn-row"><button class="btn btn-minus" onclick="changeQty('${p.id}', -1)">-1</button><button class="btn btn-plus" onclick="changeQty('${p.id}', 1)">+1</button></div>
-                    <div class="btn-row"><button class="btn btn-minus" onclick="changeQty('${p.id}', -5)">-5</button><button class="btn btn-plus" onclick="changeQty('${p.id}', 5)">+5</button></div>
-                </div>` : `
-                <div class="card-buttons btn-normal-layout">
-                    <button class="btn btn-minus" onclick="changeQty('${p.id}', -1)">-</button><button class="btn btn-plus" onclick="changeQty('${p.id}', 1)">+</button>
-                </div>`;
-            card.innerHTML = `
-                <span class="${badgeClass}" id="badge-${p.id}">${qty}</span>
-                <div class="product-info">
-                    <div class="product-name">${p.name}</div>
-                    <div class="product-meta">
-                        <span class="product-price" id="price-${p.id}">Preço Un.: ${currentPrice.toFixed(2)} €</span>
-                        <span class="${subtotalClass}" id="subtotal-${p.id}">Total: ${itemSubtotal.toFixed(2)} €</span>
-                    </div>
-                </div>${buttonsHtml}`;
-            container.appendChild(card);
-        });
-        document.getElementById('total-diario').innerText = totalDiario.toFixed(2) + ' €';
-    }
-
-    function changeQty(id, delta) {
-        cart[id] = Math.max(0, cart[id] + delta);
-        document.getElementById(`badge-${id}`).innerText = cart[id];
-        document.getElementById(`badge-${id}`).className = cart[id] > 0 ? 'qty-badge' : 'qty-badge zero';
-        const p = productsData.find(prod => prod.id === id);
-        const currentPrice = getCalculatedPrice(p);
-        const subtotalSpan = document.getElementById(`subtotal-${id}`);
-        subtotalSpan.innerText = `Total: ${(cart[id] * currentPrice).toFixed(2)} €`;
-        subtotalSpan.className = cart[id] > 0 ? 'product-subtotal' : 'product-subtotal zero';
-        calcularTotalCliente();
-    }
-
-    function updatePricesDisplay() {
-        productsData.forEach(p => {
-            const currentPrice = getCalculatedPrice(p);
-            if (document.getElementById('price-' + p.id)) document.getElementById('price-' + p.id).innerText = `Preço Un.: ${currentPrice.toFixed(2)} €`;
-            if (document.getElementById('subtotal-' + p.id)) document.getElementById('subtotal-' + p.id).innerText = `Total: ${(cart[p.id] * currentPrice).toFixed(2)} €`;
-        });
-        calcularTotalCliente();
-    }
-
-    function calcularTotalCliente() {
-        let total = 0;
-        productsData.forEach(p => { total += cart[p.id] * getCalculatedPrice(p); });
-        document.getElementById('total-cliente').innerText = total.toFixed(2) + ' €';
-        calcularTroco();
-        return total;
-    }
-
-    function calcularTroco() {
-        const total = parseFloat(document.getElementById('total-cliente').innerText) || 0;
-        const recebido = parseFloat(document.getElementById('dinheiro-recebido').value) || 0;
-        const troco = recebido - total;
-        
-        if (recebido <= 0 || troco < 0) {
-            document.getElementById('calc-troco').innerText = "Troco: 0.00 €";
-            document.getElementById('calc-troco').style.color = "var(--danger)";
-        } else {
-            document.getElementById('calc-troco').innerText = `Troco: ${troco.toFixed(2)} €`;
-            document.getElementById('calc-troco').style.color = "var(--success)";
-        }
-    }
-
-    function limparClienteAtual() {
-        productsData.forEach(p => cart[p.id] = 0);
-        document.getElementById('total-cliente').innerText = '0.00 €';
-        document.getElementById('dinheiro-recebido').value = '';
-        document.getElementById('calc-troco').innerText = 'Troco: 0.00 €';
-        document.getElementById('calc-troco').style.color = "var(--success)";
-        renderProducts();
-    }
-
-    function guardarCliente() {
-        let totalCliente = calcularTotalCliente();
-        if (totalCliente === 0) return;
-        totalDiario += totalCliente;
-        localStorage.setItem('totalDiario', totalDiario);
-        
-        calcHistory.unshift(totalCliente);
-        if (calcHistory.length > 3) calcHistory.pop();
-        localStorage.setItem('calcHistory', JSON.stringify(calcHistory));
-        updateHistoryUI();
-
-        productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
-        localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
-        limparClienteAtual();
-        sortProducts();
-        renderProducts();
-        document.getElementById('view-calculadora').scrollTo(0, 0);
-    }
-
-    function updateHistoryUI() {
-        document.getElementById('hist-1').innerText = calcHistory[0] ? `1°: ${calcHistory[0].toFixed(2)} €` : '-';
-        document.getElementById('hist-2').innerText = calcHistory[1] ? `2°: ${calcHistory[1].toFixed(2)} €` : '-';
-        document.getElementById('hist-3').innerText = calcHistory[2] ? `3°: ${calcHistory[2].toFixed(2)} €` : '-';
-    }
-
-    function deshacerUltimoTotal() {
-        if (calcHistory.length === 0) {
-            alert("Nenhum valor para desfazer no histórico.");
-            return;
-        }
-        let valorADesfazer = calcHistory.shift();
-        totalDiario = Math.max(0, totalDiario - valorADesfazer);
-        localStorage.setItem('totalDiario', totalDiario);
-        localStorage.setItem('calcHistory', JSON.stringify(calcHistory));
-        
-        document.getElementById('total-diario').innerText = totalDiario.toFixed(2) + ' €';
-        updateHistoryUI();
-        alert(`Removido: -${valorADesfazer.toFixed(2)} € do Total Diário.`);
-    }
-
-    let pressTimer, isLongPress = false;
-    function startPress() { isLongPress = false; pressTimer = window.setTimeout(() => { isLongPress = true; resetFabrica(); }, 3000); }
-    function cancelPress() { window.clearTimeout(pressTimer); }
-    function handleClearClick() { if (!isLongPress) resetDiario(); }
-
-    setTimeout(() => {
-        const btnClearD = document.getElementById('btn-clear-daily');
-        if(btnClearD) {
-            btnClearD.addEventListener('mousedown', startPress);
-            btnClearD.addEventListener('touchstart', startPress, {passive: true});
-            btnClearD.addEventListener('mouseup', cancelPress);
-            btnClearD.addEventListener('mouseleave', cancelPress);
-            btnClearD.addEventListener('touchend', cancelPress);
-        }
-    }, 500);
-
-    function resetDiario() {
-        if (confirm('Tem a certeza de que deseja limpar o Total Diário y o histórico recente?')) {
-            totalDiario = 0; localStorage.removeItem('totalDiario');
-            calcHistory = []; localStorage.removeItem('calcHistory');
-            document.getElementById('total-diario').innerText = '0.00 €';
-            updateHistoryUI();
-        }
-    }
-
-    function resetFabrica() {
-        if (confirm('⚠️ ATENÇÃO: Deseja repor as definições de FÁBRICA?')) {
-            totalDiario = 0; popularity = {}; calcHistory = [];
-            localStorage.removeItem('totalDiario'); localStorage.removeItem('padaria_popularity'); localStorage.removeItem('calcHistory');
-            productsData = [...originalProductsOrder]; limparClienteAtual();
-            document.getElementById('total-diario').innerText = '0.00 €';
-            updateHistoryUI();
-            alert('Aplicação reiniciada com sucesso!');
-        }
-    }
-
-
-    // ==================== LÓGICA: CLIENTES ====================
-    const masterVillages = ["Abrunheiro Grande", "Abrunheiro Pequeno","Agua Formosa", "Agua Formosa Contrario", "Aivado", "Aldeia do Couço", "Aveleira", "Boafarinha", "Borda da Ribeira", "Borreiros", "Brejo Cimeiro", "Cabeça do Poço", "Casal Cimeiro", "Cercadas", "Estevais", "Fouto", "Fundada", "Lagoa", "Lousa", "Melriça", "Monte Novo", "Penedo", "Pisão Fundeiro", "Portela", "Relva", "Relva do Boi", "Ribeira", "Seada", "Trutas", "Valadas", "Vale da Urra", "Vale das Casas", "Vale do Grou", "Vila de Rei Lares", "Vilar", "Vilar do Ruivo"].sort();
-    const diasSemana = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
-    const hoy = diasSemana[new Date().getDay()];
+// Lógica de navegación entre pantallas
+function switchView(viewId, element) {
+    document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active-view'));
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
     
-    document.getElementById('day-name').innerText = hoy.split('-')[0];
+    document.getElementById('view-' + viewId).classList.add('active-view');
+    element.classList.add('active');
+}
 
-    let clients = JSON.parse(localStorage.getItem('clients') || '[]');
-    let villageOrder = JSON.parse(localStorage.getItem('villageOrder') || '[]');
-    let logs = JSON.parse(localStorage.getItem('transactionLogs') || '[]');
-    let currentClientTab = 'ruta';
-    let targetId = null;
+// Lógica de Jornada adaptada a formato de hora estricto (24h - HH:MM)
+function calcularJornada() {
+    const inicio = document.getElementById('hora-inicio').value;
+    const fim = document.getElementById('hora-fim').value;
     
-    let dailyData = JSON.parse(localStorage.getItem('dailyData') || '{"date":"","received":0,"added":0}');
-    if (dailyData.amount !== undefined) { 
-        dailyData.received = dailyData.amount; dailyData.added = 0; delete dailyData.amount; 
-    }
-
-    let currentCalDate = new Date();
-    let selectedDateStr = "";
-
-    function initClientLogic() {
-        const selectVillage = document.getElementById('n-village');
-        selectVillage.innerHTML = '';
-        masterVillages.forEach(v => {
-            let opt = document.createElement('option');
-            opt.value = v; opt.innerText = v; selectVillage.appendChild(opt);
-        });
-
-        if(villageOrder.length === 0) {
-            villageOrder = [...masterVillages];
-        } else {
-            masterVillages.forEach(v => {
-                if (!villageOrder.includes(v)) villageOrder.push(v);
-            });
-        }
-        localStorage.setItem('villageOrder', JSON.stringify(villageOrder));
-
-        const todayStr = getTodayString();
-        if (dailyData.date !== todayStr) {
-            dailyData = { date: todayStr, received: 0, added: 0 };
-            localStorage.setItem('dailyData', JSON.stringify(dailyData));
-        }
-        updateEarningsDisplay();
-        renderClients();
-        const d = new Date();
-        selectedDateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-    }
-
-    function updateEarningsDisplay() {
-        document.getElementById('today-earnings').innerText = dailyData.received.toFixed(2) + "€";
-        document.getElementById('today-added-debts').innerText = dailyData.added.toFixed(2) + "€";
-    }
-
-    function addPaymentToDaily(val) {
-        if (val > 0) {
-            dailyData.received += val;
-            localStorage.setItem('dailyData', JSON.stringify(dailyData));
-            updateEarningsDisplay();
-        }
-    }
-
-    function addDebtToDaily(val) {
-        if (val > 0) {
-            dailyData.added += val;
-            localStorage.setItem('dailyData', JSON.stringify(dailyData));
-            updateEarningsDisplay();
-        }
-    }
-
-    // MODIFICADO: AHORA SOPORTA EL FLAG 'isDaily' PARA EVITAR CORRUPCIÓN DE LOS TOTALES AL ANULAR
-    function logAction(clientName, type, amount, isDaily = true) {
-        const d = new Date();
-        const dateFormatted = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-        const timeFormatted = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-        logs.unshift({ date: dateFormatted, time: timeFormatted, name: clientName, type: type, amount: amount, isDaily: isDaily });
-        localStorage.setItem('transactionLogs', JSON.stringify(logs));
-    }
-
-    function openHistoryModal() { document.getElementById('m-history').style.display = 'flex'; renderCalendar(); }
-
-    function renderCalendar() {
-        const grid = document.getElementById('calendar-grid');
-        const monthYearLabel = document.getElementById('cal-month-year');
-        grid.innerHTML = '';
-        const year = currentCalDate.getFullYear();
-        const month = currentCalDate.getMonth();
-        const meses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Octubro", "Novembro", "Dezembro"];
-        monthYearLabel.innerText = `${meses[month]} ${year}`;
-        const diasCc = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-        diasCc.forEach(d => { grid.innerHTML += `<div class="cal-day-name">${d}</div>`; });
-        const firstDayIndex = new Date(year, month, 1).getDay();
-        const totalDays = new Date(year, month + 1, 0).getDate();
-        for (let i = 0; i < firstDayIndex; i++) { grid.innerHTML += `<div class="cal-cell empty"></div>`; }
-        for (let day = 1; day <= totalDays; day++) {
-            const dateStr = `${String(day).padStart(2, '0')}/${String(month + 1).padStart(2, '0')}/${year}`;
-            const hasData = logs.some(l => l.date === dateStr);
-            const isSelected = selectedDateStr === dateStr ? 'selected' : '';
-            const dataClass = hasData ? 'has-data' : '';
-            grid.innerHTML += `<div class="cal-cell ${isSelected} ${dataClass}" onclick="selectCalendarDate('${dateStr}')">${day}</div>`;
-        }
-        renderDayLogs();
-    }
-
-    function changeMonth(dir) { currentCalDate.setMonth(currentCalDate.getMonth() + dir); renderCalendar(); }
-    function selectCalendarDate(dateStr) { selectedDateStr = dateStr; renderCalendar(); }
-
-    function renderDayLogs() {
-        document.getElementById('selected-date-title').innerText = `Movimentos do dia`;
-        const logBox = document.getElementById('history-log');
-        logBox.innerHTML = '';
-        
-        let count = 0;
-        let totalCobradoDia = 0;
-        
-        logs.forEach((l, idx) => {
-            if (l.date !== selectedDateStr) return;
-            count++;
-            
-            let typeText = '';
-            let color = '';
-            let icon = '';
-            
-            if (l.type === 'pay') {
-                typeText = '✓ Pagou';
-                color = 'var(--success)';
-                icon = '🟢';
-                totalCobradoDia += l.amount;
-            } else if (l.type === 'add') {
-                typeText = l.isDaily === false ? '➔ Dívida Inicial (+)' : '➔ Dívida (+)';
-                color = 'var(--danger)';
-                icon = '🔴';
-            } else if (l.type === 'correction') {
-                typeText = '🛠 Corr. Saldo';
-                color = '#f39c12';
-                icon = '🔵';
-            }
-            
-            logBox.innerHTML += `
-                <div class="history-item" style="position: relative; padding-right: 65px; min-height: 38px; display: flex; flex-direction: column; justify-content: center;">
-                    <div><b>${l.name}</b> <small style="color:#757575; float:right; margin-right:5px;">${l.time}</small></div>
-                    <span style="color:${color}; font-weight:bold;">${icon} ${typeText}: ${l.amount.toFixed(2)}€</span>
-                    <button onclick="anularMovimento(${idx})" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: var(--danger); color: white; border: none; padding: 5px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer;">Anular</button>
-                </div>`;
-        });
-        
-        if (count === 0) {
-            logBox.innerHTML = '<p style="text-align:center; color:#757575; padding:15px; margin:0; font-size:0.85rem;">Nenhum movimento neste dia.</p>';
-            return;
-        }
-        logBox.innerHTML += `<div style="padding:10px; background:#E8F5E9; font-weight:bold; text-align:center; font-size:0.9rem; color:#2E7D32;">💰 Total Fiados Recebidos: ${totalCobradoDia.toFixed(2)}€</div>`;
-    }
-
-    // MODIFICADO: AHORA FILTRA ADECUADAMENTE SI EL REGISTRO AFECTABA O NO A LOS FILTROS DIARIOS (isDaily)
-    function anularMovimento(index) {
-        if (index < 0 || index >= logs.length) return;
-        let l = logs[index];
-        
-        if (!confirm(`Deseja anular o movimento de "${l.name}" de ${l.amount.toFixed(2)}€? Saldo e totais serão corrigidos.`)) {
-            return;
-        }
-        
-        let c = clients.find(x => x.name === l.name);
-        if (c) {
-            if (l.type === 'pay') {
-                c.balance += l.amount; 
-            } else if (l.type === 'add') {
-                c.balance = Math.max(0, c.balance - l.amount); 
-            }
-            c.lastModified = ""; 
-        }
-        
-        const d = new Date();
-        const todayFormatted = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-        if (l.date === todayFormatted && l.isDaily !== false) {
-            if (l.type === 'pay') {
-                dailyData.received = Math.max(0, dailyData.received - l.amount);
-            } else if (l.type === 'add') {
-                dailyData.added = Math.max(0, dailyData.added - l.amount);
-            }
-            localStorage.setItem('dailyData', JSON.stringify(dailyData));
-            updateEarningsDisplay();
-        }
-        
-        logs.splice(index, 1);
-        localStorage.setItem('transactionLogs', JSON.stringify(logs));
-        localStorage.setItem('clients', JSON.stringify(clients));
-        
-        renderCalendar();
-        renderClients();
-    }
-
-    // NUEVA FUNCIÓN: ACCIÓN RÁPIDA DE DESFAZER SIN ENTRAR AL HISTÓRICO
-    function anularUltimoMovimentoRapido() {
-        if (logs.length === 0) {
-            alert("Nenhum movimento registrado para anular.");
-            return;
-        }
-        // El elemento 0 siempre es el más reciente de toda la aplicación
-        anularMovimento(0);
-    }
-
-    function clearFullHistory() {
-        if (confirm("Tem certeza que deseja apagar permanentemente TODO o histórico?")) {
-            logs = []; localStorage.setItem('transactionLogs', JSON.stringify(logs)); renderCalendar();
-        }
-    }
-
-    function resetDailyEarnings() {
-        if(confirm("Deseja zerar os valores de Fiados Recebidos e Fiados do Dia de volta a 0.00€?")) {
-            dailyData.received = 0;
-            dailyData.added = 0;
-            localStorage.setItem('dailyData', JSON.stringify(dailyData));
-            updateEarningsDisplay();
-        }
-    }
-
-    function openAddModal() {
-        document.getElementById('n-name').value = ''; document.getElementById('n-balance').value = '';
-        document.getElementById('n-village').selectedIndex = 0;
-        document.querySelectorAll('#n-days input').forEach(cb => cb.checked = false);
-        document.getElementById('n-add-to-daily').checked = true; // Por defecto seleccionado
-        document.getElementById('m-add').style.display = 'flex';
-    }
-
-    function switchClientTab(t) { currentClientTab = t; document.getElementById('tab-ruta').classList.toggle('active', t==='ruta'); document.getElementById('tab-todos').classList.toggle('active', t==='todos'); renderClients(); }
-    function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
-
-    // MODIFICADO: AHORA EVALÚA EL CHECKBOX ANTES DE SUMAR EL VALOR A LOS TOTALES DEL DÍA
-    function registerClient() {
-        const name = document.getElementById('n-name').value.trim();
-        const village = document.getElementById('n-village').value;
-        const days = Array.from(document.querySelectorAll('#n-days input:checked')).map(i => i.value);
-        const balance = parseFloat(document.getElementById('n-balance').value) || 0;
-        if(!name) return alert("Por favor, introduza un nome.");
-        
-        // Obtener estado del nuevo checkbox
-        const addToDaily = document.getElementById('n-add-to-daily').checked;
-
-        clients.push({ id: Date.now(), name, village, days, balance, lastModified: balance > 0 ? getTodayString() : "" });
-        if (balance > 0) { 
-            // Se envía 'addToDaily' como parámetro para saber si el log debe afectar los totales si se anula
-            logAction(name, 'add', balance, addToDaily);
-            if (addToDaily) {
-                addDebtToDaily(balance);
-            }
-        }
-        localStorage.setItem('clients', JSON.stringify(clients));
-        document.getElementById('m-add').style.display = 'none'; 
-        updateEarningsDisplay();
-        renderClients();
-    }
-
-    function renderClients() {
-        const list = document.getElementById('list'); list.innerHTML = '';
-        if(currentClientTab === 'ruta') {
-            let activeRouteClients = clients.filter(c => c.balance > 0 && c.days.includes(hoy) && c.lastModified !== getTodayString());
-            activeRouteClients.sort((a, b) => {
-                const villageDiff = villageOrder.indexOf(a.village) - villageOrder.indexOf(b.village);
-                if (villageDiff !== 0) return villageDiff;
-                return clients.findIndex(c => c.id === a.id) - clients.findIndex(c => c.id === b.id);
-            });
-            if(activeRouteClients.length === 0) {
-                list.innerHTML = `<p style="text-align:center; color:#757575; margin-top:30px;">Rota concluída ou sem clientes pendentes hoje (${hoy.split('-')[0]}).</p>`; return;
-            }
-            activeRouteClients.forEach(c => {
-                list.innerHTML += `<div class="client-card" onclick="openClientManagementModal(${c.id})"><div style="flex:1;"><strong>${c.name}</strong><br><small>${c.village}</small></div><b style="color:var(--danger); margin-right:10px;">${c.balance.toFixed(2)}€</b></div>`;
-            });
-        } else {
-            const activeVillages = villageOrder.filter(v => clients.some(c => c.village === v));
-            if(activeVillages.length === 0) {
-                list.innerHTML = `<p style="text-align:center; color:#757575; margin-top:30px;">Nenhum cliente registado.</p>`; return;
-            }
-            activeVillages.forEach(v => {
-                const group = clients.filter(c => c.village === v);
-                let groupHtml = `<div class="village-group" data-village="${v}"><div class="village-header"><span onclick="let box = this.parentElement.nextElementSibling; box.style.display=(box.style.display==='none'?'block':'none')" style="cursor:pointer; flex:1;">📍 ${v} (${group.length}) ▾</span><div class="drag-handle handle-v">☰</div></div><div style="display:none" class="client-box" data-village="${v}">`;
-                group.forEach(c => {
-                    groupHtml += `<div class="client-card" data-id="${c.id}" onclick="openClientManagementModal(${c.id})"><div style="flex:1;"><div>${c.name}</div><b style="${c.balance > 0 ? 'color:var(--danger);' : 'color:#9e9e9e;'} font-size:0.9rem;">${c.balance.toFixed(2)}€</b></div><div class="drag-handle handle-c" onclick="event.stopPropagation()">☰</div></div>`;
-                });
-                groupHtml += `</div></div>`; list.innerHTML += groupHtml;
-            });
-            setupDragAndDrop();
-        }
-    }
-
-    function setupDragAndDrop() {
-        let draggedItem = null; let dragType = null;
-        document.querySelectorAll('.handle-v').forEach(handle => {
-            const item = handle.closest('.village-group'); handle.ontouchstart = (e) => { draggedItem = item; dragType = 'village'; item.classList.add('dragging'); }; handle.ontouchend = () => { saveDraggedOrder(); };
-        });
-        document.querySelectorAll('.handle-c').forEach(handle => {
-            const item = handle.closest('.client-card'); handle.ontouchstart = (e) => { draggedItem = item; dragType = 'client'; item.classList.add('dragging'); }; handle.ontouchend = () => { saveDraggedOrder(); };
-        });
-        const container = document.getElementById('list');
-        container.ontouchmove = (e) => {
-            if (!draggedItem) return; e.preventDefault(); const touch = e.touches[0]; const target = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (!target) return;
-            if (dragType === 'village') {
-                const nextGroup = target.closest('.village-group');
-                if (nextGroup && nextGroup !== draggedItem) {
-                    const rect = nextGroup.getBoundingClientRect(); const next = (touch.clientY - rect.top) / (rect.bottom - rect.top) > 0.5; container.insertBefore(draggedItem, next ? nextGroup.nextSibling : nextGroup);
-                }
-            } else if (dragType === 'client') {
-                const pBox = draggedItem.closest('.client-box'); const nextClient = target.closest('.client-card');
-                if (nextClient && nextClient !== draggedItem && nextClient.closest('.client-box') === pBox) {
-                    const rect = nextClient.getBoundingClientRect(); const next = (touch.clientY - rect.top) / (rect.bottom - rect.top) > 0.5; pBox.insertBefore(draggedItem, next ? nextClient.nextSibling : nextClient);
-                }
-            }
-        };
-
-        function saveDraggedOrder() {
-            if (!draggedItem) return; draggedItem.classList.remove('dragging');
-            if (dragType === 'village') {
-                const newOrder = Array.from(document.querySelectorAll('.village-group')).map(el => el.dataset.village); villageOrder = [...newOrder, ...villageOrder.filter(v => !newOrder.includes(v))]; localStorage.setItem('villageOrder', JSON.stringify(villageOrder));
-            } else if (dragType === 'client') {
-                const vName = draggedItem.closest('.client-box').dataset.village; const newClientIds = Array.from(document.querySelectorAll(`.client-box[data-village="${vName}"] .client-card`)).map(el => parseInt(el.dataset.id)); let remainingClients = clients.filter(c => c.village !== vName); let reorderedGroup = newClientIds.map(id => clients.find(c => c.id === id)); clients = [...remainingClients, ...reorderedGroup]; localStorage.setItem('clients', JSON.stringify(clients));
-            }
-            draggedItem = null; dragType = null; renderClients();
-        }
-    }
-
-    function openClientManagementModal(id) { 
-        targetId = id; 
-        let c = clients.find(x => x.id === id); 
-        document.getElementById('cname').innerText = c.name; 
-        document.getElementById('cbalance').innerText = c.balance.toFixed(2) + "€"; 
-        
-        let currentCalcTotal = parseFloat(document.getElementById('total-cliente').innerText) || 0;
-        document.getElementById('m-calc-total').innerText = currentCalcTotal.toFixed(2) + "€";
-        
-        let combinedTotal = c.balance + currentCalcTotal;
-        document.getElementById('m-combined-total').innerText = combinedTotal.toFixed(2) + "€";
-
-        document.getElementById('m-name').value = c.name;
-        document.querySelectorAll('#m-days input').forEach(cb => {
-            cb.checked = c.days.includes(cb.value);
-        });
-
-        document.getElementById('v-add').value = ''; 
-        document.getElementById('v-sub').value = ''; 
-        document.getElementById('v-correct').value = ''; 
-        document.getElementById('m-manage').style.display = 'flex'; 
+    if (!inicio || !fim) return;
+    
+    // Desglosar horas y minutos
+    const [hInicio, mInicio] = inicio.split(':').map(Number);
+    let [hFim, mFim] = fim.split(':').map(Number);
+    
+    // Gestión si la jornada cruza la medianoche (reparto de madrugada)
+    if (hFim < hInicio || (hFim === hInicio && mFim < mInicio)) {
+        hFim += 24;
     }
     
-    function payAll() { 
-        let c = clients.find(x => x.id === targetId);
-        let currentCalcTotal = parseFloat(document.getElementById('total-cliente').innerText) || 0;
-        let combinedTotal = c.balance + currentCalcTotal;
-
-        if (combinedTotal > 0) { 
-            addPaymentToDaily(combinedTotal); 
-            logAction(c.name, 'pay', combinedTotal); 
-        }
-        
-        if (currentCalcTotal > 0) {
-            productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
-            localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
-        }
-
-        c.balance = 0; 
-        c.lastModified = getTodayString(); 
-        
-        limparClienteAtual();
-        sortProducts();
-        renderProducts();
-
-        localStorage.setItem('clients', JSON.stringify(clients)); 
-        document.getElementById('m-manage').style.display = 'none'; 
-        updateEarningsDisplay();
-        renderClients(); 
-    }
-
-    function notPaid() {
-        let c = clients.find(x => x.id === targetId);
-        let currentCalcTotal = parseFloat(document.getElementById('total-cliente').innerText) || 0;
-        
-        if (currentCalcTotal > 0) {
-            c.balance += currentCalcTotal;
-            logAction(c.name, 'add', currentCalcTotal);
-            addDebtToDaily(currentCalcTotal);
-            
-            productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
-            localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
-        }
-        
-        c.lastModified = getTodayString();
-        limparClienteAtual();
-        sortProducts();
-        renderProducts();
-
-        localStorage.setItem('clients', JSON.stringify(clients));
-        document.getElementById('m-manage').style.display = 'none';
-        updateEarningsDisplay();
-        renderClients();
-    }
+    // Convertir todo a minutos absolutos para evitar errores decimales
+    const totalMinutosInicio = hInicio * 60 + mInicio;
+    const totalMinutosFim = hFim * 60 + mFim;
     
-    function saveManagement() { 
-        let c = clients.find(x => x.id === targetId); 
-        
-        const nuevoNombre = document.getElementById('m-name').value.trim();
-        if(!nuevoNombre) return alert("Por favor, introduza um nome válido.");
-        c.name = nuevoNombre;
-        c.days = Array.from(document.querySelectorAll('#m-days input:checked')).map(i => i.value);
-
-        const correctInput = document.getElementById('v-correct').value.trim();
-        if (correctInput !== "") {
-            const newBal = parseFloat(correctInput);
-            if (!isNaN(newBal) && newBal >= 0) {
-                logAction(c.name, 'correction', newBal);
-                c.balance = newBal;
-            }
-        } else {
-            const addedInput = parseFloat(document.getElementById('v-add').value) || 0;
-            if (addedInput > 0) { 
-                c.balance += addedInput; 
-                logAction(c.name, 'add', addedInput); 
-                addDebtToDaily(addedInput);
-            }
-            const paymentInput = parseFloat(document.getElementById('v-sub').value) || 0;
-            if (paymentInput > 0) {
-                const realPaid = paymentInput > c.balance ? c.balance : paymentInput; 
-                addPaymentToDaily(realPaid); 
-                logAction(c.name, 'pay', realPaid); 
-                c.balance -= realPaid;
-            }
-        }
-        
-        if(c.balance < 0) c.balance = 0; 
-        
-        c.lastModified = getTodayString(); 
-        localStorage.setItem('clients', JSON.stringify(clients)); 
-        document.getElementById('m-manage').style.display = 'none'; 
-        updateEarningsDisplay();
-        renderClients(); 
-    }
+    const diferenciaMinutos = totalMinutosFim - totalMinutosInicio;
     
-    function deleteClient() { 
-        let c = clients.find(x => x.id === targetId); 
-        if (c && confirm(`Eliminar "${c.name}"?`)) { 
-            clients = clients.filter(x => x.id !== targetId); 
-            localStorage.setItem('clients', JSON.stringify(clients)); 
-            document.getElementById('m-manage').style.display = 'none'; 
-            updateEarningsDisplay();
-            renderClients(); 
-        } 
-    }
-
-
-    // ==================== LÓGICA: CONTROL DE JORNADA ====================
-    const dayNames = { 1: "Lunes", 2: "Martes", 3: "Miércoles", 4: "Jueves", 5: "Viernes", 6: "Sábado" };
-    const REGULAR_HOURS_LIMIT = 40;
+    // Volver a calcular horas y minutos restantes
+    const horasFinales = Math.floor(diferenciaMinutos / 60);
+    const minutosFinales = diferenciaMinutos % 60;
     
-    let hoursData = JSON.parse(localStorage.getItem('workTimeData')) || {
-        hours: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
-        pauses: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
-        startTime: null, pauseStartTime: null, entryDay: null, status: 'OUT'
-    };
-    if (!hoursData.pauses) hoursData.pauses = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
-
-    function saveHoursData() { localStorage.setItem('workTimeData', JSON.stringify(hoursData)); updateHoursUI(); }
-
-    function updateHoursUI() {
-        const statusEl = document.getElementById('status');
-        const btnIn = document.getElementById('btnIn');
-        const activeActions = document.getElementById('active-actions');
-        const btnPause = document.getElementById('btnPause');
-        const btnResume = document.getElementById('btnResume');
-        
-        if (hoursData.status === 'IN') {
-            const timeStr = new Date(hoursData.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            statusEl.innerText = `Trabajando (Entrada: ${timeStr})`; statusEl.style.color = '#2ecc71';
-            btnIn.style.display = 'none'; activeActions.style.display = 'flex';
-            btnPause.style.display = 'block'; btnResume.style.display = 'none';
-        } else if (hoursData.status === 'PAUSED') {
-            statusEl.innerText = "Jornada Pausada ⏸️"; statusEl.style.color = '#f39c12';
-            btnIn.style.display = 'none'; activeActions.style.display = 'flex';
-            btnPause.style.display = 'none'; btnResume.style.display = 'block';
-        } else {
-            statusEl.innerText = "Fuera del trabajo"; statusEl.style.color = '#e74c3c';
-            btnIn.style.display = 'block'; activeActions.style.display = 'none';
-        }
-
-        const tbody = document.getElementById('daysTable'); tbody.innerHTML = '';
-        let total = 0; let totalP = 0;
-        for (let i = 1; i <= 6; i++) {
-            const hrs = hoursData.hours[i] || 0; total += hrs;
-            const pHrs = hoursData.pauses[i] || 0; totalP += pHrs;
-            tbody.innerHTML += `<tr><td>${dayNames[i]}</td><td><strong>${hrs.toFixed(2)}</strong> hrs</td><td>${pHrs.toFixed(2)} hrs</td></tr>`;
-        }
-        document.getElementById('weeklyTotal').innerText = `Total Semana: ${total.toFixed(2)} hrs`;
-        document.getElementById('weeklyPauses').innerText = `Total Pausas: ${totalP.toFixed(2)} hrs`;
-
-        const overtimeEl = document.getElementById('weeklyOvertime');
-        if (total > REGULAR_HOURS_LIMIT) {
-            overtimeEl.innerText = `Horas Extra: +${(total - REGULAR_HOURS_LIMIT).toFixed(2)} hrs`;
-            overtimeEl.style.display = 'block';
-        } else {
-            overtimeEl.style.display = 'none';
-        }
-    }
-
-    document.getElementById('btnIn').addEventListener('click', () => {
-        let currentDay = new Date().getDay();
-        if (currentDay === 0) currentDay = 1;
-        hoursData.status = 'IN'; hoursData.startTime = new Date().getTime(); hoursData.entryDay = currentDay;
-        saveHoursData();
-    });
-
-    document.getElementById('btnPause').addEventListener('click', () => {
-        if (hoursData.status === 'IN') {
-            const now = new Date().getTime();
-            const diffHrs = (now - hoursData.startTime) / (1000 * 60 * 60);
-            const targetDay = hoursData.entryDay || new Date().getDay();
-            if (targetDay >= 1 && targetDay <= 6) { hoursData.hours[targetDay] = (hoursData.hours[targetDay] || 0) + diffHrs; }
-            hoursData.status = 'PAUSED'; hoursData.pauseStartTime = now;
-            saveHoursData();
-        }
-    });
-
-    document.getElementById('btnResume').addEventListener('click', () => {
-        if (hoursData.status === 'PAUSED') {
-            const now = new Date().getTime();
-            const diffPauseHrs = (now - hoursData.pauseStartTime) / (1000 * 60 * 60);
-            const targetDay = hoursData.entryDay || new Date().getDay();
-            if (targetDay >= 1 && targetDay <= 6) { hoursData.pauses[targetDay] = (hoursData.pauses[targetDay] || 0) + diffPauseHrs; }
-            hoursData.status = 'IN'; hoursData.startTime = now; hoursData.pauseStartTime = null;
-            saveHoursData();
-        }
-    });
-
-    document.getElementById('btnOut').addEventListener('click', () => {
-        if (hoursData.status === 'IN' || hoursData.status === 'PAUSED') {
-            const now = new Date().getTime();
-            const targetDay = hoursData.entryDay || new Date().getDay();
-            
-            if (hoursData.status === 'IN') {
-                const diffHrs = (now - hoursData.startTime) / (1000 * 60 * 60);
-                if (targetDay >= 1 && targetDay <= 6) { hoursData.hours[targetDay] = (hoursData.hours[targetDay] || 0) + diffHrs; }
-            } else if (hoursData.status === 'PAUSED') {
-                const diffPauseHrs = (now - hoursData.pauseStartTime) / (1000 * 60 * 60);
-                if (targetDay >= 1 && targetDay <= 6) { hoursData.pauses[targetDay] = (hoursData.pauses[targetDay] || 0) + diffPauseHrs; }
-            }
-            hoursData.status = 'OUT'; hoursData.startTime = null; hoursData.pauseStartTime = null; hoursData.entryDay = null;
-            saveHoursData();
-        }
-    });
-
-    document.getElementById('btnReset').addEventListener('click', () => {
-        if (confirm('¿Quieres borrar todas las horas e iniciar una nueva semana?')) {
-            hoursData = { 
-                hours: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }, 
-                pauses: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }, 
-                startTime: null, pauseStartTime: null, entryDay: null, status: 'OUT' 
-            };
-            saveHoursData();
-        }
-    });
-
-
-    // --- INICIALIZADOR GENERAL GLOBAL ---
-    window.onload = function() {
-        sortProducts();
-        renderProducts();
-        initClientLogic();
-        updateHoursUI();
-        updateHistoryUI();
-    };
+    // Formatear cadenas agregando un cero a la izquierda si es necesario (ej: 08:05)
+    const horasStr = String(horasFinales).padStart(2, '0');
+    const minutosStr = String(minutosFinales).padStart(2, '0');
+    
+    document.getElementById('resultado-jornada').innerText = `Total: ${horasStr}:${minutosStr} h`;
+}
 </script>
+
 </body>
 </html>
