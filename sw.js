@@ -1,4 +1,4 @@
-const CACHE_NAME = 'padaria-v8';
+const CACHE_NAME = 'padaria-v9';
 const ASSETS = [
   './',
   './index.html',
