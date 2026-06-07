@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Padaria Vicente - Painel Total</title>
-    <link class="js-manifest" rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json">
     <script>
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
@@ -33,7 +33,7 @@
 
         /* Menú de Navegación Inferior */
         .bottom-nav { height: 60px; background: var(--primary-dark); display: flex; border-top: 2px solid var(--primary); z-index: 1000; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 0.72rem; font-weight: bold; gap: 4px; text-align: center; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 0.75rem; font-weight: bold; gap: 4px; }
         .nav-item.active { color: var(--accent); background: rgba(255,255,255,0.05); }
         .nav-item svg { width: 22px; height: 22px; fill: currentColor; }
 
@@ -76,7 +76,7 @@
         .btn-next { background-color: var(--primary); flex: 2; font-size: 15px; }
         .btn-clear { background-color: #757575; max-width: 85px; line-height: 1.2; }
 
-        /* FIADOS (ANTERIOR CLIENTES) */
+        /* CLIENTES */
         .daily-summary { background: var(--primary-dark); color: white; padding: 10px 12px; font-size: 0.85rem; display: flex; flex-direction: column; align-items: stretch; gap: 6px; border-radius: 8px; margin-bottom: 10px; height: auto; }
         .daily-summary b { color: var(--accent); font-size: 1rem; }
         .summary-btns { display: flex; gap: 4px; }
@@ -91,7 +91,19 @@
         .drag-handle { cursor: grab; padding: 5px; font-size: 1.1rem; color: #999; }
         .dragging { opacity: 0.5; background: #f0f0f0; }
         .fixed-add-btn { position: absolute; bottom: 75px; right: 15px; background: var(--primary); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 99; }
-        .tomorrow-header { background: var(--primary); color: white; padding: 8px 12px; font-weight: bold; font-size: 0.95rem; border-radius: 6px; margin: 15px 0 8px 0; display: flex; align-items: center; gap: 6px; }
+
+        /* Modales */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000; padding: 15px; }
+        .modal-content { background: white; padding: 15px; width: 100%; max-width: 400px; border-radius: 10px; max-height: 80vh; overflow-y: auto; }
+        .input-num { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 0.95rem; }
+        .checkbox-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-top: 5px; font-size: 0.8rem; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: bold; font-size: 0.9rem; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 0.8rem; }
+        .cal-day-name { font-weight: bold; color: #757575; }
+        .cal-cell { padding: 6px 0; border-radius: 4px; cursor: pointer; position: relative; font-weight: 500; }
+        .cal-cell.has-data::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background: var(--primary); border-radius: 50%; }
+        .cal-cell.selected { background: var(--primary); color: white; }
+        .history-item { padding: 6px; border-bottom: 1px solid #eee; font-size: 0.8rem; }
 
         /* JORNADA */
         .hours-card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); margin-bottom: 12px; border: 1px solid #e0e0e0; }
@@ -103,9 +115,6 @@
         .hours-table th { color: #7f8c8d; font-size: 0.8rem; }
         .total-hours { font-size: 1.1rem; font-weight: bold; text-align: right; margin-top: 10px; color: #2c3e50; }
         .overtime { font-size: 1rem; font-weight: bold; text-align: right; margin-top: 4px; color: var(--success); background-color: #e8f8f5; padding: 6px; border-radius: 4px; display: inline-block; float: right; clear: both; }
-
-        /* ENCOMENDAS */
-        .hint { font-size: 0.85rem; color: #757575; font-style: italic; }
     </style>
 </head>
 <body>
@@ -153,18 +162,7 @@
         </div>
     </section>
 
-    <section id="view-encomendas" class="app-view">
-        <div class="hours-card">
-            <h2>Gestão de Encomendas</h2>
-            <p class="hint" style="margin-top: 8px;">Registo de pedidos especiais e encomendas para a rota de distribuição.</p>
-            <div style="text-align: center; padding: 40px 20px; color: #7f8c8d;">
-                <p style="font-size: 1.1rem; font-weight: bold; margin-bottom: 6px;">Nenhuma encomenda ativa</p>
-                <p style="font-size: 0.85rem;">Os pedidos futuros e notas de carregamento aparecerão aqui.</p>
-            </div>
-        </div>
-    </section>
-
-    <section id="view-fiados" class="app-view">
+    <section id="view-clientes" class="app-view">
         <div class="daily-summary">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span>Fiados Recebidos: <b id="today-earnings">0.00€</b></span>
@@ -184,49 +182,37 @@
             <div class="tab active" id="tab-ruta" onclick="switchClientTab('ruta')">Hoje (<span id="day-name"></span>)</div>
             <div class="tab" id="tab-todos" onclick="switchClientTab('todos')">Todos</div>
         </div>
-
-        <div class="client-list-container" id="list-container-scrollable">
-            <div id="list"></div>
-            
-            <div id="tomorrow-section" style="display: block;">
-                <div class="tomorrow-header">
-                    <span>📅 Amanhã (Previsão de Saldos)</span>
-                </div>
-                <div id="tomorrow-list">
-                    </div>
-            </div>
-        </div>
-
+        <div class="client-list-container" id="list"></div>
         <button class="fixed-add-btn" onclick="openAddModal()">+</button>
     </section>
 
     <section id="view-jornada" class="app-view">
         <div class="hours-card">
-            <h2>Registo de Jornada</h2>
-            <div id="status" class="status">Fora do trabalho</div>
+            <h2>Registro de Jornada</h2>
+            <div id="status" class="status">Fuera del trabajo</div>
             <button id="btnIn" class="btn-job btn-plus" style="color:white;">Registrar Entrada</button>
             <div id="active-actions" style="display:none; flex-direction:column; gap:8px;">
                 <div style="display:flex; gap:8px;">
                     <button id="btnPause" class="btn-job" style="background-color:#f39c12; color:white; flex:1;">Pausar</button>
-                    <button id="btnResume" class="btn-job" style="display:none; background-color:#2980b9; color:white; flex:1;">Retomar</button>
+                    <button id="btnResume" class="btn-job" style="display:none; background-color:#2980b9; color:white; flex:1;">Reanudar</button>
                 </div>
-                <button id="btnOut" class="btn-job btn-minus" style="color:white;">Registrar Saída</button>
+                <button id="btnOut" class="btn-job btn-minus" style="color:white;">Registrar Salida</button>
             </div>
         </div>
         <div class="hours-card">
-            <h2>Horas Acumuladas (Segunda a Sábado)</h2>
+            <h2>Horas Acumuladas (Lunes a Sábado)</h2>
             <table class="hours-table">
                 <thead>
-                    <tr><th>Dia</th><th>Trabalhado</th><th>Pausas</th></tr>
+                    <tr><th>Día</th><th>Trabajado</th><th>Pausas</th></tr>
                 </thead>
                 <tbody id="daysTable"></tbody>
             </table>
             <div style="margin-top: 15px; overflow: hidden;">
-                <div class="total-hours" id="weeklyTotal">Total Semana: 00:00 h</div>
-                <div class="total-hours" id="weeklyPauses" style="font-size: 0.95rem; color: #7f8c8d;">Total Pausas: 00:00 h</div>
-                <div class="overtime" id="weeklyOvertime" style="display:none;">Horas Extra: 00:00 h</div>
+                <div class="total-hours" id="weeklyTotal">Total Semana: 0.00 hrs</div>
+                <div class="total-hours" id="weeklyPauses" style="font-size: 0.95rem; color: #7f8c8d;">Total Pausas: 0.00 hrs</div>
+                <div class="overtime" id="weeklyOvertime" style="display:none;">Horas Extra: 0.00 hrs</div>
             </div>
-            <button id="btnReset" class="btn-job" style="background-color:#7f8c8d; color:white; margin-top:15px;">Reiniciar Semana</button>
+            <button id="btnReset" class="btn-job" style="background-color:#7f8c8d; color:white; margin-top:15px;">Restablecer Semana</button>
         </div>
     </section>
 
@@ -235,13 +221,9 @@
             <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 14h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2zm-4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2zm-4 8H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2z"/></svg>
             Calculadora
         </div>
-        <div class="nav-item" onclick="switchView('encomendas', this)">
-            <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-8.9-5h7.45c.75 0 1.41-.41 1.75-1.03L21.42 4.5c.17-.31.08-.69-.22-.87-.29-.17-.67-.09-.85.2L16.55 9H8.53L4.27 2H1v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63z"/></svg>
-            Encomendas
-        </div>
-        <div class="nav-item" onclick="switchView('fiados', this)">
+        <div class="nav-item" onclick="switchView('clientes', this)">
             <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-            Fiados
+            Clientes
         </div>
         <div class="nav-item" onclick="switchView('jornada', this)">
             <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
@@ -538,15 +520,10 @@
     }
 
 
-    // ==================== LÓGICA: FIADOS (CLIENTES) ====================
+    // ==================== LÓGICA: CLIENTES ====================
     const masterVillages = ["Abrunheiro Grande", "Abrunheiro Pequeno","Agua Formosa", "Agua Formosa Contrario", "Aivado", "Aldeia do Couço", "Aveleira", "Boafarinha", "Borda da Ribeira", "Borreiros", "Brejo Cimeiro", "Cabeça do Poço", "Casal Cimeiro", "Cercadas", "Estevais", "Fouto", "Fundada", "Lagoa", "Lousa", "Melriça", "Monte Novo", "Penedo", "Pisão Fundeiro", "Portela", "Relva", "Relva do Boi", "Ribeira", "Seada", "Trutas", "Valadas", "Vale da Urra", "Vale das Casas", "Vale do Grou", "Vila de Rei Lares", "Vilar", "Vilar do Ruivo"].sort();
     const diasSemana = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
-    
-    const indiceHoje = new Date().getDay();
-    const hoy = diasSemana[indiceHoje];
-    // Calcular el día de mañana para filtrar el bloque "Amanhã"
-    const indiceAmanha = (indiceHoje + 1) % 7;
-    const amanha = diasSemana[indiceAmanha];
+    const hoy = diasSemana[new Date().getDay()];
     
     document.getElementById('day-name').innerText = hoy.split('-')[0];
 
@@ -613,6 +590,7 @@
         }
     }
 
+    // MODIFICADO: AHORA SOPORTA EL FLAG 'isDaily' PARA EVITAR CORRUPCIÓN DE LOS TOTALES AL ANULAR
     function logAction(clientName, type, amount, isDaily = true) {
         const d = new Date();
         const dateFormatted = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
@@ -623,7 +601,6 @@
 
     function openHistoryModal() { document.getElementById('m-history').style.display = 'flex'; renderCalendar(); }
 
-    // HISTORIAL CALENDARIO
     function renderCalendar() {
         const grid = document.getElementById('calendar-grid');
         const monthYearLabel = document.getElementById('cal-month-year');
@@ -696,6 +673,7 @@
         logBox.innerHTML += `<div style="padding:10px; background:#E8F5E9; font-weight:bold; text-align:center; font-size:0.9rem; color:#2E7D32;">💰 Total Fiados Recebidos: ${totalCobradoDia.toFixed(2)}€</div>`;
     }
 
+    // MODIFICADO: AHORA FILTRA ADECUADAMENTE SI EL REGISTRO AFECTABA O NO A LOS FILTROS DIARIOS (isDaily)
     function anularMovimento(index) {
         if (index < 0 || index >= logs.length) return;
         let l = logs[index];
@@ -734,11 +712,13 @@
         renderClients();
     }
 
+    // NUEVA FUNCIÓN: ACCIÓN RÁPIDA DE DESFAZER SIN ENTRAR AL HISTÓRICO
     function anularUltimoMovimentoRapido() {
         if (logs.length === 0) {
             alert("Nenhum movimento registrado para anular.");
             return;
         }
+        // El elemento 0 siempre es el más reciente de toda la aplicación
         anularMovimento(0);
     }
 
@@ -761,24 +741,14 @@
         document.getElementById('n-name').value = ''; document.getElementById('n-balance').value = '';
         document.getElementById('n-village').selectedIndex = 0;
         document.querySelectorAll('#n-days input').forEach(cb => cb.checked = false);
-        document.getElementById('n-add-to-daily').checked = true;
+        document.getElementById('n-add-to-daily').checked = true; // Por defecto seleccionado
         document.getElementById('m-add').style.display = 'flex';
     }
 
-    function switchClientTab(t) { 
-        currentClientTab = t; 
-        document.getElementById('tab-ruta').classList.toggle('active', t==='ruta'); 
-        document.getElementById('tab-todos').classList.toggle('active', t==='todos'); 
-        
-        // Ocultar bloque de mañana si estamos viendo la lista completa de todos los clientes
-        const tomSec = document.getElementById('tomorrow-section');
-        if(tomSec) tomSec.style.display = (t === 'ruta') ? 'block' : 'none';
-        
-        renderClients(); 
-    }
-    
+    function switchClientTab(t) { currentClientTab = t; document.getElementById('tab-ruta').classList.toggle('active', t==='ruta'); document.getElementById('tab-todos').classList.toggle('active', t==='todos'); renderClients(); }
     function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
 
+    // MODIFICADO: AHORA EVALÚA EL CHECKBOX ANTES DE SUMAR EL VALOR A LOS TOTALES DEL DÍA
     function registerClient() {
         const name = document.getElementById('n-name').value.trim();
         const village = document.getElementById('n-village').value;
@@ -786,10 +756,12 @@
         const balance = parseFloat(document.getElementById('n-balance').value) || 0;
         if(!name) return alert("Por favor, introduza un nome.");
         
+        // Obtener estado del nuevo checkbox
         const addToDaily = document.getElementById('n-add-to-daily').checked;
 
         clients.push({ id: Date.now(), name, village, days, balance, lastModified: balance > 0 ? getTodayString() : "" });
         if (balance > 0) { 
+            // Se envía 'addToDaily' como parámetro para saber si el log debe afectar los totales si se anula
             logAction(name, 'add', balance, addToDaily);
             if (addToDaily) {
                 addDebtToDaily(balance);
@@ -801,47 +773,22 @@
         renderClients();
     }
 
-    // MODIFICADO: RENDERIZA LA LISTA DE HOY Y LA LISTA DE MAÑANA DE FORMA SEPARADA
     function renderClients() {
-        const list = document.getElementById('list'); 
-        const tomorrowList = document.getElementById('tomorrow-list');
-        list.innerHTML = '';
-        tomorrowList.innerHTML = '';
-        
+        const list = document.getElementById('list'); list.innerHTML = '';
         if(currentClientTab === 'ruta') {
-            // 1. FILTRAR CLIENTES DE HOY
             let activeRouteClients = clients.filter(c => c.balance > 0 && c.days.includes(hoy) && c.lastModified !== getTodayString());
             activeRouteClients.sort((a, b) => {
                 const villageDiff = villageOrder.indexOf(a.village) - villageOrder.indexOf(b.village);
                 if (villageDiff !== 0) return villageDiff;
                 return clients.findIndex(c => c.id === a.id) - clients.findIndex(c => c.id === b.id);
             });
-            
             if(activeRouteClients.length === 0) {
-                list.innerHTML = `<p style="text-align:center; color:#757575; padding: 12px 0;">Rota concluída ou sem clientes pendentes hoje (${hoy.split('-')[0]}).</p>`;
-            } else {
-                activeRouteClients.forEach(c => {
-                    list.innerHTML += `<div class="client-card" onclick="openClientManagementModal(${c.id})"><div style="flex:1;"><strong>${c.name}</strong><br><small>${c.village}</small></div><b style="color:var(--danger); margin-right:10px;">${c.balance.toFixed(2)}€</b></div>`;
-                });
+                list.innerHTML = `<p style="text-align:center; color:#757575; margin-top:30px;">Rota concluída ou sem clientes pendentes hoje (${hoy.split('-')[0]}).</p>`; return;
             }
-
-            // 2. FILTRAR CLIENTES DE MAÑANA (BLOQUE INTEGRADO)
-            let tomorrowRouteClients = clients.filter(c => c.balance > 0 && c.days.includes(amanha));
-            tomorrowRouteClients.sort((a, b) => {
-                const villageDiff = villageOrder.indexOf(a.village) - villageOrder.indexOf(b.village);
-                if (villageDiff !== 0) return villageDiff;
-                return clients.findIndex(c => c.id === a.id) - clients.findIndex(c => c.id === b.id);
+            activeRouteClients.forEach(c => {
+                list.innerHTML += `<div class="client-card" onclick="openClientManagementModal(${c.id})"><div style="flex:1;"><strong>${c.name}</strong><br><small>${c.village}</small></div><b style="color:var(--danger); margin-right:10px;">${c.balance.toFixed(2)}€</b></div>`;
             });
-
-            if(tomorrowRouteClients.length === 0) {
-                tomorrowList.innerHTML = `<p style="text-align:center; color:#757575; font-size:0.85rem; padding:10px;">Nenhum cliente pendente para amanhã (${amanha.split('-')[0]}).</p>`;
-            } else {
-                tomorrowRouteClients.forEach(c => {
-                    tomorrowList.innerHTML += `<div class="client-card" style="border-left: 4px solid #757575; background: #fafafa;" onclick="openClientManagementModal(${c.id})"><div style="flex:1;"><strong>${c.name}</strong><br><small>${c.village}</small></div><b style="color:#757575; margin-right:10px;">${c.balance.toFixed(2)}€</b></div>`;
-                });
-            }
         } else {
-            // TAB "TODOS": VISTA ORGANIZADA POR ALDEAS
             const activeVillages = villageOrder.filter(v => clients.some(c => c.village === v));
             if(activeVillages.length === 0) {
                 list.innerHTML = `<p style="text-align:center; color:#757575; margin-top:30px;">Nenhum cliente registado.</p>`; return;
@@ -941,7 +888,6 @@
 
         localStorage.setItem('clients', JSON.stringify(clients)); 
         document.getElementById('m-manage').style.display = 'none'; 
-        document.getElementById('view-fiados').scrollTo(0,0);
         updateEarningsDisplay();
         renderClients(); 
     }
@@ -966,7 +912,6 @@
 
         localStorage.setItem('clients', JSON.stringify(clients));
         document.getElementById('m-manage').style.display = 'none';
-        document.getElementById('view-fiados').scrollTo(0,0);
         updateEarningsDisplay();
         renderClients();
     }
@@ -990,7 +935,7 @@
             const addedInput = parseFloat(document.getElementById('v-add').value) || 0;
             if (addedInput > 0) { 
                 c.balance += addedInput; 
-                logAction(name, 'add', addedInput); 
+                logAction(c.name, 'add', addedInput); 
                 addDebtToDaily(addedInput);
             }
             const paymentInput = parseFloat(document.getElementById('v-sub').value) || 0;
@@ -1012,7 +957,7 @@
     }
     
     function deleteClient() { 
-        let c = clients.find(x => x.id !== targetId); 
+        let c = clients.find(x => x.id === targetId); 
         if (c && confirm(`Eliminar "${c.name}"?`)) { 
             clients = clients.filter(x => x.id !== targetId); 
             localStorage.setItem('clients', JSON.stringify(clients)); 
@@ -1023,9 +968,9 @@
     }
 
 
-    // ==================== LÓGICA: REGISTO DE JORNADA (FORMATO 24H EXTRA STRICT) ====================
-    const dayNames = { 1: "Segunda-feira", 2: "Terça-feira", 3: "Quarta-feira", 4: "Quinta-feira", 5: "Sexta-feira", 6: "Sábado" };
-    const REGULAR_HOURS_LIMIT = 40; // Limite semanal regulamentar
+    // ==================== LÓGICA: CONTROL DE JORNADA ====================
+    const dayNames = { 1: "Lunes", 2: "Martes", 3: "Miércoles", 4: "Jueves", 5: "Viernes", 6: "Sábado" };
+    const REGULAR_HOURS_LIMIT = 40;
     
     let hoursData = JSON.parse(localStorage.getItem('workTimeData')) || {
         hours: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
@@ -1036,15 +981,6 @@
 
     function saveHoursData() { localStorage.setItem('workTimeData', JSON.stringify(hoursData)); updateHoursUI(); }
 
-    // FUNÇÃO AUXILIAR: Transforma horas decimais no formato HH:MM de relógio
-    function formatDecimalToHoursStr(decimalHours) {
-        if (!decimalHours || decimalHours <= 0) return "00:00 h";
-        const totalMinutes = Math.round(decimalHours * 60);
-        const hh = Math.floor(totalMinutes / 60);
-        const mm = totalMinutes % 60;
-        return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')} h`;
-    }
-
     function updateHoursUI() {
         const statusEl = document.getElementById('status');
         const btnIn = document.getElementById('btnIn');
@@ -1054,7 +990,7 @@
         
         if (hoursData.status === 'IN') {
             const timeStr = new Date(hoursData.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            statusEl.innerText = `A Trabalhar (Entrada: ${timeStr})`; statusEl.style.color = '#2ecc71';
+            statusEl.innerText = `Trabajando (Entrada: ${timeStr})`; statusEl.style.color = '#2ecc71';
             btnIn.style.display = 'none'; activeActions.style.display = 'flex';
             btnPause.style.display = 'block'; btnResume.style.display = 'none';
         } else if (hoursData.status === 'PAUSED') {
@@ -1062,7 +998,7 @@
             btnIn.style.display = 'none'; activeActions.style.display = 'flex';
             btnPause.style.display = 'none'; btnResume.style.display = 'block';
         } else {
-            statusEl.innerText = "Fora do trabalho"; statusEl.style.color = '#e74c3c';
+            statusEl.innerText = "Fuera del trabajo"; statusEl.style.color = '#e74c3c';
             btnIn.style.display = 'block'; activeActions.style.display = 'none';
         }
 
@@ -1071,15 +1007,14 @@
         for (let i = 1; i <= 6; i++) {
             const hrs = hoursData.hours[i] || 0; total += hrs;
             const pHrs = hoursData.pauses[i] || 0; totalP += pHrs;
-            tbody.innerHTML += `<tr><td>${dayNames[i]}</td><td><strong>${formatDecimalToHoursStr(hrs)}</strong></td><td>${formatDecimalToHoursStr(pHrs)}</td></tr>`;
+            tbody.innerHTML += `<tr><td>${dayNames[i]}</td><td><strong>${hrs.toFixed(2)}</strong> hrs</td><td>${pHrs.toFixed(2)} hrs</td></tr>`;
         }
-        
-        document.getElementById('weeklyTotal').innerText = `Total Semana: ${formatDecimalToHoursStr(total)}`;
-        document.getElementById('weeklyPauses').innerText = `Total Pausas: ${formatDecimalToHoursStr(totalP)}`;
+        document.getElementById('weeklyTotal').innerText = `Total Semana: ${total.toFixed(2)} hrs`;
+        document.getElementById('weeklyPauses').innerText = `Total Pausas: ${totalP.toFixed(2)} hrs`;
 
         const overtimeEl = document.getElementById('weeklyOvertime');
         if (total > REGULAR_HOURS_LIMIT) {
-            overtimeEl.innerText = `Horas Extra: +${formatDecimalToHoursStr(total - REGULAR_HOURS_LIMIT)}`;
+            overtimeEl.innerText = `Horas Extra: +${(total - REGULAR_HOURS_LIMIT).toFixed(2)} hrs`;
             overtimeEl.style.display = 'block';
         } else {
             overtimeEl.style.display = 'none';
@@ -1088,7 +1023,7 @@
 
     document.getElementById('btnIn').addEventListener('click', () => {
         let currentDay = new Date().getDay();
-        if (currentDay === 0) currentDay = 1; // Se for domingo atribui a segunda
+        if (currentDay === 0) currentDay = 1;
         hoursData.status = 'IN'; hoursData.startTime = new Date().getTime(); hoursData.entryDay = currentDay;
         saveHoursData();
     });
@@ -1133,7 +1068,7 @@
     });
 
     document.getElementById('btnReset').addEventListener('click', () => {
-        if (confirm('Deseja apagar todas as horas registradas e iniciar uma nova semana?')) {
+        if (confirm('¿Quieres borrar todas las horas e iniciar una nueva semana?')) {
             hoursData = { 
                 hours: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }, 
                 pauses: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }, 
