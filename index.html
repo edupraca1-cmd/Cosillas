@@ -8,8 +8,8 @@
     <script>
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
-          .then(() => console.log('Service Worker Registrado con Éxito'))
-          .catch(err => console.error('Error al registrar el SW:', err));
+          .then(() => console.log('Service Worker Registrado com Sucesso'))
+          .catch(err => console.error('Erro ao registar o SW:', err));
       }
     </script>
     <style>
@@ -188,31 +188,31 @@
 
     <section id="view-jornada" class="app-view">
         <div class="hours-card">
-            <h2>Registro de Jornada</h2>
-            <div id="status" class="status">Fuera del trabajo</div>
-            <button id="btnIn" class="btn-job btn-plus" style="color:white;">Registrar Entrada</button>
+            <h2>Registo de Jornada</h2>
+            <div id="status" class="status">Fora do trabalho</div>
+            <button id="btnIn" class="btn-job btn-plus" style="color:white;">Registar Entrada</button>
             <div id="active-actions" style="display:none; flex-direction:column; gap:8px;">
                 <div style="display:flex; gap:8px;">
                     <button id="btnPause" class="btn-job" style="background-color:#f39c12; color:white; flex:1;">Pausar</button>
-                    <button id="btnResume" class="btn-job" style="display:none; background-color:#2980b9; color:white; flex:1;">Reanudar</button>
+                    <button id="btnResume" class="btn-job" style="display:none; background-color:#2980b9; color:white; flex:1;">Retomar</button>
                 </div>
-                <button id="btnOut" class="btn-job btn-minus" style="color:white;">Registrar Salida</button>
+                <button id="btnOut" class="btn-job btn-minus" style="color:white;">Registar Saída</button>
             </div>
         </div>
         <div class="hours-card">
-            <h2>Horas Acumuladas (Lunes a Sábado)</h2>
+            <h2>Horas Acumuladas (Segunda a Sábado)</h2>
             <table class="hours-table">
                 <thead>
-                    <tr><th>Día</th><th>Trabajado</th><th>Pausas</th></tr>
+                    <tr><th>Dia</th><th>Trabalhado</th><th>Pausas</th></tr>
                 </thead>
                 <tbody id="daysTable"></tbody>
             </table>
             <div style="margin-top: 15px; overflow: hidden;">
-                <div class="total-hours" id="weeklyTotal">Total Semana: 0.00 hrs</div>
-                <div class="total-hours" id="weeklyPauses" style="font-size: 0.95rem; color: #7f8c8d;">Total Pausas: 0.00 hrs</div>
-                <div class="overtime" id="weeklyOvertime" style="display:none;">Horas Extra: 0.00 hrs</div>
+                <div class="total-hours" id="weeklyTotal">Total Semana: 0h 00m</div>
+                <div class="total-hours" id="weeklyPauses" style="font-size: 0.95rem; color: #7f8c8d;">Total Pausas: 0h 00m</div>
+                <div class="overtime" id="weeklyOvertime" style="display:none;">Horas Extra: +0h 00m</div>
             </div>
-            <button id="btnReset" class="btn-job" style="background-color:#7f8c8d; color:white; margin-top:15px;">Restablecer Semana</button>
+            <button id="btnReset" class="btn-job" style="background-color:#7f8c8d; color:white; margin-top:15px;">Repor Semana</button>
         </div>
     </section>
 
@@ -500,7 +500,7 @@
     }, 500);
 
     function resetDiario() {
-        if (confirm('Tem a certeza de que deseja limpar o Total Diário y o histórico recente?')) {
+        if (confirm('Tem a certeza de que deseja limpar o Total Diário e o histórico recente?')) {
             totalDiario = 0; localStorage.removeItem('totalDiario');
             calcHistory = []; localStorage.removeItem('calcHistory');
             document.getElementById('total-diario').innerText = '0.00 €';
@@ -590,7 +590,6 @@
         }
     }
 
-    // MODIFICADO: AHORA SOPORTA EL FLAG 'isDaily' PARA EVITAR CORRUPCIÓN DE LOS TOTALES AL ANULAR
     function logAction(clientName, type, amount, isDaily = true) {
         const d = new Date();
         const dateFormatted = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
@@ -673,7 +672,6 @@
         logBox.innerHTML += `<div style="padding:10px; background:#E8F5E9; font-weight:bold; text-align:center; font-size:0.9rem; color:#2E7D32;">💰 Total Fiados Recebidos: ${totalCobradoDia.toFixed(2)}€</div>`;
     }
 
-    // MODIFICADO: AHORA FILTRA ADECUADAMENTE SI EL REGISTRO AFECTABA O NO A LOS FILTROS DIARIOS (isDaily)
     function anularMovimento(index) {
         if (index < 0 || index >= logs.length) return;
         let l = logs[index];
@@ -712,13 +710,11 @@
         renderClients();
     }
 
-    // NUEVA FUNCIÓN: ACCIÓN RÁPIDA DE DESFAZER SIN ENTRAR AL HISTÓRICO
     function anularUltimoMovimentoRapido() {
         if (logs.length === 0) {
             alert("Nenhum movimento registrado para anular.");
             return;
         }
-        // El elemento 0 siempre es el más reciente de toda la aplicación
         anularMovimento(0);
     }
 
@@ -741,14 +737,13 @@
         document.getElementById('n-name').value = ''; document.getElementById('n-balance').value = '';
         document.getElementById('n-village').selectedIndex = 0;
         document.querySelectorAll('#n-days input').forEach(cb => cb.checked = false);
-        document.getElementById('n-add-to-daily').checked = true; // Por defecto seleccionado
+        document.getElementById('n-add-to-daily').checked = true;
         document.getElementById('m-add').style.display = 'flex';
     }
 
     function switchClientTab(t) { currentClientTab = t; document.getElementById('tab-ruta').classList.toggle('active', t==='ruta'); document.getElementById('tab-todos').classList.toggle('active', t==='todos'); renderClients(); }
     function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
 
-    // MODIFICADO: AHORA EVALÚA EL CHECKBOX ANTES DE SUMAR EL VALOR A LOS TOTALES DEL DÍA
     function registerClient() {
         const name = document.getElementById('n-name').value.trim();
         const village = document.getElementById('n-village').value;
@@ -756,12 +751,10 @@
         const balance = parseFloat(document.getElementById('n-balance').value) || 0;
         if(!name) return alert("Por favor, introduza un nome.");
         
-        // Obtener estado del nuevo checkbox
         const addToDaily = document.getElementById('n-add-to-daily').checked;
 
         clients.push({ id: Date.now(), name, village, days, balance, lastModified: balance > 0 ? getTodayString() : "" });
         if (balance > 0) { 
-            // Se envía 'addToDaily' como parámetro para saber si el log debe afectar los totales si se anula
             logAction(name, 'add', balance, addToDaily);
             if (addToDaily) {
                 addDebtToDaily(balance);
@@ -969,7 +962,7 @@
 
 
     // ==================== LÓGICA: CONTROL DE JORNADA ====================
-    const dayNames = { 1: "Lunes", 2: "Martes", 3: "Miércoles", 4: "Jueves", 5: "Viernes", 6: "Sábado" };
+    const dayNames = { 1: "Segunda", 2: "Terça", 3: "Quarta", 4: "Quinta", 5: "Sexta", 6: "Sábado" };
     const REGULAR_HOURS_LIMIT = 40;
     
     let hoursData = JSON.parse(localStorage.getItem('workTimeData')) || {
@@ -978,6 +971,14 @@
         startTime: null, pauseStartTime: null, entryDay: null, status: 'OUT'
     };
     if (!hoursData.pauses) hoursData.pauses = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+
+    function formatarHoras(decimalHrs) {
+        if (!decimalHrs || decimalHrs <= 0) return "0h 00m";
+        const totalMinutos = Math.round(decimalHrs * 60);
+        const horas = Math.floor(totalMinutos / 60);
+        const minutos = totalMinutos % 60;
+        return `${horas}h ${String(minutos).padStart(2, '0')}m`;
+    }
 
     function saveHoursData() { localStorage.setItem('workTimeData', JSON.stringify(hoursData)); updateHoursUI(); }
 
@@ -990,7 +991,7 @@
         
         if (hoursData.status === 'IN') {
             const timeStr = new Date(hoursData.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            statusEl.innerText = `Trabajando (Entrada: ${timeStr})`; statusEl.style.color = '#2ecc71';
+            statusEl.innerText = `A trabalhar (Entrada: ${timeStr})`; statusEl.style.color = '#2ecc71';
             btnIn.style.display = 'none'; activeActions.style.display = 'flex';
             btnPause.style.display = 'block'; btnResume.style.display = 'none';
         } else if (hoursData.status === 'PAUSED') {
@@ -998,7 +999,7 @@
             btnIn.style.display = 'none'; activeActions.style.display = 'flex';
             btnPause.style.display = 'none'; btnResume.style.display = 'block';
         } else {
-            statusEl.innerText = "Fuera del trabajo"; statusEl.style.color = '#e74c3c';
+            statusEl.innerText = "Fora do trabalho"; statusEl.style.color = '#e74c3c';
             btnIn.style.display = 'block'; activeActions.style.display = 'none';
         }
 
@@ -1007,14 +1008,14 @@
         for (let i = 1; i <= 6; i++) {
             const hrs = hoursData.hours[i] || 0; total += hrs;
             const pHrs = hoursData.pauses[i] || 0; totalP += pHrs;
-            tbody.innerHTML += `<tr><td>${dayNames[i]}</td><td><strong>${hrs.toFixed(2)}</strong> hrs</td><td>${pHrs.toFixed(2)} hrs</td></tr>`;
+            tbody.innerHTML += `<tr><td>${dayNames[i]}</td><td><strong>${formatarHoras(hrs)}</strong></td><td>${formatarHoras(pHrs)}</td></tr>`;
         }
-        document.getElementById('weeklyTotal').innerText = `Total Semana: ${total.toFixed(2)} hrs`;
-        document.getElementById('weeklyPauses').innerText = `Total Pausas: ${totalP.toFixed(2)} hrs`;
+        document.getElementById('weeklyTotal').innerText = `Total Semana: ${formatarHoras(total)}`;
+        document.getElementById('weeklyPauses').innerText = `Total Pausas: ${formatarHoras(totalP)}`;
 
         const overtimeEl = document.getElementById('weeklyOvertime');
         if (total > REGULAR_HOURS_LIMIT) {
-            overtimeEl.innerText = `Horas Extra: +${(total - REGULAR_HOURS_LIMIT).toFixed(2)} hrs`;
+            overtimeEl.innerText = `Horas Extra: +${formatarHoras(total - REGULAR_HOURS_LIMIT)}`;
             overtimeEl.style.display = 'block';
         } else {
             overtimeEl.style.display = 'none';
@@ -1068,7 +1069,7 @@
     });
 
     document.getElementById('btnReset').addEventListener('click', () => {
-        if (confirm('¿Quieres borrar todas las horas e iniciar una nueva semana?')) {
+        if (confirm('Deseja apagar todas as horas e iniciar uma nova semana?')) {
             hoursData = { 
                 hours: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }, 
                 pauses: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }, 
