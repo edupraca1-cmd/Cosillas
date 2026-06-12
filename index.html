@@ -182,6 +182,13 @@
             <div class="tab active" id="tab-ruta" onclick="switchClientTab('ruta')">Hoje (<span id="day-name"></span>)</div>
             <div class="tab" id="tab-todos" onclick="switchClientTab('todos')">Todos</div>
         </div>
+
+        <div id="route-day-nav" style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 6px 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 0.9rem;">
+            <button onclick="changeRouteDay(-1)" style="background: var(--primary); color: white; border: none; padding: 6px 12px; font-weight: bold; border-radius: 4px; cursor: pointer;">◀</button>
+            <span id="route-day-display" style="font-weight: bold; color: var(--primary-dark);">Hoje: Segunda-feira</span>
+            <button onclick="changeRouteDay(1)" style="background: var(--primary); color: white; border: none; padding: 6px 12px; font-weight: bold; border-radius: 4px; cursor: pointer;">▶</button>
+        </div>
+
         <div class="client-list-container" id="list"></div>
         <button class="fixed-add-btn" onclick="openAddModal()">+</button>
     </section>
@@ -223,7 +230,7 @@
         </div>
         <div class="nav-item" onclick="switchView('clientes', this)">
             <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-            Fiados
+            Clientes
         </div>
         <div class="nav-item" onclick="switchView('jornada', this)">
             <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
@@ -275,7 +282,10 @@
 <div class="modal" id="m-add">
     <div class="modal-content">
         <h3>Novo Cliente</h3>
-        <input type="text" id="n-name" placeholder="Nome" class="input-num">
+        <input type="text" id="n-name" placeholder="Nome" class="input-num" list="clients-datalist" oninput="checkExistingClient()">
+        <datalist id="clients-datalist"></datalist>
+        <div id="n-warn-msg" style="color: #0288D1; font-size: 0.85rem; margin: 4px 2px; font-weight: bold; display: none;">💡 Cliente existente: o valor será adicionado ao saldo atual.</div>
+        
         <label style="font-size:0.85rem; font-weight:bold; display:block; margin-top:10px;">Aldeia:</label>
         <select id="n-village" class="input-num"></select>
         <label style="font-size:0.85rem; font-weight:bold; display:block; margin-top:10px;">Dias de entrega:</label>
@@ -532,6 +542,7 @@
     let logs = JSON.parse(localStorage.getItem('transactionLogs') || '[]');
     let currentClientTab = 'ruta';
     let targetId = null;
+    let viewingDayIndex = new Date().getDay(); // Guarda el índice del día seleccionado en la navegación
     
     let dailyData = JSON.parse(localStorage.getItem('dailyData') || '{"date":"","received":0,"added":0}');
     if (dailyData.amount !== undefined) { 
@@ -564,7 +575,10 @@
             localStorage.setItem('dailyData', JSON.stringify(dailyData));
         }
         updateEarningsDisplay();
-        renderClients();
+
+        viewingDayIndex = new Date().getDay(); // Forzar hoy al iniciar
+        updateRouteDayUI();
+
         const d = new Date();
         selectedDateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     }
@@ -572,6 +586,24 @@
     function updateEarningsDisplay() {
         document.getElementById('today-earnings').innerText = dailyData.received.toFixed(2) + "€";
         document.getElementById('today-added-debts').innerText = dailyData.added.toFixed(2) + "€";
+    }
+
+    function changeRouteDay(dir) {
+        viewingDayIndex = (viewingDayIndex + dir + 7) % 7;
+        updateRouteDayUI();
+    }
+
+    function updateRouteDayUI() {
+        const literalTodayIndex = new Date().getDay();
+        const viewingDayName = diasSemana[viewingDayIndex];
+        const displayEl = document.getElementById('route-day-display');
+        
+        if (viewingDayIndex === literalTodayIndex) {
+            displayEl.innerText = `Hoje: ${viewingDayName.split('-')[0]}`;
+        } else {
+            displayEl.innerText = viewingDayName.split('-')[0];
+        }
+        renderClients();
     }
 
     function addPaymentToDaily(val) {
@@ -734,14 +766,43 @@
     }
 
     function openAddModal() {
-        document.getElementById('n-name').value = ''; document.getElementById('n-balance').value = '';
+        document.getElementById('n-name').value = ''; 
+        document.getElementById('n-balance').value = '';
         document.getElementById('n-village').selectedIndex = 0;
         document.querySelectorAll('#n-days input').forEach(cb => cb.checked = false);
         document.getElementById('n-add-to-daily').checked = true;
+
+        document.getElementById('n-warn-msg').style.display = 'none';
+        const datalist = document.getElementById('clients-datalist');
+        datalist.innerHTML = '';
+        clients.forEach(c => {
+            let opt = document.createElement('option');
+            opt.value = c.name;
+            datalist.appendChild(opt);
+        });
+
         document.getElementById('m-add').style.display = 'flex';
     }
 
-    function switchClientTab(t) { currentClientTab = t; document.getElementById('tab-ruta').classList.toggle('active', t==='ruta'); document.getElementById('tab-todos').classList.toggle('active', t==='todos'); renderClients(); }
+    function checkExistingClient() {
+        const nameInput = document.getElementById('n-name').value.trim().toLowerCase();
+        const warnMsg = document.getElementById('n-warn-msg');
+        if (nameInput === '') {
+            warnMsg.style.display = 'none';
+            return;
+        }
+        const exists = clients.some(c => c.name.trim().toLowerCase() === nameInput);
+        warnMsg.style.display = exists ? 'block' : 'none';
+    }
+
+    function switchClientTab(t) { 
+        currentClientTab = t; 
+        document.getElementById('tab-ruta').classList.toggle('active', t==='ruta'); 
+        document.getElementById('tab-todos').classList.toggle('active', t==='todos'); 
+        document.getElementById('route-day-nav').style.display = (t === 'ruta') ? 'flex' : 'none';
+        renderClients(); 
+    }
+    
     function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
 
     function registerClient() {
@@ -749,17 +810,26 @@
         const village = document.getElementById('n-village').value;
         const days = Array.from(document.querySelectorAll('#n-days input:checked')).map(i => i.value);
         const balance = parseFloat(document.getElementById('n-balance').value) || 0;
-        if(!name) return alert("Por favor, introduza un nome.");
+        if(!name) return alert("Por favor, introduza um nome.");
         
         const addToDaily = document.getElementById('n-add-to-daily').checked;
+        const existingClient = clients.find(c => c.name.trim().toLowerCase() === name.toLowerCase());
 
-        clients.push({ id: Date.now(), name, village, days, balance, lastModified: balance > 0 ? getTodayString() : "" });
-        if (balance > 0) { 
-            logAction(name, 'add', balance, addToDaily);
-            if (addToDaily) {
-                addDebtToDaily(balance);
+        if (existingClient) {
+            if (balance > 0) {
+                existingClient.balance += balance;
+                logAction(existingClient.name, 'add', balance, addToDaily);
+                if (addToDaily) addDebtToDaily(balance);
+            }
+            existingClient.lastModified = getTodayString();
+        } else {
+            clients.push({ id: Date.now(), name, village, days, balance, lastModified: balance > 0 ? getTodayString() : "" });
+            if (balance > 0) { 
+                logAction(name, 'add', balance, addToDaily);
+                if (addToDaily) addDebtToDaily(balance);
             }
         }
+
         localStorage.setItem('clients', JSON.stringify(clients));
         document.getElementById('m-add').style.display = 'none'; 
         updateEarningsDisplay();
@@ -769,17 +839,48 @@
     function renderClients() {
         const list = document.getElementById('list'); list.innerHTML = '';
         if(currentClientTab === 'ruta') {
-            let activeRouteClients = clients.filter(c => c.balance > 0 && c.days.includes(hoy) && c.lastModified !== getTodayString());
+            const targetDayName = diasSemana[viewingDayIndex];
+            // Filtrar todos los clientes que corresponden al día seleccionado de la navegación
+            let routeClients = clients.filter(c => c.days.includes(targetDayName));
+            
+            let activeRouteClients = [];
+            let completedRouteClients = [];
+
+            routeClients.forEach(c => {
+                // Solo se tachan al fondo si el día visualizado es literalmente HOY y ya se marcaron como completados
+                if (targetDayName === hoy && c.lastModified === getTodayString()) {
+                    completedRouteClients.push(c);
+                } else {
+                    activeRouteClients.push(c);
+                }
+            });
+
+            // Ordenar activos por aldea
             activeRouteClients.sort((a, b) => {
                 const villageDiff = villageOrder.indexOf(a.village) - villageOrder.indexOf(b.village);
                 if (villageDiff !== 0) return villageDiff;
                 return clients.findIndex(c => c.id === a.id) - clients.findIndex(c => c.id === b.id);
             });
-            if(activeRouteClients.length === 0) {
-                list.innerHTML = `<p style="text-align:center; color:#757575; margin-top:30px;">Rota concluída ou sem clientes pendentes hoje (${hoy.split('-')[0]}).</p>`; return;
+
+            // Ordenar completados por aldea
+            completedRouteClients.sort((a, b) => {
+                const villageDiff = villageOrder.indexOf(a.village) - villageOrder.indexOf(b.village);
+                if (villageDiff !== 0) return villageDiff;
+                return clients.findIndex(c => c.id === a.id) - clients.findIndex(c => c.id === b.id);
+            });
+
+            if(routeClients.length === 0) {
+                list.innerHTML = `<p style="text-align:center; color:#757575; margin-top:30px;">Sem clientes agendados para ${targetDayName.split('-')[0]}.</p>`; return;
             }
+
+            // Renderizar Clientes Activos
             activeRouteClients.forEach(c => {
                 list.innerHTML += `<div class="client-card" onclick="openClientManagementModal(${c.id})"><div style="flex:1;"><strong>${c.name}</strong><br><small>${c.village}</small></div><b style="color:var(--danger); margin-right:10px;">${c.balance.toFixed(2)}€</b></div>`;
+            });
+
+            // Renderizar Clientes Completados (Tachados al fondo)
+            completedRouteClients.forEach(c => {
+                list.innerHTML += `<div class="client-card" onclick="openClientManagementModal(${c.id})" style="background: #f5f5f5; opacity: 0.6; text-decoration: line-through;"><div style="flex:1;"><strong>${c.name}</strong><br><small>${c.village}</small></div><b style="color:#757575; margin-right:10px;">${c.balance.toFixed(2)}€</b></div>`;
             });
         } else {
             const activeVillages = villageOrder.filter(v => clients.some(c => c.village === v));
@@ -873,7 +974,7 @@
         }
 
         c.balance = 0; 
-        c.lastModified = getTodayString(); 
+        c.lastModified = getTodayString(); // Marcar como concluido para hoy
         
         limparClienteAtual();
         sortProducts();
@@ -898,7 +999,7 @@
             localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
         }
         
-        c.lastModified = getTodayString();
+        c.lastModified = getTodayString(); // Marcar como concluido para hoy
         limparClienteAtual();
         sortProducts();
         renderProducts();
@@ -942,7 +1043,7 @@
         
         if(c.balance < 0) c.balance = 0; 
         
-        c.lastModified = getTodayString(); 
+        // ELIMINADO c.lastModified = getTodayString() para que cambios simples NO lo marquen como finalizado el día de hoy
         localStorage.setItem('clients', JSON.stringify(clients)); 
         document.getElementById('m-manage').style.display = 'none'; 
         updateEarningsDisplay();
