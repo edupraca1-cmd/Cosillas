@@ -249,9 +249,16 @@
             <div style="display: flex; justify-content: space-between; border-top: 1px dashed #ccc; padding-top: 5px; font-weight: bold; font-size: 1rem;"><span>Total Combinado:</span> <b id="m-combined-total" style="color:var(--success);">0.00€</b></div>
         </div>
         
-        <div style="display: flex; gap: 8px; margin: 10px 0;">
-            <button style="background:var(--success); color:white; border:none; padding:12px; border-radius:5px; flex: 1; font-weight:bold; cursor:pointer; font-size: 0.85rem;" onclick="payAll()">✓ PAGAR TUDO</button>
-            <button style="background:#7f8c8d; color:white; border:none; padding:12px; border-radius:5px; flex: 1; font-weight:bold; cursor:pointer; font-size: 0.85rem;" onclick="notPaid()">❌ Não pagou / Acumular</button>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin: 10px 0;">
+            <button style="background:var(--success); color:white; border:none; padding:12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size: 0.9rem;" onclick="payAll()">✓ PAGAR TUDO</button>
+            <div style="display: flex; gap: 8px;">
+                <button style="background:#f39c12; color:white; border:none; padding:12px; border-radius:5px; flex: 1; font-weight:bold; cursor:pointer; font-size: 0.85rem;" onclick="acumularCalculadora()">➕ Acumular</button>
+                <button style="background:#7f8c8d; color:white; border:none; padding:12px; border-radius:5px; flex: 1; font-weight:bold; cursor:pointer; font-size: 0.85rem;" onclick="justNotPaid()">❌ Não pagou</button>
+            </div>
+            <label style="font-size:0.85rem; font-weight:bold; display:flex; align-items:center; gap:6px; margin-top: 4px; color:#333; cursor:pointer;">
+                <input type="checkbox" id="m-add-calc-to-daily" checked style="width:16px; height:16px; cursor:pointer;">
+                Somar a Fiados do Dia (ao acumular)
+            </label>
         </div>
         
         <div style="margin: 15px 0; border-top: 1px dashed #ccc; padding-top: 10px;">
@@ -986,14 +993,15 @@
         renderClients(); 
     }
 
-    function notPaid() {
+    function acumularCalculadora() {
         let c = clients.find(x => x.id === targetId);
         let currentCalcTotal = parseFloat(document.getElementById('total-cliente').innerText) || 0;
         
         if (currentCalcTotal > 0) {
             c.balance += currentCalcTotal;
-            logAction(c.name, 'add', currentCalcTotal);
-            addDebtToDaily(currentCalcTotal);
+            const addToDaily = document.getElementById('m-add-calc-to-daily').checked;
+            logAction(c.name, 'add', currentCalcTotal, addToDaily);
+            if (addToDaily) addDebtToDaily(currentCalcTotal);
             
             productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
             localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
@@ -1003,6 +1011,17 @@
         limparClienteAtual();
         sortProducts();
         renderProducts();
+
+        localStorage.setItem('clients', JSON.stringify(clients));
+        document.getElementById('m-manage').style.display = 'none';
+        updateEarningsDisplay();
+        renderClients();
+    }
+
+    function justNotPaid() {
+        let c = clients.find(x => x.id === targetId);
+        
+        c.lastModified = getTodayString(); // Marcar como concluido para hoy (tachándolo)
 
         localStorage.setItem('clients', JSON.stringify(clients));
         document.getElementById('m-manage').style.display = 'none';
@@ -1043,7 +1062,6 @@
         
         if(c.balance < 0) c.balance = 0; 
         
-        // ELIMINADO c.lastModified = getTodayString() para que cambios simples NO lo marquen como finalizado el día de hoy
         localStorage.setItem('clients', JSON.stringify(clients)); 
         document.getElementById('m-manage').style.display = 'none'; 
         updateEarningsDisplay();
