@@ -171,6 +171,12 @@
             <input type="number" id="litros" step="0.01" placeholder="0 si es el punto inicial">
             <label>Coste total (€):</label>
             <input type="number" id="coste" step="0.01" placeholder="0 si es el punto inicial">
+            
+            <label style="display: flex; align-items: center; gap: 8px; margin: 15px 0 5px 0; cursor: pointer;">
+                <input type="checkbox" id="tanque_lleno" checked style="width: 18px; height: 18px; margin: 0;">
+                <span>¿Se ha llenado el tanque por completo?</span>
+            </label>
+            
             <button class="btn-gasolina" onclick="agregarRegistroGasolina()">Registrar Repostaje</button>
         </div>
         <div class="card">
@@ -506,10 +512,12 @@
             let odomInput = document.getElementById('odometro');
             let litrosInput = document.getElementById('litros');
             let costeInput = document.getElementById('coste');
+            let llenoInput = document.getElementById('tanque_lleno');
             
             let odom = parseFloat(odomInput.value);
             let litros = parseFloat(litrosInput.value);
             let coste = parseFloat(costeInput.value);
+            let tanqueLleno = llenoInput ? llenoInput.checked : true;
 
             if (isNaN(odom) || isNaN(litros) || isNaN(coste)) {
                 alert("Por favor, introduce valores válidos en todos los campos.");
@@ -517,8 +525,6 @@
             }
 
             let historial = JSON.parse(localStorage.getItem('historial_consumo')) || [];
-            let consumoText = "Base";
-            let distanciaText = "Base";
 
             if (historial.length > 0) {
                 let ultimo = historial[historial.length - 1];
@@ -528,15 +534,6 @@
                     alert("El kilometraje debe ser mayor que el del registro anterior.");
                     return;
                 }
-                
-                distanciaText = distancia.toFixed(1) + " km";
-
-                if (litros > 0) {
-                    let calc = (litros / distancia) * 100;
-                    consumoText = calc.toFixed(2) + " L/100km";
-                } else {
-                    consumoText = "N/A";
-                }
             }
 
             let ahora = new Date();
@@ -545,10 +542,9 @@
                 mes: ahora.getMonth(),
                 ano: ahora.getFullYear(),
                 odometro: odom,
-                distancia: distanciaText,
                 litros: litros,
                 coste: coste,
-                consumo: consumoText
+                tanqueLleno: tanqueLleno
             };
 
             historial.push(nuevo);
@@ -557,6 +553,7 @@
             odomInput.value = "";
             litrosInput.value = "";
             costeInput.value = "";
+            if (llenoInput) llenoInput.checked = true;
             
             cargarHistorialGasolina();
         }
@@ -571,6 +568,45 @@
             tabla.innerHTML = "";
             contenedorMeses.innerHTML = "";
 
+            // --- FASE 1: CÁLCULO DINÁMICO DE CONSUMO (Hacia adelante) ---
+            let litrosAcumulados = 0;
+            let kmInicialCiclo = historial.length > 0 ? historial[0].odometro : 0;
+
+            for (let i = 0; i < historial.length; i++) {
+                let reg = historial[i];
+                
+                if (reg.tanqueLleno === undefined) reg.tanqueLleno = true; // Compatibilidad hacia atrás
+
+                if (i === 0) {
+                    reg.distanciaCalculada = "Base";
+                    reg.consumoCalculado = "Base";
+                    kmInicialCiclo = reg.odometro;
+                    litrosAcumulados = 0;
+                    continue;
+                }
+
+                let ultimo = historial[i - 1];
+                let distanciaTramo = reg.odometro - ultimo.odometro;
+                reg.distanciaCalculada = distanciaTramo.toFixed(1) + " km";
+
+                litrosAcumulados += reg.litros;
+
+                if (reg.tanqueLleno) {
+                    let distTotalCiclo = reg.odometro - kmInicialCiclo;
+                    if (distTotalCiclo > 0 && litrosAcumulados > 0) {
+                        let calc = (litrosAcumulados / distTotalCiclo) * 100;
+                        reg.consumoCalculado = calc.toFixed(2) + " L/100km";
+                    } else {
+                        reg.consumoCalculado = "N/A";
+                    }
+                    kmInicialCiclo = reg.odometro;
+                    litrosAcumulados = 0;
+                } else {
+                    reg.consumoCalculado = "Parcial";
+                }
+            }
+
+            // --- FASE 2: RENDERIZADO (Hacia atrás, el más reciente primero) ---
             let ahora = new Date();
             let mesActual = ahora.getMonth();
             let anoActual = ahora.getFullYear();
@@ -598,10 +634,10 @@
                 let fila = `<tr>
                     <td>${reg.fechaTxt}</td>
                     <td>${reg.odometro.toLocaleString()}</td>
-                    <td><strong>${reg.distancia || "---"}</strong></td>
-                    <td>${reg.litros} L</td>
+                    <td><strong>${reg.distanciaCalculada}</strong></td>
+                    <td>${reg.litros} L ${reg.tanqueLleno ? '' : '<span style="color:#f39c12; font-size:11px;">(Parcial)</span>'}</td>
                     <td>${costeVal.toFixed(2)} €</td>
-                    <td><strong>${reg.consumo}</strong></td>
+                    <td><strong>${reg.consumoCalculado}</strong></td>
                 </tr>`;
                 tabla.innerHTML += fila;
             }
