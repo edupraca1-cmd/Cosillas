@@ -1038,6 +1038,8 @@
         c.days = Array.from(document.querySelectorAll('#m-days input:checked')).map(i => i.value);
 
         const correctInput = document.getElementById('v-correct').value.trim();
+        let currentCalcTotal = parseFloat(document.getElementById('total-cliente').innerText) || 0;
+        
         if (correctInput !== "") {
             const newBal = parseFloat(correctInput);
             if (!isNaN(newBal) && newBal >= 0) {
@@ -1046,17 +1048,57 @@
             }
         } else {
             const addedInput = parseFloat(document.getElementById('v-add').value) || 0;
-            if (addedInput > 0) { 
-                c.balance += addedInput; 
-                logAction(c.name, 'add', addedInput); 
-                addDebtToDaily(addedInput);
-            }
             const paymentInput = parseFloat(document.getElementById('v-sub').value) || 0;
-            if (paymentInput > 0) {
-                const realPaid = paymentInput > c.balance ? c.balance : paymentInput; 
-                addPaymentToDaily(realPaid); 
-                logAction(c.name, 'pay', realPaid); 
-                c.balance -= realPaid;
+            
+            // --- NUEVA LÓGICA: Venta Parcial desde la Calculadora ---
+            if (currentCalcTotal > 0 && paymentInput > 0) {
+                if (paymentInput > currentCalcTotal) {
+                    return alert("O valor pago não pode ser maior que o total da calculadora.");
+                }
+                
+                let restanteFiado = currentCalcTotal - paymentInput;
+                
+                // 1. El pago parcial va al Total Diario de la calculadora (Caja)
+                totalDiario += paymentInput;
+                localStorage.setItem('totalDiario', totalDiario);
+                document.getElementById('total-diario').innerText = totalDiario.toFixed(2) + ' €';
+                
+                // Guardar pago en el historial corto de la calculadora
+                calcHistory.unshift(paymentInput);
+                if (calcHistory.length > 3) calcHistory.pop();
+                localStorage.setItem('calcHistory', JSON.stringify(calcHistory));
+                updateHistoryUI();
+                
+                // 2. El restante va a la deuda y a los fiados del día
+                if (restanteFiado > 0) {
+                    c.balance += restanteFiado;
+                    const addToDaily = document.getElementById('m-add-calc-to-daily').checked;
+                    logAction(c.name, 'add', restanteFiado, addToDaily);
+                    if (addToDaily) addDebtToDaily(restanteFiado);
+                }
+                
+                // Actualizar popularidad de productos y limpiar la calculadora
+                productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
+                localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
+                
+                c.lastModified = getTodayString(); // Marcar cliente como despachado hoy
+                limparClienteAtual();
+                sortProducts();
+                renderProducts();
+            } 
+            // --- LÓGICA ORIGINAL: Ajustes y pagos de deudas antiguas ---
+            else {
+                if (addedInput > 0) { 
+                    c.balance += addedInput; 
+                    logAction(c.name, 'add', addedInput); 
+                    addDebtToDaily(addedInput);
+                }
+                if (paymentInput > 0) {
+                    const realPaid = paymentInput > c.balance ? c.balance : paymentInput; 
+                    addPaymentToDaily(realPaid); 
+                    logAction(c.name, 'pay', realPaid); 
+                    c.balance -= realPaid;
+                }
             }
         }
         
