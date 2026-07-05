@@ -1,4 +1,4 @@
-const CACHE_NAME = 'padaria-v16'; // Subimos a v12 para forzar el cambio
+const CACHE_NAME = 'padaria-v17'; // Subimos a v17 para forzar el cambio
 const ASSETS = [
   './',
   './index.html',
