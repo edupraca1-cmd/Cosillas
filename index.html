@@ -517,13 +517,20 @@
     }, 500);
 
     function resetDiario() {
-        if (confirm('Tem a certeza de que deseja limpar o Total Diário e o histórico recente?')) {
-            totalDiario = 0; localStorage.removeItem('totalDiario');
-            calcHistory = []; localStorage.removeItem('calcHistory');
-            document.getElementById('total-diario').innerText = '0.00 €';
-            updateHistoryUI();
-        }
+    if (confirm('Tem a certeza de que deseja limpar o Total Diário e o histórico recente?')) {
+        let fundo = prompt('Quanto dinheiro fica em caixa para os trocos de amanhã?', '0.00');
+        
+        totalDiario = parseFloat(fundo ? fundo.replace(',', '.') : 0) || 0;
+        localStorage.setItem('totalDiario', totalDiario);
+        
+        calcHistory = []; 
+        localStorage.removeItem('calcHistory');
+        
+        document.getElementById('total-diario').innerText = totalDiario.toFixed(2) + ' €';
+        updateHistoryUI();
     }
+    }
+    
 
     function resetFabrica() {
         if (confirm('⚠️ ATENÇÃO: Deseja repor as definições de FÁBRICA?')) {
