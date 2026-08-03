@@ -855,7 +855,7 @@
         if(currentClientTab === 'ruta') {
             const targetDayName = diasSemana[viewingDayIndex];
             // Filtrar todos los clientes que corresponden al día seleccionado de la navegación
-            let routeClients = clients.filter(c => c.days.includes(targetDayName));
+            let routeClients = clients.filter(c => c.days.includes(targetDayName) && c.balance > 0);
             
             let activeRouteClients = [];
             let completedRouteClients = [];
