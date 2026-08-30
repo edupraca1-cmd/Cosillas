@@ -326,6 +326,18 @@
         <div class="cal-grid" id="calendar-grid"></div>
         <h4 id="selected-date-title" style="margin: 15px 0 5px 0; border-top: 1px solid #ddd; padding-top: 10px;">Movimentos do dia</h4>
         <div id="history-log" style="max-height: 22vh; overflow-y: auto; border: 1px solid #ddd; background: #fafafa; border-radius: 5px; margin-bottom: 10px;"></div>
+        
+        <!-- SECCIÓN DE COPIAS DE SEGURIDAD -->
+        <div style="margin: 15px 0; padding-top: 10px; border-top: 1px dashed #ccc; display: flex; flex-direction: column; gap: 8px;">
+            <button onclick="exportarBackup()" style="width:100%; padding:10px; background:var(--primary); color:white; border:none; font-weight:bold; border-radius:4px; cursor:pointer; font-size:0.85rem;">
+                📥 Exportar Copia de Seguridad
+            </button>
+            <button onclick="document.getElementById('importFile').click()" style="width:100%; padding:10px; background:#2980b9; color:white; border:none; font-weight:bold; border-radius:4px; cursor:pointer; font-size:0.85rem;">
+                📤 Importar Copia de Seguridad
+            </button>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importarBackup(event)">
+        </div>
+
         <button onclick="clearFullHistory()" style="width:100%; padding:8px; background:var(--danger); color:white; border:none; font-weight:bold; cursor:pointer; border-radius:4px; font-size:0.85rem;">🗑 Limpar Todo o Histórico</button>
         <button onclick="document.getElementById('m-history').style.display='none'" style="width:100%; padding:10px; margin-top:8px; cursor:pointer; font-weight:bold;">Fechar</button>
     </div>
@@ -1270,6 +1282,67 @@
             saveHoursData();
         }
     });
+
+
+    // ==================== LÓGICA: COPIAS DE SEGURIDAD (IMPORT / EXPORT) ====================
+
+    function exportarBackup() {
+        const dataBackup = {
+            clients: JSON.parse(localStorage.getItem('clients') || '[]'),
+            villageOrder: JSON.parse(localStorage.getItem('villageOrder') || '[]'),
+            transactionLogs: JSON.parse(localStorage.getItem('transactionLogs') || '[]'),
+            dailyData: JSON.parse(localStorage.getItem('dailyData') || '{}'),
+            totalDiario: parseFloat(localStorage.getItem('totalDiario')) || 0,
+            padaria_popularity: JSON.parse(localStorage.getItem('padaria_popularity') || '{}'),
+            calcHistory: JSON.parse(localStorage.getItem('calcHistory') || '[]'),
+            workTimeData: JSON.parse(localStorage.getItem('workTimeData') || '{}')
+        };
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataBackup, null, 2));
+        const downloadAnchor = document.createElement('a');
+        
+        const hoy = new Date();
+        const fechaStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+        
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `backup_padaria_${fechaStr}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function importarBackup(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+
+                if (!confirm("⚠️ ATENCIÓN: Esta acción reemplazará todos los datos actuales por los del archivo importado. ¿Deseas continuar?")) {
+                    event.target.value = '';
+                    return;
+                }
+
+                if (data.clients) localStorage.setItem('clients', JSON.stringify(data.clients));
+                if (data.villageOrder) localStorage.setItem('villageOrder', JSON.stringify(data.villageOrder));
+                if (data.transactionLogs) localStorage.setItem('transactionLogs', JSON.stringify(data.transactionLogs));
+                if (data.dailyData) localStorage.setItem('dailyData', JSON.stringify(data.dailyData));
+                if (data.totalDiario !== undefined) localStorage.setItem('totalDiario', data.totalDiario);
+                if (data.padaria_popularity) localStorage.setItem('padaria_popularity', JSON.stringify(data.padaria_popularity));
+                if (data.calcHistory) localStorage.setItem('calcHistory', JSON.stringify(data.calcHistory));
+                if (data.workTimeData) localStorage.setItem('workTimeData', JSON.stringify(data.workTimeData));
+
+                alert("✅ Copia de seguridad restaurada con éxito.");
+                location.reload();
+            } catch (err) {
+                alert("❌ Error al leer el archivo JSON. Verifica que sea un archivo válido.");
+                console.error(err);
+            }
+        };
+        reader.readAsText(file);
+    }
 
 
     // --- INICIALIZADOR GENERAL GLOBAL ---
