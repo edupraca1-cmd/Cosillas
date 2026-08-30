@@ -366,6 +366,16 @@
 
     productsData.forEach(p => cart[p.id] = 0);
 
+    function getCartSummary() {
+        let items = [];
+        productsData.forEach(p => {
+            if (cart[p.id] > 0) {
+                items.push(`${cart[p.id]} ${p.name}`);
+            }
+        });
+        return items.join(', ');
+    }
+
     function sortProducts() {
         productsData.sort((a, b) => {
             const popA = popularity[a.id] || 0; const popB = popularity[b.id] || 0;
@@ -517,18 +527,18 @@
     }, 500);
 
     function resetDiario() {
-    if (confirm('Tem a certeza de que deseja limpar o Total Diário e o histórico recente?')) {
-        let fundo = prompt('Quanto dinheiro fica em caixa para os trocos de amanhã?', '0.00');
-        
-        totalDiario = parseFloat(fundo ? fundo.replace(',', '.') : 0) || 0;
-        localStorage.setItem('totalDiario', totalDiario);
-        
-        calcHistory = []; 
-        localStorage.removeItem('calcHistory');
-        
-        document.getElementById('total-diario').innerText = totalDiario.toFixed(2) + ' €';
-        updateHistoryUI();
-    }
+        if (confirm('Tem a certeza de que deseja limpar o Total Diário e o histórico recente?')) {
+            let fundo = prompt('Quanto dinheiro fica em caixa para os trocos de amanhã?', '0.00');
+            
+            totalDiario = parseFloat(fundo ? fundo.replace(',', '.') : 0) || 0;
+            localStorage.setItem('totalDiario', totalDiario);
+            
+            calcHistory = []; 
+            localStorage.removeItem('calcHistory');
+            
+            document.getElementById('total-diario').innerText = totalDiario.toFixed(2) + ' €';
+            updateHistoryUI();
+        }
     }
     
 
@@ -556,7 +566,7 @@
     let logs = JSON.parse(localStorage.getItem('transactionLogs') || '[]');
     let currentClientTab = 'ruta';
     let targetId = null;
-    let viewingDayIndex = new Date().getDay(); // Guarda el índice del día seleccionado en la navegación
+    let viewingDayIndex = new Date().getDay();
     
     let dailyData = JSON.parse(localStorage.getItem('dailyData') || '{"date":"","received":0,"added":0}');
     if (dailyData.amount !== undefined) { 
@@ -590,7 +600,7 @@
         }
         updateEarningsDisplay();
 
-        viewingDayIndex = new Date().getDay(); // Forzar hoy al iniciar
+        viewingDayIndex = new Date().getDay();
         updateRouteDayUI();
 
         const d = new Date();
@@ -636,11 +646,19 @@
         }
     }
 
-    function logAction(clientName, type, amount, isDaily = true) {
+    function logAction(clientName, type, amount, isDaily = true, details = '') {
         const d = new Date();
         const dateFormatted = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
         const timeFormatted = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-        logs.unshift({ date: dateFormatted, time: timeFormatted, name: clientName, type: type, amount: amount, isDaily: isDaily });
+        logs.unshift({ 
+            date: dateFormatted, 
+            time: timeFormatted, 
+            name: clientName, 
+            type: type, 
+            amount: amount, 
+            isDaily: isDaily,
+            details: details 
+        });
         localStorage.setItem('transactionLogs', JSON.stringify(logs));
     }
 
@@ -703,10 +721,13 @@
                 icon = '🔵';
             }
             
+            let detailsHtml = l.details ? `<div style="font-size:0.75rem; color:#555; margin-top:2px; font-style:italic;">📦 ${l.details}</div>` : '';
+
             logBox.innerHTML += `
                 <div class="history-item" style="position: relative; padding-right: 65px; min-height: 38px; display: flex; flex-direction: column; justify-content: center;">
                     <div><b>${l.name}</b> <small style="color:#757575; float:right; margin-right:5px;">${l.time}</small></div>
                     <span style="color:${color}; font-weight:bold;">${icon} ${typeText}: ${l.amount.toFixed(2)}€</span>
+                    ${detailsHtml}
                     <button onclick="anularMovimento(${idx})" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: var(--danger); color: white; border: none; padding: 5px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer;">Anular</button>
                 </div>`;
         });
@@ -781,7 +802,10 @@
 
     function openAddModal() {
         document.getElementById('n-name').value = ''; 
-        document.getElementById('n-balance').value = '';
+        
+        let currentCalcTotal = parseFloat(document.getElementById('total-cliente').innerText) || 0;
+        document.getElementById('n-balance').value = currentCalcTotal > 0 ? currentCalcTotal.toFixed(2) : '';
+
         document.getElementById('n-village').selectedIndex = 0;
         document.querySelectorAll('#n-days input').forEach(cb => cb.checked = false);
         document.getElementById('n-add-to-daily').checked = true;
@@ -829,19 +853,29 @@
         const addToDaily = document.getElementById('n-add-to-daily').checked;
         const existingClient = clients.find(c => c.name.trim().toLowerCase() === name.toLowerCase());
 
+        const cartDetails = getCartSummary();
+
         if (existingClient) {
             if (balance > 0) {
                 existingClient.balance += balance;
-                logAction(existingClient.name, 'add', balance, addToDaily);
+                logAction(existingClient.name, 'add', balance, addToDaily, cartDetails);
                 if (addToDaily) addDebtToDaily(balance);
             }
             existingClient.lastModified = getTodayString();
         } else {
             clients.push({ id: Date.now(), name, village, days, balance, lastModified: balance > 0 ? getTodayString() : "" });
             if (balance > 0) { 
-                logAction(name, 'add', balance, addToDaily);
+                logAction(name, 'add', balance, addToDaily, cartDetails);
                 if (addToDaily) addDebtToDaily(balance);
             }
+        }
+
+        if (cartDetails) {
+            productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
+            localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
+            limparClienteAtual();
+            sortProducts();
+            renderProducts();
         }
 
         localStorage.setItem('clients', JSON.stringify(clients));
@@ -854,14 +888,12 @@
         const list = document.getElementById('list'); list.innerHTML = '';
         if(currentClientTab === 'ruta') {
             const targetDayName = diasSemana[viewingDayIndex];
-            // Filtrar todos los clientes que corresponden al día seleccionado de la navegación
             let routeClients = clients.filter(c => c.days.includes(targetDayName) && c.balance > 0);
             
             let activeRouteClients = [];
             let completedRouteClients = [];
 
             routeClients.forEach(c => {
-                // Solo se tachan al fondo si el día visualizado es literalmente HOY y ya se marcaron como completados
                 if (targetDayName === hoy && c.lastModified === getTodayString()) {
                     completedRouteClients.push(c);
                 } else {
@@ -869,14 +901,12 @@
                 }
             });
 
-            // Ordenar activos por aldea
             activeRouteClients.sort((a, b) => {
                 const villageDiff = villageOrder.indexOf(a.village) - villageOrder.indexOf(b.village);
                 if (villageDiff !== 0) return villageDiff;
                 return clients.findIndex(c => c.id === a.id) - clients.findIndex(c => c.id === b.id);
             });
 
-            // Ordenar completados por aldea
             completedRouteClients.sort((a, b) => {
                 const villageDiff = villageOrder.indexOf(a.village) - villageOrder.indexOf(b.village);
                 if (villageDiff !== 0) return villageDiff;
@@ -887,12 +917,10 @@
                 list.innerHTML = `<p style="text-align:center; color:#757575; margin-top:30px;">Sem clientes agendados para ${targetDayName.split('-')[0]}.</p>`; return;
             }
 
-            // Renderizar Clientes Activos
             activeRouteClients.forEach(c => {
                 list.innerHTML += `<div class="client-card" onclick="openClientManagementModal(${c.id})"><div style="flex:1;"><strong>${c.name}</strong><br><small>${c.village}</small></div><b style="color:var(--danger); margin-right:10px;">${c.balance.toFixed(2)}€</b></div>`;
             });
 
-            // Renderizar Clientes Completados (Tachados al fondo)
             completedRouteClients.forEach(c => {
                 list.innerHTML += `<div class="client-card" onclick="openClientManagementModal(${c.id})" style="background: #f5f5f5; opacity: 0.6; text-decoration: line-through;"><div style="flex:1;"><strong>${c.name}</strong><br><small>${c.village}</small></div><b style="color:#757575; margin-right:10px;">${c.balance.toFixed(2)}€</b></div>`;
             });
@@ -979,7 +1007,7 @@
 
         if (combinedTotal > 0) { 
             addPaymentToDaily(combinedTotal); 
-            logAction(c.name, 'pay', combinedTotal); 
+            logAction(c.name, 'pay', combinedTotal, true, getCartSummary()); 
         }
         
         if (currentCalcTotal > 0) {
@@ -988,7 +1016,7 @@
         }
 
         c.balance = 0; 
-        c.lastModified = getTodayString(); // Marcar como concluido para hoy
+        c.lastModified = getTodayString();
         
         limparClienteAtual();
         sortProducts();
@@ -1007,14 +1035,16 @@
         if (currentCalcTotal > 0) {
             c.balance += currentCalcTotal;
             const addToDaily = document.getElementById('m-add-calc-to-daily').checked;
-            logAction(c.name, 'add', currentCalcTotal, addToDaily);
+            const cartDetails = getCartSummary();
+            
+            logAction(c.name, 'add', currentCalcTotal, addToDaily, cartDetails);
             if (addToDaily) addDebtToDaily(currentCalcTotal);
             
             productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
             localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
         }
         
-        c.lastModified = getTodayString(); // Marcar como concluido para hoy
+        c.lastModified = getTodayString();
         limparClienteAtual();
         sortProducts();
         renderProducts();
@@ -1028,7 +1058,7 @@
     function justNotPaid() {
         let c = clients.find(x => x.id === targetId);
         
-        c.lastModified = getTodayString(); // Marcar como concluido para hoy (tachándolo)
+        c.lastModified = getTodayString();
 
         localStorage.setItem('clients', JSON.stringify(clients));
         document.getElementById('m-manage').style.display = 'none';
@@ -1057,7 +1087,6 @@
             const addedInput = parseFloat(document.getElementById('v-add').value) || 0;
             const paymentInput = parseFloat(document.getElementById('v-sub').value) || 0;
             
-            // --- NUEVA LÓGICA: Venta Parcial desde la Calculadora ---
             if (currentCalcTotal > 0 && paymentInput > 0) {
                 if (paymentInput > currentCalcTotal) {
                     return alert("O valor pago não pode ser maior que o total da calculadora.");
@@ -1065,35 +1094,30 @@
                 
                 let restanteFiado = currentCalcTotal - paymentInput;
                 
-                // 1. El pago parcial va al Total Diario de la calculadora (Caja)
                 totalDiario += paymentInput;
                 localStorage.setItem('totalDiario', totalDiario);
                 document.getElementById('total-diario').innerText = totalDiario.toFixed(2) + ' €';
                 
-                // Guardar pago en el historial corto de la calculadora
                 calcHistory.unshift(paymentInput);
                 if (calcHistory.length > 3) calcHistory.pop();
                 localStorage.setItem('calcHistory', JSON.stringify(calcHistory));
                 updateHistoryUI();
                 
-                // 2. El restante va a la deuda y a los fiados del día
                 if (restanteFiado > 0) {
                     c.balance += restanteFiado;
                     const addToDaily = document.getElementById('m-add-calc-to-daily').checked;
-                    logAction(c.name, 'add', restanteFiado, addToDaily);
+                    logAction(c.name, 'add', restanteFiado, addToDaily, getCartSummary());
                     if (addToDaily) addDebtToDaily(restanteFiado);
                 }
                 
-                // Actualizar popularidad de productos y limpiar la calculadora
                 productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
                 localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
                 
-                c.lastModified = getTodayString(); // Marcar cliente como despachado hoy
+                c.lastModified = getTodayString();
                 limparClienteAtual();
                 sortProducts();
                 renderProducts();
             } 
-            // --- LÓGICA ORIGINAL: Ajustes y pagos de deudas antiguas ---
             else {
                 if (addedInput > 0) { 
                     c.balance += addedInput; 
