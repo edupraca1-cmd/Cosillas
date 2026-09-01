@@ -1064,7 +1064,7 @@
         renderClients();
     }
     
-    function saveManagement() { 
+        function saveManagement() { 
         let c = getOrCreateClientByName();
         if (!c) return;
 
@@ -1089,71 +1089,99 @@
             const addedInput = parseFloat(document.getElementById('v-add').value) || 0;
             const paymentInput = parseFloat(document.getElementById('v-sub').value) || 0;
             
-            if (currentCalcTotal > 0 && paymentInput > 0) {
-                if (paymentInput > currentCalcTotal) {
-                    return alert("O valor pago não pode ser maior que o total da calculadora.");
+            if (paymentInput > 0) {
+                const totalCombinado = c.balance + currentCalcTotal;
+                
+                if (paymentInput > totalCombinado) {
+                    return alert("O valor pago não pode ser maior que o total combinado (" + totalCombinado.toFixed(2) + "€).");
                 }
-                
-                let restanteFiado = currentCalcTotal - paymentInput;
-                
-                totalDiario += paymentInput;
-                localStorage.setItem('totalDiario', totalDiario);
-                document.getElementById('total-diario').innerText = totalDiario.toFixed(2) + ' €';
-                
-                calcHistory.unshift(paymentInput);
-                if (calcHistory.length > 3) calcHistory.pop();
-                localStorage.setItem('calcHistory', JSON.stringify(calcHistory));
-                updateHistoryUI();
-                
-                if (restanteFiado > 0) {
-                    c.balance += restanteFiado;
-                    const addToDaily = document.getElementById('m-add-calc-to-daily').checked;
-                    logAction(c.name, 'add', restanteFiado, addToDaily, getCartSummary());
-                    if (addToDaily) addDebtToDaily(restanteFiado);
-                }
-                
-                productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
-                localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
-                
-                c.lastModified = getTodayString();
-                limparClienteAtual();
-                sortProducts();
-                renderProducts();
-            } 
-            else {
-                if (addedInput > 0) { 
-                    c.balance += addedInput; 
-                    logAction(c.name, 'add', addedInput); 
-                    addDebtToDaily(addedInput);
-                }
-                if (paymentInput > 0) {
-                    const realPaid = paymentInput > c.balance ? c.balance : paymentInput; 
-                    addPaymentToDaily(realPaid); 
-                    logAction(c.name, 'pay', realPaid); 
+
+                if (currentCalcTotal > 0) {
+                    if (paymentInput >= currentCalcTotal) {
+                        // Cubre toda la compra actual
+                        let pagoCompra = currentCalcTotal;
+                        let sobraParaDeuda = paymentInput - currentCalcTotal;
+
+                        totalDiario += pagoCompra;
+                        localStorage.setItem('totalDiario', totalDiario);
+                        document.getElementById('total-diario').innerText = totalDiario.toFixed(2) + ' €';
+
+                        calcHistory.unshift(pagoCompra);
+                        if (calcHistory.length > 3) calcHistory.pop();
+                        localStorage.setItem('calcHistory', JSON.stringify(calcHistory));
+                        updateHistoryUI();
+
+                        logAction(c.name, 'pay', pagoCompra, true, getCartSummary());
+
+                        // El remanente descuenta la deuda anterior
+                        if (sobraParaDeuda > 0) {
+                            addPaymentToDaily(sobraParaDeuda);
+                            logAction(c.name, 'pay', sobraParaDeuda, true, 'Abono de dívida anterior');
+                            c.balance -= sobraParaDeuda;
+                        }
+
+                        productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
+                        localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
+
+                        c.lastModified = getTodayString();
+                        limparClienteAtual();
+                        sortProducts();
+                        renderProducts();
+                    } else {
+                        // Paga solo una parte de la compra actual
+                        let pagoCompra = paymentInput;
+                        let noPagadoCompra = currentCalcTotal - pagoCompra;
+
+                        totalDiario += pagoCompra;
+                        localStorage.setItem('totalDiario', totalDiario);
+                        document.getElementById('total-diario').innerText = totalDiario.toFixed(2) + ' €';
+
+                        calcHistory.unshift(pagoCompra);
+                        if (calcHistory.length > 3) calcHistory.pop();
+                        localStorage.setItem('calcHistory', JSON.stringify(calcHistory));
+                        updateHistoryUI();
+
+                        logAction(c.name, 'pay', pagoCompra, true, getCartSummary());
+
+                        // Lo faltante de la compra se suma a su saldo de deuda
+                        const addToDaily = document.getElementById('m-add-calc-to-daily').checked;
+                        c.balance += noPagadoCompra;
+                        logAction(c.name, 'add', noPagadoCompra, addToDaily, 'Falta de compra actual');
+                        if (addToDaily) addDebtToDaily(noPagadoCompra);
+
+                        productsData.forEach(p => { if (cart[p.id] > 0) popularity[p.id] = (popularity[p.id] || 0) + cart[p.id]; });
+                        localStorage.setItem('padaria_popularity', JSON.stringify(popularity));
+
+                        c.lastModified = getTodayString();
+                        limparClienteAtual();
+                        sortProducts();
+                        renderProducts();
+                    }
+                } else {
+                    // Solo abono de deuda anterior (calculadora en 0)
+                    const realPaid = Math.min(paymentInput, c.balance);
+                    addPaymentToDaily(realPaid);
+                    logAction(c.name, 'pay', realPaid, true, 'Abono de dívida');
                     c.balance -= realPaid;
+                    c.lastModified = getTodayString();
                 }
+            }
+
+            if (addedInput > 0) { 
+                c.balance += addedInput; 
+                logAction(c.name, 'add', addedInput); 
+                addDebtToDaily(addedInput);
             }
         }
         
-        if(c.balance < 0) c.balance = 0; 
+        if (c.balance < 0) c.balance = 0; 
         
         localStorage.setItem('clients', JSON.stringify(clients)); 
         document.getElementById('m-manage').style.display = 'none'; 
         updateEarningsDisplay();
         renderClients(); 
-    }
+        }
     
-    function deleteClient() { 
-        if (!targetId) return alert("Nenhum cliente existente selecionado.");
-        let c = clients.find(x => x.id === targetId); 
-        if (c && confirm(`Eliminar "${c.name}"?`)) { 
-            clients = clients.filter(x => x.id !== targetId); 
-            localStorage.setItem('clients', JSON.stringify(clients)); 
-            document.getElementById('m-manage').style.display = 'none'; 
-            updateEarningsDisplay();
-            renderClients(); 
-        } 
-    }
 
 
     // ==================== LÓGICA: CONTROL DE JORNADA ====================
