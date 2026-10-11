@@ -259,6 +259,7 @@
 
         .date-nav {
             display: flex;
+            gap: 6px;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
@@ -373,6 +374,18 @@
         .sd-ayuda { font-size: 11px; color: #64748b; margin-top: 6px; line-height: 1.4; }
         .arrastrando { background: #fffbeb !important; box-shadow: 0 6px 16px rgba(15,23,42,0.28); outline: 2px solid var(--primary); position: relative; z-index: 5; }
 
+        /* Segurança dos dados */
+        .aviso-copia { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; }
+        .aviso-copia-txt { font-size: 13px; color: #92400e; line-height: 1.4; }
+        .aviso-copia-bot { display: flex; gap: 8px; margin-top: 8px; }
+        .aviso-copia-bot button { flex: 1; height: 40px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer; border: none; }
+        .seg-fila { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .seg-fila b { text-align: right; }
+        .seg-fila b.mal { color: var(--danger); }
+        .seg-fila b.bien { color: #15803d; }
+        .seg-nota { font-size: 12px; color: #64748b; line-height: 1.45; margin-top: 8px; }
+        .badge-copia { display: inline-block; margin-left: 4px; }
+
         /* Diário de Atividade */
         .dr-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
         .dr-card summary { cursor: pointer; font-size: 14px; }
@@ -420,7 +433,7 @@
         body.modo-fiados #fiados-host { display: block; }
         body.modo-fiados .btn-float-add { display: none; }
         /* O botão "+" tapava as alças de arrastar na lista de rota */
-        body[data-sub="config"] .btn-float-add, body[data-sub="diario"] .btn-float-add { display: none; }
+        body[data-sub="config"] .btn-float-add, body[data-sub="diario"] .btn-float-add, body[data-sub="backup"] .btn-float-add { display: none; }
 
         #area-impressao-act { display: none; padding: 20px; }
         @media print {
@@ -438,7 +451,9 @@
     <!-- 1. VISTA DE REPARTIÇÃO -->
     <div id="view-reparto" class="view active">
         <h2>Encomendas</h2>
+        <div id="aviso-copia" class="aviso-copia" style="display:none;"></div>
         <div class="date-nav">
+            <button id="btn-fecha-ant" onclick="cambiarFecha(-1)" style="display:none;">◀ Ant</button>
             <button class="btn-hoy-nav" onclick="irAlDiaActual()">Hoje</button>
             <span id="fecha-actual-display" style="font-weight: bold; font-size: 13px; text-align: center; flex: 1.2;"></span>
             <button onclick="cambiarFecha(1)">Seg ▶</button>
@@ -521,7 +536,7 @@
             </div>
             <div class="menu-card" onclick="abrirSubModulo('backup')">
                 <div class="menu-card-icon">💾</div>
-                <div class="menu-card-title">Cópias de Segurança</div>
+                <div class="menu-card-title">Cópias de Segurança<span id="badge-copia" class="badge-copia" style="display:none;">⚠️</span></div>
             </div>
         </div>
     </div>
@@ -541,6 +556,9 @@
         <div class="dr-botones" style="margin: 10px 0;">
             <button type="button" onclick="diarioDocMes(false)">📄 Resumo do mês</button>
             <button type="button" onclick="diarioDocMes(true)">📄 Mês com detalhe</button>
+        </div>
+        <div class="dr-botones" style="margin: -4px 0 10px 0;">
+            <button type="button" onclick="diarioDocAno()">📄 Resumo do ano (férias e horas)</button>
         </div>
         <div id="diario-dia"></div>
     </div>
@@ -582,10 +600,19 @@
         <button class="btn-close" style="padding: 8px 14px; margin-bottom: 10px; border-radius: 6px;" onclick="switchTab('mais')">◀ Voltar</button>
         <h2>Cópia de Segurança de Dados</h2>
         <div class="jornada-card">
-            <p style="font-size: 13px; color: #475569;">Guarde uma cópia dos seus dados de encomendas, horas, fiados, calculadora e do Diário de Atividade para evitar perdas. Recomenda-se descarregar uma cópia no fim de cada mês.</p>
-            <button class="btn-jornada btn-start" style="margin-bottom: 10px;" onclick="exportarBackupJSON()">⬇️ Descarregar Cópia (JSON)</button>
-            <input type="file" id="input-importar-backup" accept=".json" style="display: none;" onchange="importarBackupJSON(event)">
-            <button class="btn-jornada btn-pause" onclick="document.getElementById('input-importar-backup').click()">⬆️ Restaurar Cópia</button>
+            <div class="seg-fila"><span>🕒 Última cópia</span><b id="seg-ultima">—</b></div>
+            <div class="seg-fila"><span>🛡 Armazenamento protegido</span><b id="seg-persist">—</b></div>
+            <div class="seg-fila"><span>📦 Dados guardados aqui</span><b id="seg-dados">—</b></div>
+            <div class="seg-fila"><span>💽 Espaço usado</span><b id="seg-espaco">—</b></div>
+            <div class="seg-nota" id="seg-nota"></div>
+            <button type="button" id="seg-pedir" class="dr-chip" style="display:none; margin-top:8px;" onclick="copiaPedirProtecao()">Pedir proteção ao navegador</button>
+        </div>
+        <div class="jornada-card">
+            <p style="font-size: 13px; color: #475569; margin-top: 0;">Os dados ficam guardados neste telemóvel, dentro do navegador. Se o telemóvel se perder ou se limparem os dados do navegador, só uma cópia de segurança os recupera. Guarde uma cópia pelo menos uma vez por mês e envie-a para fora do telemóvel (WhatsApp, Drive, e-mail).</p>
+            <button class="btn-jornada btn-start" style="margin-bottom: 10px;" onclick="compartirCopia()">📤 Partilhar cópia (WhatsApp, Drive…)</button>
+            <button class="btn-jornada btn-pause" style="margin-bottom: 10px;" onclick="exportarBackupJSON()">⬇️ Descarregar cópia (ficheiro)</button>
+            <input type="file" id="input-importar-backup" accept=".json,.txt,application/json,text/plain" style="display: none;" onchange="importarBackupJSON(event)">
+            <button class="btn-jornada btn-stop" onclick="document.getElementById('input-importar-backup').click()">⬆️ Restaurar cópia</button>
         </div>
     </div>
 
@@ -960,6 +987,7 @@
             if (subId === 'config') { document.getElementById('buscar-ruta').value = ''; renderConfigRuta(); }
             if (subId === 'jornada') renderJornadaUI();
             if (subId === 'diario') renderDiario();
+            if (subId === 'backup') renderSeguridadDatos();
             if (subId === 'calendario') renderCalendarioMensual();
             if (subId === 'historico') {
                 document.getElementById('filtro-registro-fecha').value = formatearFechaLocal(fechaHoy);
@@ -2034,6 +2062,9 @@
         function renderReparto() {
             const fechaStr = formatearFechaLocal(fechaConsulta);
             document.getElementById('fecha-actual-display').innerText = fechaConsulta.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'short' });
+            renderAvisoCopia();
+            // "Ant" só aparece quando não se está a ver o dia de hoje
+            document.getElementById('btn-fecha-ant').style.display = (fechaStr === formatearFechaLocal(new Date())) ? 'none' : '';
 
             const contPend = document.getElementById('reparto-pendientes');
             const contEntr = document.getElementById('reparto-entregados');
@@ -2683,10 +2714,10 @@
                 <h2 style="margin:0 0 4px 0; font-size:18px;">${esc(titulo)}</h2>
                 <div style="font-size:12px; color:#444; margin-bottom:12px;">${subtitulo}</div>`;
         }
-        function diarioDocPie() {
+        function diarioDocPie(sinUbicacion) {
             return `<div style="margin-top:18px; padding-top:8px; border-top:1px solid #999; font-size:10px; color:#555;">
                 Documento gerado pela aplicação em ${new Date().toLocaleString('pt-PT')}. Registo pessoal elaborado a partir de ações guardadas automaticamente com data e hora.
-                “~” indica localização aproximada (última aldeia registada antes da ação).
+                ${sinUbicacion ? '' : '“~” indica localização aproximada (última aldeia registada antes da ação).'}
             </div></div>`;
         }
         const DIARIO_TH = 'border:1px solid #888; padding:4px 6px; background:#eee; text-align:left; font-size:11px;';
@@ -2816,7 +2847,180 @@
             diarioImprimir(html);
         }
 
-        async function exportarBackupJSON() {
+        // Resumo do ano: férias, horas por mês, horas acima das 40h semanais e feriados trabalhados
+        function diarioDocAno() {
+            const y = diarioMes.getFullYear();
+            const ini = `${y}-01-01`, fin = `${y}-12-31`;
+            const M = Array.from({ length: 12 }, () => ({ min: 0, dom: 0, dias: 0, extra: 0, ferias: 0, fer: 0, ferPagos: 0 }));
+            const feriadosTrab = [];
+            // 1) dia a dia: horas, domingos, dias trabalhados, férias e feriados trabalhados
+            for (let dia = ini; dia <= fin; dia = diarioSumarDias(dia, 1)) {
+                const mi = +dia.slice(5, 7) - 1;
+                const jornadas = diarioJornadasDia(dia);
+                const min = jornadas.reduce((s, j) => s + calcularMinutosTrabajados(j), 0);
+                M[mi].min += min;
+                if (diarioEsDomingo(dia)) M[mi].dom += min;
+                if (jornadas.length) M[mi].dias++;
+                if (esDiaDeFerias(dia)) M[mi].ferias++;
+                if (diarioFeriadoTrabalhado(dia)) {
+                    M[mi].fer++;
+                    const pago = diarioFeriadoPago(dia);
+                    if (pago) M[mi].ferPagos++;
+                    feriadosTrab.push({ dia, nombre: diarioNombreFeriadoNacional(dia) || diarioCfg().feriado_manual[dia] || 'Feriado', pago });
+                }
+            }
+            // 2) semana a semana (seg–sáb): o que passa das 40h reparte-se pelos dias trabalhados dessa semana
+            let semanas = 0, semanasExtra = 0;
+            for (let lunes = diarioLunesDe(ini); lunes <= fin; lunes = diarioSumarDias(lunes, 7)) {
+                const dias = []; let W = 0;
+                for (let i = 0; i < 6; i++) { const dia = diarioSumarDias(lunes, i); const m = diarioMinDia(dia); dias.push([dia, m]); W += m; }
+                const E = Math.max(0, W - 2400);
+                let tocaAno = false;
+                dias.forEach(([dia, m]) => {
+                    if (dia < ini || dia > fin || !m) return;
+                    tocaAno = true;
+                    M[+dia.slice(5, 7) - 1].extra += E * m / W;
+                });
+                if (tocaAno) { semanas++; if (E > 0) semanasExtra++; }
+            }
+            M.forEach(x => { x.extra = Math.round(x.extra); });
+            const T = M.reduce((a, x) => { Object.keys(a).forEach(k => { a[k] += x[k]; }); return a; }, { min: 0, dom: 0, dias: 0, extra: 0, ferias: 0, fer: 0, ferPagos: 0 });
+
+            // férias gozadas: períodos de dias úteis seguidos (fins de semana e feriados pelo meio não interrompem)
+            const gozadas = diarioCfg().ferias_dias.filter(d => d.startsWith(String(y))).sort();
+            const periodos = [];
+            gozadas.forEach(d => {
+                const ult = periodos[periodos.length - 1];
+                if (ult) {
+                    let seguido = true;
+                    for (let x = diarioSumarDias(ult.fin, 1); x < d; x = diarioSumarDias(x, 1)) { if (!diarioFeriasNoCuenta(x)) { seguido = false; break; } }
+                    if (seguido) { ult.fin = d; ult.n++; return; }
+                }
+                periodos.push({ ini: d, fin: d, n: 1 });
+            });
+
+            const TDc = DIARIO_TD + ' padding:3px 4px;', THc = DIARIO_TH + ' padding:3px 4px; font-size:10px;';
+            const celda = v => `<td style="${TDc} text-align:right; white-space:nowrap;">${v}</td>`;
+            const hm = m => m ? diarioFmtHM(m) : '—';
+            const num = n => n || '—';
+            const filas = M.map((x, i) => `<tr style="page-break-inside:avoid;"><td style="${TDc}">${DIARIO_MESES[i]}</td>
+                ${celda(num(x.dias))}${celda(hm(x.min))}${celda(hm(x.dom))}${celda(x.extra ? '<b>' + diarioFmtHM(x.extra) + '</b>' : '—')}${celda(num(x.ferias))}${celda(num(x.fer))}</tr>`).join('');
+            const total = `<tr style="background:#f4f4f4;"><td style="${TDc}"><b>Total ${y}</b></td>
+                ${celda('<b>' + T.dias + '</b>')}${celda('<b>' + diarioFmtHM(T.min) + '</b>')}${celda('<b>' + diarioFmtHM(T.dom) + '</b>')}${celda('<b>' + diarioFmtHM(T.extra) + '</b>')}${celda('<b>' + T.ferias + '</b>')}${celda('<b>' + T.fer + '</b>')}</tr>`;
+
+            const listaFerias = periodos.length
+                ? '<ul style="margin:4px 0 0 18px; padding:0; font-size:12px;">' + periodos.map(p => `<li>${p.ini === p.fin ? diarioFechaCorta(p.ini) : diarioFechaCorta(p.ini) + ' → ' + diarioFechaCorta(p.fin)} — ${p.n} dia${p.n === 1 ? '' : 's'}</li>`).join('') + '</ul>'
+                : '<div style="font-size:12px;">Nenhum dia de férias marcado neste ano.</div>';
+            const listaFer = feriadosTrab.length
+                ? `<table style="width:100%; border-collapse:collapse; margin-top:4px;"><thead><tr><th style="${DIARIO_TH}">Data</th><th style="${DIARIO_TH}">Feriado</th><th style="${DIARIO_TH}">Estado</th></tr></thead><tbody>`
+                    + feriadosTrab.map(f => `<tr style="page-break-inside:avoid;"><td style="${DIARIO_TD}">${diarioFechaCorta(f.dia)}</td><td style="${DIARIO_TD}">${esc(f.nombre)}</td><td style="${DIARIO_TD}">${f.pago ? 'Pago' : '<b>Por pagar</b>'}</td></tr>`).join('') + '</tbody></table>'
+                : '<div style="font-size:12px;">Nenhum feriado trabalhado registado neste ano.</div>';
+
+            const html = diarioDocCabecera(`Resumo Anual de Férias e Horas — ${y}`, 'Horas líquidas de trabalho, horas acima das 40h semanais, férias e feriados trabalhados') + `
+                <h3 style="font-size:14px; margin:12px 0 4px;">Horas por mês</h3>
+                <table style="width:100%; border-collapse:collapse;"><thead><tr>
+                    <th style="${THc}">Mês</th><th style="${THc}">Dias trab.</th><th style="${THc}">Horas líquidas</th>
+                    <th style="${THc}">Dom.</th><th style="${THc}">Acima de 40h</th><th style="${THc}">Férias</th><th style="${THc}">Feriados trab.</th>
+                </tr></thead><tbody>${filas}${total}</tbody></table>
+                <div style="font-size:12px; margin-top:6px; line-height:1.6;">Semanas trabalhadas (seg–sáb): <b>${semanas}</b> · Semanas acima das 40h: <b>${semanasExtra}</b> · Horas acima das 40h no ano: <b>${diarioFmtHM(T.extra)}</b></div>
+                <h3 style="font-size:14px; margin:14px 0 4px;">Férias</h3>
+                <div style="font-size:12px; line-height:1.6;">Dias de férias gozados em ${y}: <b>${gozadas.length}</b> · Férias por gozar (saldo atual da aplicação): <b>${diarioFeriasPorGozar()}</b> dias</div>
+                ${listaFerias}
+                <h3 style="font-size:14px; margin:14px 0 4px;">Feriados trabalhados</h3>
+                <div style="font-size:12px; line-height:1.6;">Total: <b>${T.fer}</b> · pagos: <b>${T.ferPagos}</b> · por pagar: <b>${T.fer - T.ferPagos}</b></div>
+                ${listaFer}
+                <div style="font-size:10px; color:#555; margin-top:12px; line-height:1.5;">
+                    Colunas: «Dias trab.» = dias com jornada; «Dom.» = horas de domingo (já incluídas nas horas líquidas); «Férias» = dias úteis de férias; «Feriados trab.» = feriados em que trabalhou.
+                    Semana de trabalho: segunda a sábado (40h). As horas de domingo não contam para as 40h.
+                    As horas acima das 40h calculam-se por semana completa; quando uma semana passa de um mês (ou de um ano) para o outro, repartem-se pelos dias trabalhados.
+                    Nas férias só contam dias úteis (sem sábados, domingos nem feriados nacionais); o saldo por gozar é o saldo atual, não é calculado por ano.
+                </div>` + diarioDocPie(true);
+            diarioImprimir(html);
+        }
+
+        // ===== Segurança dos dados: cópia, partilha, aviso e proteção do armazenamento =====
+        const COPIA_META_KEY = 'panaderia_copia_meta_v1';   // {ultima: ISO, adiado: 'AAAA-MM-DD'}; fica fora da cópia para refletir ESTE telemóvel
+        const COPIA_AVISO_DIAS = 30;
+        function copiaMeta() {
+            try { const m = JSON.parse(localStorage.getItem(COPIA_META_KEY) || '{}'); return (m && typeof m === 'object') ? m : {}; } catch (err) { return {}; }
+        }
+        function copiaGuardarMeta(m) { try { localStorage.setItem(COPIA_META_KEY, JSON.stringify(m)); } catch (err) {} }
+        function copiaMarcarFeita() {
+            const m = copiaMeta(); m.ultima = new Date().toISOString(); delete m.adiado; copiaGuardarMeta(m);
+            renderAvisoCopia(); renderSeguridadDatos();
+        }
+        function copiaDiasDesde() {
+            const u = copiaMeta().ultima;
+            if (!u) return null;
+            const ms = Date.now() - new Date(u).getTime();
+            return isFinite(ms) ? Math.max(0, Math.floor(ms / 86400000)) : null;
+        }
+        function copiaHayDatos() {
+            return !!((estado.encomiendas || []).length || (estado.jornadas || []).length
+                || Object.values(estado.orden_clientes || {}).some(l => Array.isArray(l) && l.length));
+        }
+        function copiaNecesitaAviso() {
+            if (!copiaHayDatos()) return false;
+            const d = copiaDiasDesde();
+            return d === null || d >= COPIA_AVISO_DIAS;
+        }
+        function copiaMasTarde() {
+            const m = copiaMeta(); m.adiado = formatearFechaLocal(new Date()); copiaGuardarMeta(m);
+            renderAvisoCopia();
+        }
+        function renderAvisoCopia() {
+            const el = document.getElementById('aviso-copia');
+            const necesita = copiaNecesitaAviso();
+            const badge = document.getElementById('badge-copia');
+            if (badge) badge.style.display = necesita ? '' : 'none';
+            if (!el) return;
+            if (!necesita || copiaMeta().adiado === formatearFechaLocal(new Date())) { el.style.display = 'none'; el.innerHTML = ''; return; }
+            const d = copiaDiasDesde();
+            el.innerHTML = `<div class="aviso-copia-txt">⚠️ ${d === null ? 'Ainda não fez nenhuma cópia de segurança neste telemóvel.' : `A última cópia de segurança foi há ${d} dias.`}
+                Se o telemóvel se perder ou o navegador limpar os dados, perde tudo.</div>
+                <div class="aviso-copia-bot"><button type="button" class="btn-success" onclick="compartirCopia()">📤 Fazer cópia agora</button>
+                <button type="button" class="btn-close" onclick="copiaMasTarde()">Mais tarde</button></div>`;
+            el.style.display = '';
+        }
+
+        // Pede ao navegador que não apague os dados da app quando faltar espaço
+        async function pedirArmazenamentoPersistente() {
+            try {
+                if (navigator.storage && navigator.storage.persist) {
+                    if (navigator.storage.persisted && await navigator.storage.persisted()) return true;
+                    return !!(await navigator.storage.persist());
+                }
+            } catch (err) {}
+            return false;
+        }
+        async function copiaPedirProtecao() { await pedirArmazenamentoPersistente(); renderSeguridadDatos(); }
+
+        async function renderSeguridadDatos() {
+            const set = (id, txt, cls) => { const el = document.getElementById(id); if (el) { el.textContent = txt; el.className = cls || ''; } };
+            if (!document.getElementById('seg-ultima')) return;
+            const u = copiaMeta().ultima, d = copiaDiasDesde();
+            set('seg-ultima', u ? `${new Date(u).toLocaleDateString('pt-PT')} (${d === 0 ? 'hoje' : 'há ' + d + (d === 1 ? ' dia' : ' dias')})` : 'Nunca',
+                (!u || d >= COPIA_AVISO_DIAS) ? 'mal' : 'bien');
+            let persist = null;
+            try { if (navigator.storage && navigator.storage.persisted) persist = !!(await navigator.storage.persisted()); } catch (err) {}
+            set('seg-persist', persist === null ? 'Não disponível' : (persist ? '✓ Sim' : '✗ Não'), persist === true ? 'bien' : (persist === false ? 'mal' : ''));
+            const btn = document.getElementById('seg-pedir');
+            if (btn) btn.style.display = persist === false ? '' : 'none';
+            const nota = document.getElementById('seg-nota');
+            if (nota) nota.textContent = persist === true
+                ? 'O navegador não apaga estes dados sozinho. Mesmo assim, faça cópias: não protegem contra perder ou trocar de telemóvel.'
+                : (persist === false
+                    ? 'O navegador ainda pode apagar estes dados se o telemóvel ficar sem espaço. Se instalar a app no ecrã principal (menu do navegador → «Adicionar ao ecrã principal»), é mais provável que fiquem protegidos. Faça sempre cópias.'
+                    : 'Este navegador não informa se os dados estão protegidos. Faça cópias regularmente.');
+            let ev = 0; try { ev = (await DiarioDB.todos()).length; } catch (err) {}
+            const pl = (n, s, p) => n + ' ' + (n === 1 ? s : p);
+            set('seg-dados', `${pl((estado.encomiendas || []).length, 'encomenda', 'encomendas')} · ${pl((estado.jornadas || []).length, 'jornada', 'jornadas')} · ${pl(ev, 'registo do Diário', 'registos do Diário')}`);
+            let espaco = '—';
+            try { if (navigator.storage && navigator.storage.estimate) { const est = await navigator.storage.estimate(); if (est && est.usage != null) espaco = est.usage < 1048576 ? Math.max(1, Math.round(est.usage / 1024)) + ' KB' : (est.usage / 1048576).toFixed(1) + ' MB'; } } catch (err) {}
+            set('seg-espaco', espaco);
+        }
+
+        async function construirCopiaJSON() {
             const copia = JSON.parse(JSON.stringify(estado));
             copia.fiados_backup = {};
             FIADOS_KEYS.forEach(k => {
@@ -2826,14 +3030,56 @@
                 } catch (err) {}
             });
             try { copia.diario_eventos = await DiarioDB.todos(); } catch (err) { copia.diario_eventos = []; }
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(copia));
-            const dlAnchorElem = document.createElement('a');
-            dlAnchorElem.setAttribute("href", dataStr);
-            dlAnchorElem.setAttribute("download", `backup_panaderia_${formatearFechaLocal(new Date())}.json`);
-            dlAnchorElem.click();
+            return JSON.stringify(copia);
+        }
+
+        // Descarrega com um Blob (um "data:" muito grande pode falhar quando o Diário crescer)
+        function descargarTexto(nombre, texto, mime) {
+            const url = URL.createObjectURL(new Blob([texto], { type: mime || 'application/json' }));
+            const a = document.createElement('a');
+            a.href = url; a.download = nombre; a.style.display = 'none';
+            document.body.appendChild(a); a.click();
+            setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
+        }
+
+        async function exportarBackupJSON() {
+            const json = await construirCopiaJSON();
+            descargarTexto(`backup_panaderia_${formatearFechaLocal(new Date())}.json`, json, 'application/json');
+            copiaMarcarFeita();
+        }
+
+        // Abre a folha de partilha do telemóvel (WhatsApp, Drive, e-mail…); se não for possível, descarrega o ficheiro
+        async function compartirCopia() {
+            let json;
+            try { json = await construirCopiaJSON(); } catch (err) { alert('Não foi possível preparar a cópia de segurança.'); return; }
+            const hoy = formatearFechaLocal(new Date());
+            const base = `backup_panaderia_${hoy}`;
+            try {
+                if (navigator.share && navigator.canShare) {
+                    const candidatos = [new File([json], base + '.json', { type: 'application/json' }), new File([json], base + '.txt', { type: 'text/plain' })];
+                    for (const f of candidatos) {
+                        let puede = false;
+                        try { puede = navigator.canShare({ files: [f] }); } catch (err) {}
+                        if (!puede) continue;
+                        try {
+                            await navigator.share({ files: [f], title: 'Cópia de segurança da padaria', text: 'Cópia de segurança de ' + hoy });
+                            copiaMarcarFeita();
+                            return;
+                        } catch (err) {
+                            if (err && err.name === 'AbortError') return;   // a pessoa fechou a folha de partilha: nada a fazer
+                            break;                                          // outro erro: descarrega
+                        }
+                    }
+                }
+            } catch (err) {}
+            descargarTexto(base + '.json', json, 'application/json');
+            copiaMarcarFeita();
+            await avisoApp('Este navegador não deixou partilhar o ficheiro diretamente, por isso a cópia foi descarregada. Pode enviá-la por WhatsApp ou guardá-la no Drive a partir dos ficheiros descarregados.');
         }
 
         function importarBackupJSON(event) {
+            const ficheiro = event.target.files && event.target.files[0];
+            if (!ficheiro) return;
             const fileReader = new FileReader();
             fileReader.onload = async function(e) {
                 try {
@@ -2858,12 +3104,13 @@
                     location.reload();
                 } catch(err) { alert("Ficheiro JSON inválido."); }
             };
-            fileReader.readAsText(event.target.files[0]);
+            fileReader.readAsText(ficheiro);
         }
 
         inicializarSelectAldeas();
         renderReparto();
         renderJornadaUI();
+        pedirArmazenamentoPersistente();
         setInterval(actualizarPuntoJornada, 60000);
     </script>
     <!-- Segunda app (Calculadora e Fiados) incrustada tal como era, só com o menu inferior escondido. -->
