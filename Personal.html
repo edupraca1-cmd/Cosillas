@@ -2,22 +2,25 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Mi Panel Personal</title>
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Mi Panel">
+    <!-- Chart.js (gráficos de Gasolina y Finanzas) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-color: #f3f4f6;
+            --bg-color: #f1f5f9;
             --card-bg: #ffffff;
-            --text-main: #1f2937;
+            --text-main: #0f172a;
             --primary: #10b981;
-            --primary-dark: #059669;
+            --primary-dark: #047857;
+            --border: #e2e8f0;
             --danger: #ef4444;
-            --danger-bg: #fef2f2;
-            --danger-border: #fca5a5;
-            --danger-text: #991b1b;
-            --info: #3b82f6;
-            --info-dark: #1d4ed8;
-            --border: #e5e7eb;
+            --info: #1d4ed8;
             --nav-bg: #2c3e50;
         }
 
@@ -26,11 +29,10 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
-            padding: 0;
-            padding-bottom: 20px;
+            padding: 0 0 30px 0;
         }
 
-        /* Navegación por Pestañas */
+        /* ===== NAVEGACIÓN POR PESTAÑAS ===== */
         .navbar {
             display: flex;
             justify-content: space-around;
@@ -40,145 +42,198 @@
             z-index: 1000;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-
         .tab-btn {
-            background: none;
-            border: none;
-            color: #bdc3c7;
-            padding: 14px 10px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            flex: 1;
-            text-align: center;
-            transition: all 0.2s ease;
+            background: none; border: none; color: #bdc3c7;
+            padding: 14px 10px; font-size: 14px; font-weight: bold; cursor: pointer;
+            flex: 1; text-align: center; transition: all 0.2s ease;
             border-bottom: 3px solid transparent;
         }
+        .tab-btn.active { color: #ffffff; border-bottom: 3px solid #2ecc71; background-color: rgba(255,255,255,0.05); }
+        .tab-content { display: none; padding: 12px; max-width: 600px; margin: 0 auto; }
+        .tab-content.active { display: block; }
 
-        .tab-btn.active {
-            color: #ffffff;
-            border-bottom: 3px solid #2ecc71;
-            background-color: rgba(255, 255, 255, 0.05);
-        }
+        /* ===== MÓDULO GASOLINA ===== */
+        #tab-gasolina .card { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        #tab-gasolina h2 { margin-top: 0; color: #2c3e50; font-size: 1.1rem; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px; }
+        #tab-gasolina label { display: block; margin: 10px 0 5px; font-weight: bold; font-size: 0.9rem; }
+        #tab-gasolina label small { font-weight: normal; color: #7f8c8d; margin-left: 6px; }
+        #tab-gasolina input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        #tab-gasolina input[type="checkbox"] { width: 22px; height: 22px; padding: 0; accent-color: var(--primary); }
+        #tab-gasolina label.chk { display: flex; align-items: center; gap: 8px; margin: 0; white-space: nowrap; }
 
-        .tab-content {
-            display: none;
-            padding: 12px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
+        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .kpi-box { background: #2c3e50; color: white; border-radius: 12px; padding: 12px 6px; text-align: center; }
+        .kpi-label { font-size: 10.5px; font-weight: 700; letter-spacing: .4px; color: #bdc3c7; text-transform: uppercase; }
+        .kpi-num { font-size: 1.5rem; font-weight: 800; color: #2ecc71; margin-top: 4px; }
+        .kpi-unit { font-size: .72rem; color: #bdc3c7; margin-top: 2px; }
+        .kpi-presu { background: #fff; border-radius: 12px; padding: 10px 14px; font-size: .85rem; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .kpi-presu:empty { display: none; }
+        .presu-bar { height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+        .presu-bar > div { height: 100%; background: #10b981; }
+        .presu-bar.mal > div { background: #ef4444; }
+        .txt-mal { color: #dc2626; }
 
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Estilos Comunes de Tarjetas */
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
-        h1 { font-size: 18px; text-align: center; margin: 8px 0 15px 0; color: var(--primary-dark); }
-        h2 { margin-top: 0; color: #2c3e50; font-size: 1.2rem; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px; }
-        label { display: block; margin: 10px 0 5px; font-weight: bold; font-size: 0.9rem; }
-        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
-        
-        /* --- ESTILOS: FINANZAS --- */
-        .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: center; margin-bottom: 12px; }
-        .metric-box { padding: 10px 4px; border-radius: 10px; border: 1px solid #e5e7eb; background: white; }
-        .metric-title { font-size: 10px; text-transform: uppercase; font-weight: bold; }
-        .metric-value { font-size: 14px; font-weight: bold; margin-top: 2px; }
-        .cycle-list { display: flex; flex-direction: column; gap: 8px; }
-        details.cycle-card { background: var(--card-bg); border-radius: 10px; border-left: 5px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        summary { padding: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; font-size: 14px; outline: none; }
-        summary::-webkit-details-marker { display: none; }
-        .summary-right { display: flex; align-items: center; gap: 8px; }
-        .breakdown-table { width: 100%; border-top: 1px solid var(--border); padding: 6px 12px; background: #fafafa; box-sizing: border-box; }
-        .row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #f0f0f0; font-size: 13px; }
-        .row:last-child { border-bottom: none; font-weight: bold; background: #f3f4f6; padding: 8px 6px; border-radius: 5px; margin-top: 4px; }
-        .item-left { display: flex; align-items: center; gap: 10px; }
-        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; border-radius: 4px; }
-        .row.checked span { text-decoration: line-through; opacity: 0.4; }
-        .row.checked input.monto-input { opacity: 0.4; }
-        input.monto-input { width: 75px; text-align: right; border: none; border-bottom: 1px solid #d1d5db; background: transparent; font-size: 13px; font-weight: 600; padding: 2px 4px; color: #374151; }
-        input.monto-input:focus { border-bottom: 2px solid var(--primary); outline: none; background: #fff; }
-        .positivo { color: #059669; }
-        .negativo { color: #4b5563; }
-        .btn-reset-finanzas { display: block; width: 100%; background-color: #e5e7eb; color: #4b5563; border: none; padding: 8px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-top: 15px; }
-
-        /* --- ESTILOS: GASOLINA --- */
-        .kpi-card { background: #2c3e50; color: white; text-align: center; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-        .kpi-value { font-size: 1.8rem; font-weight: bold; margin-top: 5px; color: #2ecc71; }
-        .btn-gasolina { width: 100%; background: #3498db; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; margin-top: 15px; cursor: pointer; }
+        .btn-gasolina { width: 100%; background: #3498db; color: white; border: none; padding: 13px; border-radius: 8px; font-size: 1rem; font-weight: bold; margin-top: 15px; cursor: pointer; }
         .btn-gasolina:active { background: #2980b9; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background: #ecf0f1; color: #2c3e50; }
-        .clear-btn { background: #e74c3c; margin-top: 30px; font-size: 0.8rem; padding: 8px; color: white; border: none; width: 100%; border-radius: 6px; cursor: pointer; }
-        .mes-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee; font-size: 0.95rem; }
-        .mes-item:last-child { border: none; }
+        .btn-cancelar { width: 100%; background: #e2e8f0; color: #475569; border: none; padding: 10px; border-radius: 8px; font-size: .9rem; font-weight: bold; margin-top: 8px; cursor: pointer; }
+        .precio-litro { font-size: .8rem; color: #64748b; margin-top: 6px; min-height: 1em; }
+        .form-extra { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
 
-        /* --- ESTILOS: ALCANCÍA --- */
-        .alcancia-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; box-sizing: border-box; }
-        .pig-emoji { font-size: 80px; margin: 0; transition: transform 0.1s ease; }
-        .pig-bounce { transform: scale(1.15); }
-        .balance-display { font-size: 42px; font-weight: bold; color: #2ec4b6; margin: 20px 0; background: #e6f9f8; padding: 10px; border-radius: 10px; }
-        .button-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
-        .btn-coin { color: white; border: none; padding: 12px; font-size: 18px; font-weight: bold; border-radius: 10px; cursor: pointer; transition: background 0.2s, transform 0.1s; }
-        .btn-add { background-color: #ff9f1c; }
-        .btn-add:hover { background-color: #e78e0b; }
-        .btn-sub { background-color: #94a3b8; }
-        .btn-sub:hover { background-color: #64748b; }
-        .btn-coin:active { transform: scale(0.95); }
-        .btn-reset-alcancia { background-color: #e71d36; color: white; border: none; padding: 10px 20px; font-size: 14px; border-radius: 8px; cursor: pointer; width: 100%; transition: background 0.2s; }
-        .btn-reset-alcancia:hover { background-color: #c51227; }
+        .autonomia-num { font-size: 1.6rem; font-weight: 800; color: #2c3e50; }
+        .autonomia-sub { font-size: .8rem; color: #64748b; margin-top: 2px; }
+
+        .mes-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee; font-size: 0.92rem; }
+        .mes-item:last-child { border: none; }
+        .mes-item small { color: #64748b; }
+
+        .stat-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        #tab-gasolina select { padding: 6px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: .9rem; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 4px; text-align: center; }
+        .stat-box .s-label { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; }
+        .stat-box .s-val { font-size: .95rem; font-weight: 800; margin-top: 3px; color: #1e293b; }
+
+        #tab-gasolina table { width: 100%; min-width: 560px; border-collapse: collapse; margin-top: 6px; font-size: 0.82rem; }
+        #tab-gasolina th, #tab-gasolina td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #ddd; white-space: nowrap; }
+        #tab-gasolina th { background: #ecf0f1; color: #2c3e50; }
+        .tag-parcial { background: #fef3c7; color: #92400e; font-size: 10px; padding: 1px 5px; border-radius: 6px; margin-left: 4px; }
+        .mini { background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; }
+        .backup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn-sec { background-color: #e2e8f0; color: #475569; border: none; padding: 10px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; }
+        .clear-btn { background: #e74c3c; margin-top: 14px; font-size: 0.8rem; padding: 8px; color: white; border: none; width: 100%; border-radius: 6px; cursor: pointer; }
+
+        /* ===== MÓDULO FINANZAS ===== */
+        .app-title { text-align: center; font-size: 22px; font-weight: bold; color: #1e3a8a; margin: 8px 0 15px 0; }
+        .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+        .metric-card { background: #ffffff; border-radius: 14px; padding: 12px 8px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .metric-card.saldo { background: #eff6ff; border-color: #bfdbfe; }
+        .metric-card.proyeccion { background: #ecfdf5; border-color: #a7f3d0; }
+        .metric-title { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; }
+        .metric-card.saldo .metric-title { color: var(--info); }
+        .metric-card.proyeccion .metric-title { color: var(--primary-dark); }
+        .metric-value { font-size: 18px; font-weight: 800; margin-top: 4px; }
+        .metric-card.saldo .metric-value { color: #1e40af; }
+        .metric-card.proyeccion .metric-value { color: #065f46; }
+        .saldo-input-directo { width: 100%; background: transparent; border: none; border-bottom: 2px dashed #3b82f6; text-align: center; font-size: 18px; font-weight: 800; color: #1e40af; outline: none; margin-top: 4px; padding: 2px 0; box-sizing: border-box; }
+        .chart-container { background: #ffffff; border-radius: 14px; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .chart-header { font-size: 11px; font-weight: 800; color: #475569; margin-bottom: 8px; text-align: center; letter-spacing: 0.5px; }
+        .cycle-list { display: flex; flex-direction: column; gap: 10px; }
+        details.cycle-card { background: var(--card-bg); border-radius: 12px; border-left: 6px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; transition: border-color 0.2s ease; }
+        details.cycle-card.alert-danger { border-left-color: var(--danger) !important; border: 1px solid #fca5a5; border-left: 6px solid var(--danger) !important; }
+        summary { padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; font-size: 15px; list-style: none; }
+        summary::-webkit-details-marker { display: none; }
+        .summary-left { display: flex; align-items: center; gap: 8px; }
+        .summary-right { display: flex; align-items: center; gap: 8px; }
+        .summary-val { color: var(--primary-dark); font-size: 16px; font-weight: 800; }
+        .arrow { color: #94a3b8; font-size: 12px; }
+        .breakdown-table { border-top: 1px solid var(--border); padding: 8px 12px; background: #fafafa; }
+        .row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #e2e8f0; font-size: 13px; }
+        .row.checked span.desc-text { text-decoration: line-through; opacity: 0.5; }
+        .row.checked input.monto-input { opacity: 0.5; }
+        .item-left { display: flex; align-items: center; gap: 8px; }
+        .item-right { display: flex; align-items: center; gap: 4px; }
+        #tab-finanzas input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+        .btn-delete { background: none; border: none; color: #94a3b8; font-size: 14px; cursor: pointer; padding: 0 4px; line-height: 1; }
+        .btn-delete:hover { color: var(--danger); }
+        .btn-sync { background: none; border: none; color: #3b82f6; font-size: 13px; cursor: pointer; padding: 0 4px; line-height: 1; }
+        .btn-sync:hover { color: #1d4ed8; }
+        .btn-delete-cycle { background: none; border: none; cursor: pointer; font-size: 14px; opacity: 0.5; padding: 2px 4px; }
+        .btn-delete-cycle:hover { opacity: 1; }
+        .btn-add-item { background: #e2e8f0; color: #334155; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; margin: 8px 0 4px 0; display: inline-block; }
+        .btn-add-item:hover { background: #cbd5e1; }
+        .btn-add-cycle { width: 100%; background: #3b82f6; color: #ffffff; border: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2); }
+        .btn-add-cycle:hover { background: #2563eb; }
+        .row-total { border-bottom: none; font-weight: bold; background: #f1f5f9; padding: 8px 6px; border-radius: 6px; margin-top: 6px; }
+        .row-imprevisto { background: #fef2f2; padding: 6px 8px; border-radius: 6px; margin-top: 6px; border: 1px dashed #fca5a5; }
+        input.monto-input { width: 80px; text-align: right; border: 1px solid #cbd5e1; border-radius: 4px; background: #ffffff; font-size: 13px; font-weight: 600; padding: 3px 6px; }
+        input.monto-input:focus { border-color: var(--primary); outline: none; }
+        .gas-info { font-size: 11.5px; padding: 4px 8px 6px 34px; color: #475569; }
+        .gas-info:empty { display: none; }
+        .gas-info.mal { color: #b91c1c; font-weight: 600; }
+        .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .btn-secondary { background-color: #e2e8f0; color: #475569; border: none; padding: 10px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; }
+        .btn-reset { width: 100%; background-color: #fecdd3; color: #9f1239; border: none; padding: 10px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <nav class="navbar">
-        <button class="tab-btn active" onclick="switchTab('tab-finanzas')">📊 Finanzas</button>
-        <button class="tab-btn" onclick="switchTab('tab-gasolina')">⛽ Gasolina</button>
-        <button class="tab-btn" onclick="switchTab('tab-alcancia')">🐷 Alcancía</button>
+        <button class="tab-btn active" onclick="switchTab('tab-gasolina', this)">⛽ Gasolina</button>
+        <button class="tab-btn" onclick="switchTab('tab-finanzas', this)">📊 Finanzas</button>
     </nav>
 
-    <div id="tab-finanzas" class="tab-content active">
-        <h1>📊 Mi Control Financiero</h1>
-        <div class="metrics">
-            <div class="metric-box" id="box-saldo-actual">
-                <div class="metric-title" id="title-saldo-actual">Saldo Actual</div>
-                <div class="metric-value" id="saldo-actual-real">0.00 €</div>
-            </div>
-            <div class="metric-box" id="box-meta-final">
-                <div class="metric-title" id="title-meta-final">Proyección (Nov)</div>
-                <div class="metric-value" id="meta-final">0.00 €</div>
-            </div>
-        </div>
-        <div class="cycle-list" id="contenedor-ciclos"></div>
-        <button class="btn-reset-finanzas" onclick="reiniciarDatosFinanzas()">🔄 Restablecer valores de fábrica</button>
-    </div>
+    <!-- ================= GASOLINA ================= -->
+    <div id="tab-gasolina" class="tab-content active">
 
-    <div id="tab-gasolina" class="tab-content">
-        <div class="kpi-card">
-            <div>Gasto Gasolina (Mes Actual)</div>
-            <div class="kpi-value" id="gasto-mes">0.00 €</div>
+        <div class="kpi-grid">
+            <div class="kpi-box">
+                <div class="kpi-label">Último llenado</div>
+                <div class="kpi-num" id="kpi-ultimo">—</div>
+                <div class="kpi-unit">L/100 km</div>
+            </div>
+            <div class="kpi-box">
+                <div class="kpi-label">Media últimos 5</div>
+                <div class="kpi-num" id="kpi-media5">—</div>
+                <div class="kpi-unit">L/100 km</div>
+            </div>
+            <div class="kpi-box">
+                <div class="kpi-label">Coste por 100 km</div>
+                <div class="kpi-num" id="kpi-coste100">—</div>
+                <div class="kpi-unit" id="kpi-coste100-sub"></div>
+            </div>
+            <div class="kpi-box">
+                <div class="kpi-label">Gasto ciclo actual</div>
+                <div class="kpi-num" id="gasto-mes">0.00 €</div>
+                <div class="kpi-unit" id="rango-ciclo-actual"></div>
+            </div>
         </div>
+        <div class="kpi-presu" id="presu-ciclo"></div>
+
+        <div class="card" id="card-form">
+            <h2 id="titulo-form">Nuevo Registro</h2>
+            <label>Kilometraje actual (Km): <small id="hint-km"></small></label>
+            <input type="number" id="odometro" inputmode="decimal" step="0.1" placeholder="Ej. 122474" enterkeyhint="next">
+            <label>Litros repostados (L):</label>
+            <input type="number" id="litros" inputmode="decimal" step="0.01" placeholder="0 si es el punto inicial" enterkeyhint="next" oninput="actualizarPrecioLitro()">
+            <label>Coste total (€):</label>
+            <input type="number" id="coste" inputmode="decimal" step="0.01" placeholder="0 si es el punto inicial" enterkeyhint="done" oninput="actualizarPrecioLitro()">
+            <div class="precio-litro" id="precio-litro"></div>
+            <div class="form-extra">
+                <label class="chk"><input type="checkbox" id="lleno" checked> Tanque lleno</label>
+                <input type="date" id="fecha">
+            </div>
+            <button class="btn-gasolina" id="btn-guardar" onclick="guardarRegistroGasolina()">Registrar Repostaje</button>
+            <button class="btn-cancelar" id="btn-cancelar" onclick="cancelarEdicion()" style="display:none;">Cancelar edición</button>
+        </div>
+
         <div class="card">
-            <h2>Resumen de Gastos por Mes</h2>
+            <h2>Autonomía estimada</h2>
+            <div id="autonomia-res"></div>
+            <label>Capacidad del depósito (L):</label>
+            <input type="number" id="capacidad" inputmode="decimal" step="0.1" placeholder="Ej. 50" oninput="guardarCapacidad(this.value)">
+        </div>
+
+        <div class="card">
+            <h2>Gasto por Ciclo (22 → 21)</h2>
             <div id="historial-mensual"></div>
         </div>
+
         <div class="card">
-            <h2>Nuevo Registro</h2>
-            <label>Kilometraje actual (Km):</label>
-            <input type="number" id="odometro" step="0.1" placeholder="Ej. 122474">
-            <label>Litros repostados (L):</label>
-            <input type="number" id="litros" step="0.01" placeholder="0 si es el punto inicial">
-            <label>Coste total (€):</label>
-            <input type="number" id="coste" step="0.01" placeholder="0 si es el punto inicial">
-            
-            <label style="display: flex; align-items: center; gap: 8px; margin: 15px 0 5px 0; cursor: pointer;">
-                <input type="checkbox" id="tanque_lleno" checked style="width: 18px; height: 18px; margin: 0;">
-                <span>¿Se ha llenado el tanque por completo?</span>
-            </label>
-            
-            <button class="btn-gasolina" onclick="agregarRegistroGasolina()">Registrar Repostaje</button>
+            <h2>Consumo en cada llenado</h2>
+            <div style="height: 170px; position: relative;">
+                <canvas id="graficoConsumo"></canvas>
+            </div>
+            <p id="msg-grafico" style="color:#7f8c8d; font-size:.85rem; margin:0; display:none;">Necesitas al menos dos llenados de tanque para ver el gráfico.</p>
         </div>
+
+        <div class="card">
+            <div class="stat-head">
+                <h2 style="margin:0; border:none; padding:0;">Estadísticas</h2>
+                <select id="sel-anio" onchange="actualizarPantallaGasolina()"></select>
+            </div>
+            <div class="stat-grid" id="stats-anio"></div>
+        </div>
+
         <div class="card">
             <h2>Historial de Repostajes</h2>
             <div style="overflow-x: auto;">
@@ -187,209 +242,832 @@
                         <tr>
                             <th>Fecha</th>
                             <th>Km Total</th>
-                            <th>Km Recorridos</th>
+                            <th>Recorridos</th>
                             <th>Litros</th>
                             <th>Coste</th>
+                            <th>€/L</th>
                             <th>Consumo</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody id="tabla-historial"></tbody>
                 </table>
             </div>
+        </div>
+
+        <div class="card">
+            <h2>Respaldo de Gasolina</h2>
+            <div class="backup-grid">
+                <button class="btn-sec" onclick="exportarGasolina()">📥 Copia Respaldo</button>
+                <button class="btn-sec" onclick="importarGasolina()">📤 Cargar Respaldo</button>
+            </div>
             <button class="clear-btn" onclick="borrarTodoGasolina()">Borrar todos los datos de gasolina</button>
         </div>
     </div>
 
-    <div id="tab-alcancia" class="tab-content">
-        <div class="alcancia-card">
-            <div id="pig" class="pig-emoji">🐷</div>
-            <h1>Mi Alcancía</h1>
-            <div class="balance-display" id="total-balance">0.00 €</div>
-            <div class="button-grid">
-                <button class="btn-coin btn-sub" onclick="modificarSaldoAlcancia(-1.00)">-1.00 €</button>
-                <button class="btn-coin btn-sub" onclick="modificarSaldoAlcancia(-5.00)">-5.00 €</button>
-                <button class="btn-coin btn-add" onclick="modificarSaldoAlcancia(1.00)">+1.00 €</button>
-                <button class="btn-coin btn-add" onclick="modificarSaldoAlcancia(5.00)">+5.00 €</button>
+    <!-- ================= FINANZAS ================= -->
+    <div id="tab-finanzas" class="tab-content">
+        <div class="app-title">📊 Mi Control Financiero</div>
+
+        <div class="metrics">
+            <div class="metric-card saldo">
+                <div class="metric-title">SALDO EN BANCO (€)</div>
+                <input type="number" id="input-saldo-banco" class="saldo-input-directo" step="0.01" value="1585.70" oninput="cambiarSaldoDirecto(this.value)">
             </div>
-            <button class="btn-reset-alcancia" onclick="vaciarAlcancia()">Vaciar Alcancía</button>
+            <div class="metric-card proyeccion">
+                <div class="metric-title">PROYECCIÓN FINAL</div>
+                <div class="metric-value" id="disp-meta-final">0.00 €</div>
+            </div>
         </div>
+
+        <div class="chart-container">
+            <div class="chart-header">PROYECCIÓN DE SALDO MES A MES</div>
+            <div style="height: 150px; position: relative;">
+                <canvas id="graficoProyeccion"></canvas>
+            </div>
+        </div>
+
+        <div class="cycle-list" id="contenedor-ciclos"></div>
+
+        <button class="btn-add-cycle" onclick="crearNuevoCiclo()">➕ Crear Nuevo Ciclo</button>
+
+        <div class="action-buttons">
+            <button class="btn-secondary" onclick="exportarDatos()">📥 Copia Respaldo</button>
+            <button class="btn-secondary" onclick="importarDatos()">📤 Cargar Respaldo</button>
+        </div>
+
+        <button class="btn-reset" onclick="restablecerFabrica()">🔄 Restablecer de fábrica</button>
     </div>
 
     <script>
-        // --- LÓGICA DE PESTAÑAS ---
-        function switchTab(tabId) {
+        // ===== PESTAÑAS =====
+        function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            if (btn) btn.classList.add('active');
+            // Los gráficos se dibujan con la pestaña oculta; al mostrarla hay que reajustarlos
+            if (tabId === 'tab-finanzas' && chartInstance) chartInstance.resize();
+            if (tabId === 'tab-gasolina' && chartConsumo) chartConsumo.resize();
         }
 
-        // --- LÓGICA: FINANZAS ---
-        const datosPorDefecto = [
-            {
-                id: 1, nombre: "22 May - 21 Jun",
-                items: [
-                    { desc: "Saldo Inicial Cuenta", valor: 1686.86, checked: true },
-                    { desc: "Limpieza de terrenos", valor: -1200.00, checked: false },
-                    { desc: "Cuota del carro", valor: -140.98, checked: false },
-                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
-                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
-                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
-                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
-                    { desc: "Teléfono", valor: -10.00, checked: false },
-                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false }
-                ]
-            },
-            {
-                id: 2, nombre: "22 Jun - 21 Jul",
-                items: [
-                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
-                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
-                    { desc: "Cuota del carro", valor: -140.98, checked: false },
-                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
-                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
-                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
-                    { desc: "Crédito del banco", valor: -30.18, checked: false },
-                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
-                    { desc: "Tarjeta de Crédito", valor: -222.99, checked: false },
-                    { desc: "Impuesto Único (IUC)", valor: -111.46, checked: false },
-                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
-                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
-                    { desc: "Ocio", valor: -20.00, checked: false },
-                    { desc: "Teléfono", valor: -10.00, checked: false },
-                    { desc: "Corte de cabello", valor: -9.00, checked: false },
-                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
-                    { desc: "Google One", valor: -1.99, checked: false }
-                ]
-            },
-            {
-                id: 3, nombre: "22 Jul - 21 Ago",
-                items: [
-                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
-                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
-                    { desc: "Cuota del carro", valor: -140.98, checked: false },
-                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
-                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
-                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
-                    { desc: "Crédito del banco", valor: -30.18, checked: false },
-                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
-                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
-                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
-                    { desc: "Ocio", valor: -20.00, checked: false },
-                    { desc: "Teléfono", valor: -10.00, checked: false },
-                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
-                    { desc: "Google One", valor: -1.99, checked: false }
-                ]
-            },
-            {
-                id: 4, nombre: "22 Ago - 21 Sep",
-                items: [
-                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
-                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
-                    { desc: "Cuota del carro", valor: -140.98, checked: false },
-                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
-                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
-                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
-                    { desc: "Crédito del banco", valor: -30.18, checked: false },
-                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
-                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
-                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
-                    { desc: "Ocio", valor: -20.00, checked: false },
-                    { desc: "Teléfono", valor: -10.00, checked: false },
-                    { desc: "Corte de cabello", valor: -9.00, checked: false },
-                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
-                    { desc: "Google One", valor: -1.99, checked: false }
-                ]
-            },
-            {
-                id: 5, nombre: "22 Sep - 21 Oct",
-                items: [
-                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
-                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
-                    { desc: "Cuota del carro", valor: -140.98, checked: false },
-                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
-                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
-                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
-                    { desc: "Crédito del banco", valor: -30.18, checked: false },
-                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
-                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
-                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
-                    { desc: "Ocio", valor: -20.00, checked: false },
-                    { desc: "Teléfono", valor: -10.00, checked: false },
-                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
-                    { desc: "Google One", valor: -1.99, checked: false }
-                ]
-            },
-            {
-                id: 6, nombre: "22 Oct - 21 Nov",
-                items: [
-                    { desc: "Ingreso Nómina", valor: 1023.78, checked: false },
-                    { desc: "Devolución Préstamo (Gabriela)", valor: -1100.00, checked: false },
-                    { desc: "Comida (Tope)", valor: -270.00, checked: false },
-                    { desc: "Cuota del carro", valor: -140.98, checked: false },
-                    { desc: "Gasolina (Tope)", valor: -90.00, checked: false },
-                    { desc: "Internet (Tope)", valor: -50.00, checked: false },
-                    { desc: "Luz (Tope)", valor: -40.00, checked: false },
-                    { desc: "Crédito del banco", valor: -30.18, checked: false },
-                    { desc: "Mascota (Lolo)", valor: -30.00, checked: false },
-                    { desc: "Gas (Tope)", valor: -20.00, checked: false },
-                    { desc: "Agua (Tope)", valor: -20.00, checked: false },
-                    { desc: "Ocio", valor: -20.00, checked: false },
-                    { desc: "Teléfono", valor: -10.00, checked: false },
-                    { desc: "Corte de cabello", valor: -9.00, checked: false },
-                    { desc: "Mantenimiento cuenta", valor: -5.20, checked: false },
-                    { desc: "Google One", valor: -1.99, checked: false }
-                ]
+        let finanzasListo = false;
+        let chartInstance = null;   // gráfico de Finanzas
+        let chartConsumo = null;    // gráfico de consumo (Gasolina)
+
+        // =====================================================
+        // ===== MÓDULO GASOLINA ===============================
+        // =====================================================
+        const MESES_CORTOS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+        const DIA_INICIO_CICLO = 22;
+        const GAS_KEY = 'gasolina_v4';
+
+        function nuevoId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+        // Fecha de un registro (los antiguos solo tenían texto)
+        function fechaDeRegistro(reg) {
+            if (reg.ts) return new Date(reg.ts);
+            if (reg.fechaTxt) {
+                const p = reg.fechaTxt.split(/[\/.\-]/).map(n => parseInt(n, 10));
+                if (p.length === 3 && p.every(n => !isNaN(n))) {
+                    let d = p[0], m = p[1], a = p[2];
+                    if (m > 12 && d <= 12) { const t = d; d = m; m = t; }
+                    if (a < 100) a += 2000;
+                    return new Date(a, m - 1, d);
+                }
             }
+            return new Date(reg.ano, reg.mes, 1);
+        }
+
+        function normalizarRegistro(r) {
+            const f = fechaDeRegistro(r);
+            const ts = r.ts ? r.ts : new Date(f.getFullYear(), f.getMonth(), f.getDate(), 12).getTime();
+            return {
+                id: r.id || nuevoId(),
+                ts: ts,
+                odometro: Number(r.odometro),
+                litros: Number(r.litros) || 0,
+                coste: Number(r.coste) || 0,
+                lleno: r.lleno === undefined ? true : !!r.lleno   // los antiguos se tratan como "lleno"
+            };
+        }
+
+        function cargarGasData() {
+            try {
+                const v4 = JSON.parse(localStorage.getItem(GAS_KEY));
+                if (v4 && Array.isArray(v4.registros)) {
+                    return { registros: v4.registros.map(normalizarRegistro), capacidad: v4.capacidad || null };
+                }
+            } catch (e) {}
+            // Primera vez: se migran los registros de la versión anterior (sin tocarlos)
+            let viejo = [];
+            try { viejo = JSON.parse(localStorage.getItem('historial_consumo')) || []; } catch (e) {}
+            return {
+                registros: viejo.map(normalizarRegistro).filter(r => !isNaN(r.odometro)),
+                capacidad: null
+            };
+        }
+
+        let gasData = cargarGasData();
+        let editandoId = null;
+
+        function guardarGasData() { localStorage.setItem(GAS_KEY, JSON.stringify(gasData)); }
+
+        function cicloDeFecha(fecha) {
+            let a = fecha.getFullYear();
+            let m = fecha.getMonth();
+            if (fecha.getDate() < DIA_INICIO_CICLO) {
+                m -= 1;
+                if (m < 0) { m = 11; a -= 1; }
+            }
+            return { ano: a, mes: m };
+        }
+        function claveCiclo(c) { return c.ano * 100 + c.mes; }
+
+        function etiquetaCiclo(c) {
+            let mFin = c.mes + 1, aFin = c.ano;
+            if (mFin > 11) { mFin = 0; aFin += 1; }
+            return `${DIA_INICIO_CICLO} ${MESES_CORTOS[c.mes]} ${c.ano} – 21 ${MESES_CORTOS[mFin]} ${aFin}`;
+        }
+
+        function pad2(n) { return String(n).padStart(2, '0'); }
+        function fmtFecha(ts) { const d = new Date(ts); return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}`; }
+        function fmtCorta(ts) { const d = new Date(ts); return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}`; }
+        function aISO(d) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+
+        // --- Análisis "lleno a lleno" ---
+        // El consumo se mide entre dos llenados de tanque; los repostajes parciales
+        // intermedios suman sus litros al tramo.
+        function analizar(regs) {
+            const det = regs.map(() => ({ dist: null, cons: null, c100: null, estado: 'previo' }));
+            const seg = [];
+            let ancla = -1, acumL = 0, acumC = 0;
+            regs.forEach((r, i) => {
+                if (i > 0) det[i].dist = r.odometro - regs[i - 1].odometro;
+                if (ancla === -1) {
+                    if (r.lleno) { ancla = i; det[i].estado = 'base'; }
+                    return;
+                }
+                acumL += r.litros;
+                acumC += r.coste;
+                if (r.lleno) {
+                    const km = r.odometro - regs[ancla].odometro;
+                    if (km > 0 && acumL > 0) {
+                        const s = { idx: i, km: km, litros: acumL, coste: acumC, cons: acumL / km * 100, c100: acumC / km * 100 };
+                        seg.push(s);
+                        det[i].cons = s.cons;
+                        det[i].c100 = s.c100;
+                        det[i].estado = 'ok';
+                    } else {
+                        det[i].estado = 'sin';
+                    }
+                    ancla = i; acumL = 0; acumC = 0;
+                } else {
+                    det[i].estado = 'parcial';
+                }
+            });
+            return { det: det, seg: seg, ancla: ancla, acumL: acumL, acumC: acumC };
+        }
+
+        // --- Enlace con Finanzas ---
+        function claveCicloFinanzas(nombre) {
+            const partes = nombre.split(/\s[-–]\s/);
+            if (partes.length < 2) return null;
+            const izq = partes[0].trim().toLowerCase();
+            const der = partes[1].trim().toLowerCase();
+            const mi = MESES_CORTOS.findIndex(m => izq.includes(m.toLowerCase()));
+            const md = MESES_CORTOS.findIndex(m => der.includes(m.toLowerCase()));
+            if (mi < 0 || md < 0) return null;
+            const aD = der.match(/20\d\d/);
+            if (!aD) return null;
+            const anioFin = parseInt(aD[0], 10);
+            const aI = izq.match(/20\d\d/);
+            const anioIni = aI ? parseInt(aI[0], 10) : (mi > md ? anioFin - 1 : anioFin);
+            return anioIni * 100 + mi;
+        }
+
+        function itemGasolinaDe(ciclo) {
+            return ciclo.items.find(i => i.desc.trim().toLowerCase() === 'gasolina');
+        }
+
+        function gastoRealGasolinaCiclo(clave) {
+            let total = 0;
+            gasData.registros.forEach(r => {
+                if (claveCiclo(cicloDeFecha(new Date(r.ts))) === clave) total += r.coste;
+            });
+            return total;
+        }
+
+        function presupuestoGasolinaCiclo(clave) {
+            for (const ciclo of appData.ciclos) {
+                if (claveCicloFinanzas(ciclo.nombre) === clave) {
+                    const it = itemGasolinaDe(ciclo);
+                    if (it) return parseFloat(it.valor) || 0;
+                }
+            }
+            return null;
+        }
+
+        // --- Formulario ---
+        function actualizarPrecioLitro() {
+            const l = parseFloat(document.getElementById('litros').value);
+            const c = parseFloat(document.getElementById('coste').value);
+            document.getElementById('precio-litro').innerText = (l > 0 && c > 0) ? `≈ ${(c / l).toFixed(3)} €/L` : '';
+        }
+
+        function resetearFormulario() {
+            editandoId = null;
+            document.getElementById('odometro').value = "";
+            document.getElementById('litros').value = "";
+            document.getElementById('coste').value = "";
+            document.getElementById('lleno').checked = true;
+            document.getElementById('fecha').value = aISO(new Date());
+            document.getElementById('titulo-form').innerText = "Nuevo Registro";
+            document.getElementById('btn-guardar').innerText = "Registrar Repostaje";
+            document.getElementById('btn-cancelar').style.display = "none";
+            actualizarPrecioLitro();
+        }
+
+        function editarRegistro(id) {
+            const r = gasData.registros.find(x => x.id === id);
+            if (!r) return;
+            editandoId = id;
+            document.getElementById('odometro').value = r.odometro;
+            document.getElementById('litros').value = r.litros;
+            document.getElementById('coste').value = r.coste;
+            document.getElementById('lleno').checked = r.lleno;
+            document.getElementById('fecha').value = aISO(new Date(r.ts));
+            document.getElementById('titulo-form').innerText = "Editar Registro";
+            document.getElementById('btn-guardar').innerText = "Guardar Cambios";
+            document.getElementById('btn-cancelar').style.display = "block";
+            actualizarPrecioLitro();
+            document.getElementById('card-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelarEdicion() { resetearFormulario(); }
+
+        function guardarRegistroGasolina() {
+            const odom = parseFloat(document.getElementById('odometro').value);
+            const litros = parseFloat(document.getElementById('litros').value);
+            const coste = parseFloat(document.getElementById('coste').value);
+            const lleno = document.getElementById('lleno').checked;
+            const fechaStr = document.getElementById('fecha').value;
+
+            if (isNaN(odom) || isNaN(litros) || isNaN(coste) || litros < 0 || coste < 0) {
+                alert("Por favor, introduce valores válidos en todos los campos.");
+                return;
+            }
+
+            let ts = Date.now();
+            if (fechaStr) {
+                const p = fechaStr.split('-').map(Number);
+                ts = new Date(p[0], p[1] - 1, p[2], 12).getTime();
+            }
+
+            const regs = gasData.registros;
+            const idx = editandoId ? regs.findIndex(r => r.id === editandoId) : regs.length;
+            const prev = idx > 0 ? regs[idx - 1] : null;
+            const next = (editandoId && idx < regs.length - 1) ? regs[idx + 1] : null;
+
+            if (prev && odom <= prev.odometro) {
+                alert(`El kilometraje debe ser mayor que el del registro anterior (${prev.odometro} km).`);
+                return;
+            }
+            if (next && odom >= next.odometro) {
+                alert(`El kilometraje debe ser menor que el del registro siguiente (${next.odometro} km).`);
+                return;
+            }
+            if (idx > 0 && litros <= 0) {
+                alert("Introduce los litros repostados.");
+                return;
+            }
+            if (!editandoId && prev && (odom - prev.odometro) > 1500) {
+                if (!confirm(`Son ${(odom - prev.odometro).toFixed(0)} km desde el último registro. ¿Es correcto?`)) return;
+            }
+
+            const nuevo = { id: editandoId || nuevoId(), ts: ts, odometro: odom, litros: litros, coste: coste, lleno: lleno };
+            const copia = regs.slice();
+            if (editandoId) copia[idx] = nuevo; else copia.push(nuevo);
+
+            const an = analizar(copia);
+            const c = an.det[idx].cons;
+            if (c !== null && (c < 3 || c > 20)) {
+                if (!confirm(`El consumo calculado es ${c.toFixed(1)} L/100 km, lo que parece fuera de lo normal. Revisa los km y los litros. ¿Guardar igualmente?`)) return;
+            }
+
+            gasData.registros = copia;
+            guardarGasData();
+            resetearFormulario();
+            actualizarPantallaGasolina();
+        }
+
+        function borrarRegistro(id) {
+            if (!confirm("¿Eliminar este registro?")) return;
+            gasData.registros = gasData.registros.filter(r => r.id !== id);
+            guardarGasData();
+            if (editandoId === id) resetearFormulario();
+            actualizarPantallaGasolina();
+        }
+
+        function guardarCapacidad(v) {
+            const n = parseFloat(v);
+            gasData.capacidad = n > 0 ? n : null;
+            guardarGasData();
+            actualizarPantallaGasolina();
+        }
+
+        // --- Pantalla ---
+        function actualizarPantallaGasolina() {
+            const regs = gasData.registros;
+            const an = analizar(regs);
+            const det = an.det, seg = an.seg;
+
+            // Indicadores de consumo
+            const ultimo = seg.length ? seg[seg.length - 1] : null;
+            const last5 = seg.slice(-5);
+            const sK = last5.reduce((a, s) => a + s.km, 0);
+            const sL = last5.reduce((a, s) => a + s.litros, 0);
+            const sC = last5.reduce((a, s) => a + s.coste, 0);
+            const media5 = sK > 0 ? sL / sK * 100 : null;
+            const coste100 = sK > 0 ? sC / sK * 100 : null;
+
+            document.getElementById('kpi-ultimo').innerText = ultimo ? ultimo.cons.toFixed(2) : "—";
+            document.getElementById('kpi-media5').innerText = media5 !== null ? media5.toFixed(2) : "—";
+            document.getElementById('kpi-coste100').innerText = coste100 !== null ? coste100.toFixed(2) + " €" : "—";
+            document.getElementById('kpi-coste100-sub').innerText = last5.length ? `últimos ${last5.length} llenado${last5.length > 1 ? 's' : ''}` : "faltan datos";
+
+            // Último km en el formulario
+            const hint = document.getElementById('hint-km');
+            hint.innerText = regs.length ? `(último: ${regs[regs.length - 1].odometro.toLocaleString('es-ES')} km)` : "";
+
+            // Gasto del ciclo actual (+ presupuesto de Finanzas)
+            const cicloHoy = cicloDeFecha(new Date());
+            const claveHoy = claveCiclo(cicloHoy);
+            const totalCiclo = gastoRealGasolinaCiclo(claveHoy);
+            document.getElementById('gasto-mes').innerText = totalCiclo.toFixed(2) + " €";
+            document.getElementById('rango-ciclo-actual').innerText = etiquetaCiclo(cicloHoy);
+
+            const presu = presupuestoGasolinaCiclo(claveHoy);
+            const elPresu = document.getElementById('presu-ciclo');
+            if (presu !== null && presu > 0) {
+                const resta = presu - totalCiclo;
+                const pct = Math.min(100, totalCiclo / presu * 100);
+                const mal = resta < 0;
+                elPresu.innerHTML = `Presupuesto del ciclo: <b>${presu.toFixed(2)} €</b> · ` +
+                    (mal ? `<b class="txt-mal">te pasaste por ${(-resta).toFixed(2)} €</b>` : `<b>quedan ${resta.toFixed(2)} €</b>`) +
+                    `<div class="presu-bar ${mal ? 'mal' : ''}"><div style="width:${pct}%"></div></div>`;
+            } else {
+                elPresu.innerHTML = "";
+            }
+
+            // Autonomía
+            const capEl = document.getElementById('capacidad');
+            if (document.activeElement !== capEl) capEl.value = gasData.capacidad || "";
+            const elAut = document.getElementById('autonomia-res');
+            const consRef = media5 !== null ? media5 : (ultimo ? ultimo.cons : null);
+            if (!gasData.capacidad) {
+                elAut.innerHTML = `<div class="autonomia-sub">Indica la capacidad del depósito para estimar cuántos km te quedan.</div>`;
+            } else if (consRef === null || an.ancla === -1) {
+                elAut.innerHTML = `<div class="autonomia-sub">Necesitas al menos dos llenados de tanque para estimarla.</div>`;
+            } else {
+                const lastReg = regs[regs.length - 1];
+                const kmDesde = lastReg.odometro - regs[an.ancla].odometro;
+                const usados = kmDesde * consRef / 100;
+                const enTanque = Math.max(0, Math.min(gasData.capacidad, gasData.capacidad - usados + an.acumL));
+                const kmRest = enTanque / consRef * 100;
+                elAut.innerHTML = `<div class="autonomia-num">≈ ${Math.round(kmRest)} km</div>
+                    <div class="autonomia-sub">Desde el último lleno: ${kmDesde.toFixed(0)} km · estimación con tu consumo medio (${consRef.toFixed(2)} L/100 km)</div>`;
+            }
+
+            // Gasto por ciclo
+            const porCiclo = {};
+            regs.forEach(r => {
+                const c = cicloDeFecha(new Date(r.ts));
+                const k = claveCiclo(c);
+                if (!porCiclo[k]) porCiclo[k] = { ciclo: c, total: 0 };
+                porCiclo[k].total += r.coste;
+            });
+            const contenedor = document.getElementById('historial-mensual');
+            const claves = Object.keys(porCiclo).map(Number).sort((a, b) => b - a);
+            if (claves.length === 0) {
+                contenedor.innerHTML = "<p style='color:#7f8c8d; margin:0; font-size:0.9rem;'>No hay datos acumulados todavía.</p>";
+            } else {
+                contenedor.innerHTML = claves.map(k => {
+                    const it = porCiclo[k];
+                    const pr = presupuestoGasolinaCiclo(k);
+                    const extra = (pr !== null && pr > 0)
+                        ? ` <small class="${it.total > pr ? 'txt-mal' : ''}">/ ${pr.toFixed(2)} €</small>` : "";
+                    return `<div class="mes-item"><span>${etiquetaCiclo(it.ciclo)}</span><span><strong>${it.total.toFixed(2)} €</strong>${extra}</span></div>`;
+                }).join("");
+            }
+
+            renderizarGraficoConsumo(seg, regs);
+            renderizarEstadisticas(regs, det);
+
+            // Historial
+            const tabla = document.getElementById('tabla-historial');
+            let filas = "";
+            for (let i = regs.length - 1; i >= 0; i--) {
+                const r = regs[i], d = det[i];
+                const precioL = r.litros > 0 ? (r.coste / r.litros).toFixed(3) : "—";
+                let consTxt = "—";
+                if (d.estado === 'ok') consTxt = d.cons.toFixed(2) + " L/100km";
+                else if (d.estado === 'base') consTxt = "Base";
+                else if (d.estado === 'parcial') consTxt = "Pendiente";
+                filas += `<tr>
+                    <td>${fmtFecha(r.ts)}${r.lleno ? '' : '<span class="tag-parcial">parcial</span>'}</td>
+                    <td>${r.odometro.toLocaleString('es-ES')}</td>
+                    <td><strong>${d.dist !== null ? d.dist.toFixed(1) + ' km' : '—'}</strong></td>
+                    <td>${r.litros} L</td>
+                    <td>${r.coste.toFixed(2)} €</td>
+                    <td>${precioL}</td>
+                    <td><strong>${consTxt}</strong></td>
+                    <td><button class="mini" title="Editar" onclick="editarRegistro('${r.id}')">✏️</button><button class="mini" title="Eliminar" onclick="borrarRegistro('${r.id}')">🗑️</button></td>
+                </tr>`;
+            }
+            tabla.innerHTML = filas;
+
+            // Mantener Finanzas al día (proyección con el gasto real)
+            if (finanzasListo) recalcular();
+        }
+
+        function renderizarGraficoConsumo(seg, regs) {
+            const canvas = document.getElementById('graficoConsumo');
+            const msg = document.getElementById('msg-grafico');
+            if (!canvas || typeof Chart === 'undefined') return;
+            if (chartConsumo) { chartConsumo.destroy(); chartConsumo = null; }
+            if (seg.length === 0) {
+                canvas.style.display = 'none';
+                msg.style.display = 'block';
+                return;
+            }
+            canvas.style.display = 'block';
+            msg.style.display = 'none';
+            const ult = seg.slice(-20);
+            chartConsumo = new Chart(canvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ult.map(s => fmtCorta(regs[s.idx].ts)),
+                    datasets: [{
+                        label: 'L/100 km',
+                        data: ult.map(s => +s.cons.toFixed(2)),
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.12)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.25,
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (c) => `${c.raw.toFixed(2)} L/100 km` } }
+                    },
+                    scales: {
+                        x: { ticks: { font: { size: 9 }, autoSkip: true, maxTicksLimit: 8 }, grid: { display: false } },
+                        y: { ticks: { font: { size: 9 } }, grid: { color: '#e2e8f0' } }
+                    }
+                }
+            });
+        }
+
+        function renderizarEstadisticas(regs, det) {
+            const sel = document.getElementById('sel-anio');
+            const actual = new Date().getFullYear();
+            const anios = new Set([actual]);
+            regs.forEach(r => anios.add(new Date(r.ts).getFullYear()));
+            const lista = Array.from(anios).sort((a, b) => b - a);
+            const previo = sel.value ? parseInt(sel.value, 10) : actual;
+            sel.innerHTML = lista.map(a => `<option value="${a}">${a}</option>`).join("");
+            sel.value = lista.includes(previo) ? previo : actual;
+            const anio = parseInt(sel.value, 10);
+
+            let gasto = 0, litros = 0, km = 0, n = 0;
+            regs.forEach((r, i) => {
+                if (new Date(r.ts).getFullYear() !== anio) return;
+                gasto += r.coste; litros += r.litros; n++;
+                if (det[i].dist !== null) km += det[i].dist;
+            });
+            const box = (label, val) => `<div class="stat-box"><div class="s-label">${label}</div><div class="s-val">${val}</div></div>`;
+            document.getElementById('stats-anio').innerHTML =
+                box("Gasto total", gasto.toFixed(2) + " €") +
+                box("Litros", litros.toFixed(1) + " L") +
+                box("Km recorridos", Math.round(km).toLocaleString('es-ES')) +
+                box("Coste por km", km > 0 ? (gasto / km).toFixed(3) + " €" : "—") +
+                box("Precio medio", litros > 0 ? (gasto / litros).toFixed(3) + " €/L" : "—") +
+                box("Repostajes", n);
+        }
+
+        // --- Respaldo ---
+        function exportarGasolina() {
+            const contenido = JSON.stringify({ tipo: 'gasolina', version: 4, registros: gasData.registros, capacidad: gasData.capacidad }, null, 2);
+            const blob = new Blob([contenido], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Gasolina_Backup_${aISO(new Date())}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function importarGasolina() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    try {
+                        const c = JSON.parse(ev.target.result);
+                        if (!c || !Array.isArray(c.registros)) { alert("El archivo no tiene el formato correcto."); return; }
+                        const regs = c.registros.map(normalizarRegistro).filter(r => !isNaN(r.odometro));
+                        if (!confirm(`Se reemplazarán los datos de gasolina actuales por ${regs.length} registros del respaldo. ¿Continuar?`)) return;
+                        gasData = { registros: regs, capacidad: c.capacidad || null };
+                        guardarGasData();
+                        resetearFormulario();
+                        actualizarPantallaGasolina();
+                        alert("¡Copia de seguridad restaurada con éxito!");
+                    } catch (err) {
+                        alert("Error al leer el archivo JSON.");
+                    }
+                };
+                reader.readAsText(file, 'UTF-8');
+            };
+            input.click();
+        }
+
+        function borrarTodoGasolina() {
+            if (confirm("¿Seguro que quieres borrar todo el historial de gasolina? Haz antes una copia de respaldo si quieres conservarlo.")) {
+                gasData.registros = [];
+                guardarGasData();
+                resetearFormulario();
+                actualizarPantallaGasolina();
+            }
+        }
+
+        // =====================================================
+        // ===== MÓDULO FINANZAS ===============================
+        // =====================================================
+        const nombresCiclosDefault = [
+            "22 Ago - 21 Sep 2026",
+            "22 Sep - 21 Oct 2026",
+            "22 Oct - 21 Nov 2026",
+            "22 Nov - 21 Dic 2026",
+            "22 Dic - 21 Ene 2027",
+            "22 Ene - 21 Feb 2027",
+            "22 Feb - 21 Mar 2027",
+            "22 Mar - 21 Abr 2027",
+            "22 Abr - 21 May 2027",
+            "22 May - 21 Jun 2027",
+            "22 Jun - 21 Jul 2027",
+            "22 Jul - 21 Ago 2027",
+            "22 Ago - 21 Sep 2027",
+            "22 Sep - 21 Oct 2027",
+            "22 Oct - 21 Nov 2027",
+            "22 Nov - 21 Dic 2027",
+            "22 Dic 2027 - 21 Ene 2028"
         ];
 
-        let datosFinancieros = JSON.parse(localStorage.getItem('datosFinancieros_v11')) || datosPorDefecto;
+        function obtenerConceptosBase() {
+            return [
+                { desc: "Ingreso Nómina", valor: "1023.78", checked: false },
+                { desc: "Comida", valor: "270.00", checked: false },
+                { desc: "Cuota carro", valor: "140.98", checked: false },
+                { desc: "Gasolina", valor: "120.00", checked: false },
+                { desc: "Ocio", valor: "20.00", checked: false },
+                { desc: "Internet", valor: "50.00", checked: false },
+                { desc: "Crédito banco", valor: "30.16", checked: false },
+                { desc: "Lolo (Mascota)", valor: "40.00", checked: false },
+                { desc: "Agua", valor: "20.00", checked: false },
+                { desc: "Gas", valor: "20.00", checked: false },
+                { desc: "Teléfono móvil", valor: "10.00", checked: false },
+                { desc: "Google", valor: "1.99", checked: false },
+                { desc: "Luz", valor: "115.00", checked: false },
+                { desc: "Corte cabello", valor: "9.00", checked: false }
+            ];
+        }
 
-        function inicializarFinanzas() {
-            let htmlBase = "";
-            datosFinancieros.forEach(ciclo => {
-                let filas = "";
-                if (ciclo.id > 1) {
-                    filas += `
-                        <div class="row" style="color: #6b7280; padding-left: 28px;">
-                            <span>Saldo acumulado anterior</span>
-                            <span id="arrastre-c${ciclo.id}">0.00 €</span>
-                        </div>
-                    `;
+        function generarPartidasParaCiclo(idx) {
+            const base = obtenerConceptosBase();
+
+            if (idx > 0 && (idx - 1) % 3 === 0) {
+                base.push({ desc: "Manutención cuenta", valor: "15.60", checked: false });
+            }
+
+            if (idx === 1) {
+                base.push({ desc: "Pago Gabriela", valor: "1100.00", checked: false });
+            } else if (idx === 2) {
+                base.push({ desc: "Pago Gabriela", valor: "200.00", checked: false });
+            }
+
+            if (idx === 7) {
+                base.push({ desc: "Mantenimiento carro", valor: "504.00", checked: false });
+                base.push({ desc: "IPO", valor: "37.00", checked: false });
+            }
+
+            if (idx === 8) {
+                base.push({ desc: "Seguro Carro", valor: "258.00", checked: false });
+            }
+
+            if (idx === 1 || idx === 13) {
+                base.push({ desc: "IUC", valor: "111.00", checked: false });
+            }
+
+            return base;
+        }
+
+        function calcularSiguienteNombreCiclo() {
+            const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+            if (appData.ciclos.length === 0) {
+                const hoy = new Date();
+                const mIdx = hoy.getMonth();
+                const y = hoy.getFullYear();
+                const nextMIdx = (mIdx + 1) % 12;
+                const nextY = nextMIdx === 0 ? y + 1 : y;
+                return `22 ${meses[mIdx]} - 21 ${meses[nextMIdx]} ${nextY}`;
+            }
+
+            const ultimoNombre = appData.ciclos[appData.ciclos.length - 1].nombre;
+            const regexAnios = /\b(20\d\d)\b/g;
+            const aniosEncontrados = ultimoNombre.match(regexAnios);
+            let anioFin = aniosEncontrados ? parseInt(aniosEncontrados[aniosEncontrados.length - 1], 10) : new Date().getFullYear();
+
+            const partes = ultimoNombre.split('-');
+            const parteDerecha = partes.length > 1 ? partes[1] : partes[0];
+
+            let mesFinIdx = -1;
+            for (let i = 0; i < meses.length; i++) {
+                if (parteDerecha.includes(meses[i])) {
+                    mesFinIdx = i;
+                    break;
                 }
+            }
 
-                ciclo.items.forEach((item, index) => {
+            if (mesFinIdx === -1) mesFinIdx = 0;
+
+            let nuevoInicioMesIdx = mesFinIdx;
+            let nuevoFinMesIdx = (mesFinIdx + 1) % 12;
+
+            let nuevoInicioAnio = anioFin;
+            let nuevoFinAnio = (nuevoFinMesIdx === 0) ? nuevoInicioAnio + 1 : nuevoInicioAnio;
+
+            if (nuevoInicioAnio === nuevoFinAnio) {
+                return `22 ${meses[nuevoInicioMesIdx]} - 21 ${meses[nuevoFinMesIdx]} ${nuevoFinAnio}`;
+            } else {
+                return `22 ${meses[nuevoInicioMesIdx]} ${nuevoInicioAnio} - 21 ${meses[nuevoFinMesIdx]} ${nuevoFinAnio}`;
+            }
+        }
+
+        function crearEstadoInicial() {
+            return {
+                saldoBase: 1598.70,
+                ciclos: nombresCiclosDefault.map((nombre, index) => ({
+                    id: Date.now() + index,
+                    nombre: nombre,
+                    items: generarPartidasParaCiclo(index),
+                    imprevisto: "0.00"
+                }))
+            };
+        }
+
+        let appData = JSON.parse(localStorage.getItem('controlFinanciero_v6')) || crearEstadoInicial();
+        if (appData.saldoBase === undefined) appData.saldoBase = 1598.70;
+
+        let openCycles = new Set([0]);
+
+        function renderizarGrafico(etiquetas, datos) {
+            const ctx = document.getElementById('graficoProyeccion');
+            if (!ctx || typeof Chart === 'undefined') return;
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: etiquetas,
+                    datasets: [{
+                        label: 'Saldo (€)',
+                        data: datos,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.25,
+                        pointRadius: 3,
+                        pointBackgroundColor: datos.map(v => v < 0 ? '#ef4444' : '#10b981')
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `Saldo: ${context.raw.toFixed(2)} €`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                font: { size: 8 },
+                                maxRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 8
+                            },
+                            grid: { display: false }
+                        },
+                        y: {
+                            ticks: { font: { size: 9 } },
+                            grid: {
+                                color: (ctx) => ctx.tick.value === 0 ? '#ef4444' : '#e2e8f0'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderizar() {
+            const cards = document.querySelectorAll('details.cycle-card');
+            if (cards.length > 0) {
+                openCycles.clear();
+                cards.forEach((card, idx) => {
+                    if (card.open) openCycles.add(idx);
+                });
+            }
+
+            let html = "";
+
+            appData.ciclos.forEach((ciclo, cIdx) => {
+                let filas = "";
+                const itGas = itemGasolinaDe(ciclo);
+
+                ciclo.items.forEach((item, iIdx) => {
+                    const isChecked = item.checked ? 'checked' : '';
                     filas += `
-                        <div class="row ${item.checked ? 'checked' : ''}">
+                        <div class="row ${isChecked}">
                             <div class="item-left">
-                                <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck(${ciclo.id}, ${index}, this)">
-                                <span>${item.desc}</span>
+                                <button class="btn-delete" title="Eliminar concepto" onclick="eliminarItem(${cIdx}, ${iIdx})">✕</button>
+                                <input type="checkbox" ${isChecked} onchange="toggleCheck(${cIdx}, ${iIdx}, this.checked)">
+                                <span class="desc-text">${item.desc}</span>
                             </div>
-                            <input type="number" 
-                                   class="monto-input ${item.valor >= 0 ? 'positivo' : 'negativo'}" 
-                                   value="${item.valor}" 
-                                   step="0.01" 
-                                   inputmode="decimal"
-                                   oninput="actualizarMonto(${ciclo.id}, ${index}, this.value)">
+                            <div class="item-right">
+                                <button class="btn-sync" title="Aplicar este importe a todos los ciclos futuros" onclick="actualizarEnCadena(${cIdx}, ${iIdx})">🔄</button>
+                                <input type="number" 
+                                       class="monto-input" 
+                                       placeholder="0.00" 
+                                       value="${item.valor}" 
+                                       step="0.01" 
+                                       oninput="actualizarValor(${cIdx}, ${iIdx}, this.value)">
+                            </div>
                         </div>
                     `;
+                    if (item === itGas) {
+                        filas += `<div class="gas-info" id="gas-info-${cIdx}"></div>`;
+                    }
                 });
 
                 filas += `
-                    <div class="row" style="padding-left: 28px;">
-                        <span>SALDO PROYECTADO AL CIERRE</span>
-                        <span id="cierre-val-c${ciclo.id}">0.00 €</span>
+                    <div class="row row-imprevisto">
+                        <span style="font-weight: 600; color: #991b1b; font-size: 12px;">⚠️ Imprevisto extra (€):</span>
+                        <input type="number" 
+                               class="monto-input" 
+                               style="border-color: #fca5a5; color: #991b1b;"
+                               placeholder="0.00" 
+                               value="${ciclo.imprevisto || ''}" 
+                               step="0.01" 
+                               oninput="actualizarImprevisto(${cIdx}, this.value)">
+                    </div>
+                    <button class="btn-add-item" onclick="agregarItem(${cIdx})">+ Añadir concepto</button>
+                    <div class="row row-total">
+                        <span>SALDO AL CIERRE</span>
+                        <span id="cierre-val-${cIdx}">0.00 €</span>
                     </div>
                 `;
 
-                htmlBase += `
-                    <details class="cycle-card" id="details-c${ciclo.id}">
+                const isOpen = openCycles.has(cIdx) ? 'open' : '';
+                html += `
+                    <details class="cycle-card" id="card-${cIdx}" ${isOpen}>
                         <summary>
-                            <span>📅 ${ciclo.nombre}</span>
+                            <div class="summary-left">
+                                <button class="btn-delete-cycle" title="Eliminar ciclo completo" onclick="eliminarCiclo(event, ${cIdx})">🗑️</button>
+                                <span>📅 ${ciclo.nombre}</span>
+                            </div>
                             <div class="summary-right">
-                                <span id="resumen-cierre-c${ciclo.id}" style="font-weight:bold;">0.00 €</span>
-                                <span style="color: #9ca3af; font-size: 11px;">▼</span>
+                                <span class="summary-val" id="sum-val-${cIdx}">0.00 €</span>
+                                <span class="arrow">▼</span>
                             </div>
                         </summary>
                         <div class="breakdown-table">
@@ -399,314 +1077,296 @@
                 `;
             });
 
-            document.getElementById("contenedor-ciclos").innerHTML = htmlBase;
-            recalcularTodoFinanzas();
+            document.getElementById("contenedor-ciclos").innerHTML = html;
+            recalcular();
         }
 
-        function toggleCheck(cicloId, itemIndex, checkbox) {
-            const ciclo = datosFinancieros.find(c => c.id === cicloId);
-            ciclo.items[itemIndex].checked = checkbox.checked;
-            
-            const row = checkbox.closest('.row');
-            if (checkbox.checked) {
-                row.classList.add('checked');
-            } else {
-                row.classList.remove('checked');
-            }
-            recalcularTodoFinanzas();
-            guardarDatosFinanzas();
-        }
-
-        function actualizarMonto(cicloId, itemIndex, nuevoValor) {
-            datosFinancieros.find(c => c.id === cicloId).items[itemIndex].valor = parseFloat(nuevoValor) || 0;
-            recalcularTodoFinanzas();
-            guardarDatosFinanzas();
-        }
-
-        function recalcularTodoFinanzas() {
-            let saldoAcumulado = 0;
-            let saldoActualReal = 0; 
-
-            datosFinancieros.forEach(ciclo => {
-                if (ciclo.id > 1) {
-                    const arrastreEl = document.getElementById(`arrastre-c${ciclo.id}`);
-                    if(arrastreEl) arrastreEl.innerText = saldoAcumulado.toFixed(2) + " €";
-                }
-
-                let subtotalMes = 0;
-                ciclo.items.forEach(item => { 
-                    subtotalMes += item.valor; 
+        function calcularSumaMarcados() {
+            let checkedSum = 0;
+            appData.ciclos.forEach(ciclo => {
+                ciclo.items.forEach(item => {
                     if (item.checked) {
-                        saldoActualReal += item.valor;
+                        let num = parseFloat(item.valor) || 0;
+                        let esIngreso = item.desc.toLowerCase().includes("ingreso") || item.desc.toLowerCase().includes("nómina");
+                        checkedSum += esIngreso ? num : -Math.abs(num);
+                    }
+                });
+            });
+            return checkedSum;
+        }
+
+        function cambiarSaldoDirecto(val) {
+            let nuevoSaldoDeseado = parseFloat(val) || 0;
+            let checkedSum = calcularSumaMarcados();
+            appData.saldoBase = nuevoSaldoDeseado - checkedSum;
+            recalcular();
+            guardar();
+        }
+
+        function toggleCheck(cIdx, iIdx, checked) {
+            appData.ciclos[cIdx].items[iIdx].checked = checked;
+            renderizar();
+            guardar();
+        }
+
+        function actualizarValor(cIdx, iIdx, val) {
+            appData.ciclos[cIdx].items[iIdx].valor = val;
+            recalcular();
+            guardar();
+            if (typeof actualizarPantallaGasolina === 'function') actualizarPantallaGasolina();
+        }
+
+        function actualizarImprevisto(cIdx, val) {
+            appData.ciclos[cIdx].imprevisto = val;
+            recalcular();
+            guardar();
+        }
+
+        function actualizarEnCadena(cIdx, iIdx) {
+            const targetItem = appData.ciclos[cIdx].items[iIdx];
+            const descTarget = targetItem.desc.trim().toLowerCase();
+            const nuevoValor = targetItem.valor;
+
+            if (confirm(`¿Deseas actualizar el importe de "${targetItem.desc}" a ${nuevoValor} € en todos los ciclos futuros desde este?`)) {
+                let contador = 0;
+                for (let i = cIdx + 1; i < appData.ciclos.length; i++) {
+                    const itemEncontrado = appData.ciclos[i].items.find(
+                        item => item.desc.trim().toLowerCase() === descTarget
+                    );
+                    if (itemEncontrado) {
+                        itemEncontrado.valor = nuevoValor;
+                        contador++;
+                    }
+                }
+                guardar();
+                renderizar();
+                alert(`¡Se actualizó el concepto en ${contador} ciclos futuros!`);
+            }
+        }
+
+        function agregarItem(cIdx) {
+            const nombre = prompt("Nombre del nuevo concepto:");
+            if (!nombre || nombre.trim() === "") return;
+
+            const valor = prompt("Monto por defecto (€):", "0.00");
+            if (valor === null) return;
+
+            const modo = prompt(
+                "¿A cuáles ciclos deseas añadir este concepto?\n\n" +
+                "1 - Solo en este ciclo\n" +
+                "2 - En este ciclo y TODOS los posteriores\n" +
+                "3 - En un número específico de ciclos posteriores",
+                "1"
+            );
+
+            const nuevoItem = {
+                desc: nombre.trim(),
+                valor: valor.trim() || "0.00",
+                checked: false
+            };
+
+            if (modo === "1") {
+                appData.ciclos[cIdx].items.push({...nuevoItem});
+            } else if (modo === "2") {
+                for (let i = cIdx; i < appData.ciclos.length; i++) {
+                    appData.ciclos[i].items.push({...nuevoItem});
+                }
+            } else if (modo === "3") {
+                const cantidad = parseInt(prompt("¿A cuántos ciclos futuros deseas añadirlo? (ej: 3)", "3"), 10);
+                if (!isNaN(cantidad) && cantidad > 0) {
+                    const limite = Math.min(cIdx + cantidad, appData.ciclos.length);
+                    for (let i = cIdx; i < limite; i++) {
+                        appData.ciclos[i].items.push({...nuevoItem});
+                    }
+                }
+            }
+
+            openCycles.add(cIdx);
+            renderizar();
+            guardar();
+        }
+
+        function eliminarItem(cIdx, iIdx) {
+            appData.ciclos[cIdx].items.splice(iIdx, 1);
+            renderizar();
+            guardar();
+        }
+
+        function crearNuevoCiclo() {
+            const nombreSugerido = calcularSiguienteNombreCiclo();
+            const nombre = prompt("Confirmar nombre del nuevo ciclo:", nombreSugerido);
+
+            if (nombre && nombre.trim() !== "") {
+                appData.ciclos.push({
+                    id: Date.now(),
+                    nombre: nombre.trim(),
+                    items: obtenerConceptosBase(),
+                    imprevisto: "0.00"
+                });
+                openCycles.add(appData.ciclos.length - 1);
+                renderizar();
+                guardar();
+            }
+        }
+
+        function eliminarCiclo(event, cIdx) {
+            event.stopPropagation();
+            const cicloNombre = appData.ciclos[cIdx].nombre;
+            if (confirm(`¿Estás seguro de que deseas eliminar el ciclo "${cicloNombre}"?`)) {
+                appData.ciclos.splice(cIdx, 1);
+                renderizar();
+                guardar();
+            }
+        }
+
+        function recalcular() {
+            let checkedSum = calcularSumaMarcados();
+            let saldoActualReal = appData.saldoBase + checkedSum;
+
+            const inputBanco = document.getElementById("input-saldo-banco");
+            if (document.activeElement !== inputBanco) {
+                inputBanco.value = saldoActualReal.toFixed(2);
+            }
+
+            let acumuladoProyectado = saldoActualReal;
+            const etiquetasGrafico = [];
+            const datosGrafico = [];
+
+            appData.ciclos.forEach((ciclo, cIdx) => {
+                let netoPendiente = 0;
+
+                // Gasolina: si hay gasto real registrado en este ciclo, solo se proyecta lo que falta del tope
+                const claveC = claveCicloFinanzas(ciclo.nombre);
+                const itGas = itemGasolinaDe(ciclo);
+                const realGas = (claveC !== null) ? gastoRealGasolinaCiclo(claveC) : 0;
+
+                ciclo.items.forEach(item => {
+                    if (!item.checked) {
+                        let num = parseFloat(item.valor) || 0;
+                        if (item === itGas && realGas > 0) num = Math.max(num - realGas, 0);
+                        let esIngreso = item.desc.toLowerCase().includes("ingreso") || item.desc.toLowerCase().includes("nómina");
+                        netoPendiente += esIngreso ? num : -Math.abs(num);
                     }
                 });
 
-                saldoAcumulado = (ciclo.id === 1) ? subtotalMes : (saldoAcumulado + subtotalMes);
+                const imprevistoExtra = parseFloat(ciclo.imprevisto) || 0;
+                netoPendiente -= imprevistoExtra;
 
-                const resumenCierre = document.getElementById(`resumen-cierre-c${ciclo.id}`);
-                const cierreVal = document.getElementById(`cierre-val-c${ciclo.id}`);
-                
-                if(resumenCierre) resumenCierre.innerText = saldoAcumulado.toFixed(2) + " €";
-                if(cierreVal) cierreVal.innerText = saldoAcumulado.toFixed(2) + " €";
+                acumuladoProyectado += netoPendiente;
 
-                if (saldoAcumulado < 0) {
-                    if(resumenCierre) resumenCierre.style.color = "var(--danger)";
-                    if(cierreVal) cierreVal.style.color = "var(--danger)";
-                } else {
-                    if(resumenCierre) resumenCierre.style.color = "var(--primary)";
-                    if(cierreVal) cierreVal.style.color = "#111827";
+                etiquetasGrafico.push(ciclo.nombre.split(' - ')[0]);
+                datosGrafico.push(acumuladoProyectado);
+
+                const elSum = document.getElementById(`sum-val-${cIdx}`);
+                const elCierre = document.getElementById(`cierre-val-${cIdx}`);
+                const cardEl = document.getElementById(`card-${cIdx}`);
+
+                if (elSum) elSum.innerText = acumuladoProyectado.toFixed(2) + " €";
+                if (elCierre) elCierre.innerText = acumuladoProyectado.toFixed(2) + " €";
+
+                const esNegativo = acumuladoProyectado < 0;
+                const color = esNegativo ? "var(--danger)" : "var(--primary-dark)";
+
+                if (elSum) elSum.style.color = color;
+                if (elCierre) elCierre.style.color = color;
+
+                if (cardEl) {
+                    if (esNegativo) {
+                        cardEl.classList.add("alert-danger");
+                    } else {
+                        cardEl.classList.remove("alert-danger");
+                    }
+                }
+
+                // Línea informativa bajo "Gasolina": gasto real vs tope
+                const gi = document.getElementById(`gas-info-${cIdx}`);
+                if (gi) {
+                    if (itGas && realGas > 0) {
+                        const pres = parseFloat(itGas.valor) || 0;
+                        if (realGas <= pres) {
+                            gi.className = 'gas-info';
+                            gi.innerHTML = `⛽ Gastado real: <b>${realGas.toFixed(2)} €</b> de ${pres.toFixed(2)} € · quedan ${(pres - realGas).toFixed(2)} €`;
+                        } else {
+                            gi.className = 'gas-info mal';
+                            gi.innerHTML = `⛽ Gastado real: ${realGas.toFixed(2)} € · te pasaste por ${(realGas - pres).toFixed(2)} €`;
+                        }
+                    } else {
+                        gi.className = 'gas-info';
+                        gi.innerHTML = '';
+                    }
                 }
             });
 
-            const boxActual = document.getElementById("box-saldo-actual");
-            const titleActual = document.getElementById("title-saldo-actual");
-            const valueActual = document.getElementById("saldo-actual-real");
-            valueActual.innerText = saldoActualReal.toFixed(2) + " €";
-            
-            if (saldoActualReal < 0) {
-                boxActual.style.background = "var(--danger-bg)";
-                boxActual.style.borderColor = "var(--danger-border)";
-                titleActual.style.color = "var(--danger-text)";
-                valueActual.style.color = "var(--danger)";
-            } else {
-                boxActual.style.background = "#eff6ff";
-                boxActual.style.borderColor = "#bfdbfe";
-                titleActual.style.color = "#1e40af";
-                valueActual.style.color = "var(--info-dark)";
-            }
-
-            const boxMeta = document.getElementById("box-meta-final");
-            const titleMeta = document.getElementById("title-meta-final");
-            const valueMeta = document.getElementById("meta-final");
-            valueMeta.innerText = saldoAcumulado.toFixed(2) + " €";
-
-            if (saldoAcumulado < 0) {
-                boxMeta.style.background = "var(--danger-bg)";
-                boxMeta.style.borderColor = "var(--danger-border)";
-                titleMeta.style.color = "var(--danger-text)";
-                valueMeta.style.color = "var(--danger)";
-            } else {
-                boxMeta.style.background = "#ecfdf5";
-                boxMeta.style.borderColor = "#a7f3d0";
-                titleMeta.style.color = "#065f46";
-                valueMeta.style.color = "var(--primary-dark)";
-            }
+            document.getElementById("disp-meta-final").innerText = acumuladoProyectado.toFixed(2) + " €";
+            renderizarGrafico(etiquetasGrafico, datosGrafico);
         }
 
-        function guardarDatosFinanzas() {
-            localStorage.setItem('datosFinancieros_v11', JSON.stringify(datosFinancieros));
+        function guardar() {
+            localStorage.setItem('controlFinanciero_v6', JSON.stringify(appData));
         }
 
-        function reiniciarDatosFinanzas() {
-            if (confirm("¿Estás seguro de que quieres restablecer todos los ciclos?")) {
-                localStorage.removeItem('datosFinancieros_v11');
-                datosFinancieros = JSON.parse(JSON.stringify(datosPorDefecto));
-                inicializarFinanzas();
-            }
+        function exportarDatos() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `Finanzas_Backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
         }
 
-        // --- LÓGICA: GASOLINA ---
-        const NOMBRES_MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-
-        function agregarRegistroGasolina() {
-            let odomInput = document.getElementById('odometro');
-            let litrosInput = document.getElementById('litros');
-            let costeInput = document.getElementById('coste');
-            let llenoInput = document.getElementById('tanque_lleno');
-            
-            let odom = parseFloat(odomInput.value);
-            let litros = parseFloat(litrosInput.value);
-            let coste = parseFloat(costeInput.value);
-            let tanqueLleno = llenoInput ? llenoInput.checked : true;
-
-            if (isNaN(odom) || isNaN(litros) || isNaN(coste)) {
-                alert("Por favor, introduce valores válidos en todos los campos.");
-                return;
-            }
-
-            let historial = JSON.parse(localStorage.getItem('historial_consumo')) || [];
-
-            if (historial.length > 0) {
-                let ultimo = historial[historial.length - 1];
-                let distancia = odom - ultimo.odometro;
-                
-                if (distancia <= 0) {
-                    alert("El kilometraje debe ser mayor que el del registro anterior.");
-                    return;
-                }
-            }
-
-            let ahora = new Date();
-            let nuevo = {
-                fechaTxt: ahora.toLocaleDateString(),
-                mes: ahora.getMonth(),
-                ano: ahora.getFullYear(),
-                odometro: odom,
-                litros: litros,
-                coste: coste,
-                tanqueLleno: tanqueLleno
-            };
-
-            historial.push(nuevo);
-            localStorage.setItem('historial_consumo', JSON.stringify(historial));
-            
-            odomInput.value = "";
-            litrosInput.value = "";
-            costeInput.value = "";
-            if (llenoInput) llenoInput.checked = true;
-            
-            cargarHistorialGasolina();
-        }
-
-        function cargarHistorialGasolina() {
-            let historial = JSON.parse(localStorage.getItem('historial_consumo')) || [];
-            let tabla = document.getElementById('tabla-historial');
-            let contenedorMeses = document.getElementById('historial-mensual');
-            
-            if(!tabla || !contenedorMeses) return;
-
-            tabla.innerHTML = "";
-            contenedorMeses.innerHTML = "";
-
-            // --- FASE 1: CÁLCULO DINÁMICO DE CONSUMO (Hacia adelante) ---
-            let litrosAcumulados = 0;
-            let kmInicialCiclo = historial.length > 0 ? historial[0].odometro : 0;
-
-            for (let i = 0; i < historial.length; i++) {
-                let reg = historial[i];
-                
-                if (reg.tanqueLleno === undefined) reg.tanqueLleno = true; // Compatibilidad hacia atrás
-
-                if (i === 0) {
-                    reg.distanciaCalculada = "Base";
-                    reg.consumoCalculado = "Base";
-                    kmInicialCiclo = reg.odometro;
-                    litrosAcumulados = 0;
-                    continue;
-                }
-
-                let ultimo = historial[i - 1];
-                let distanciaTramo = reg.odometro - ultimo.odometro;
-                reg.distanciaCalculada = distanciaTramo.toFixed(1) + " km";
-
-                litrosAcumulados += reg.litros;
-
-                if (reg.tanqueLleno) {
-                    let distTotalCiclo = reg.odometro - kmInicialCiclo;
-                    if (distTotalCiclo > 0 && litrosAcumulados > 0) {
-                        let calc = (litrosAcumulados / distTotalCiclo) * 100;
-                        reg.consumoCalculado = calc.toFixed(2) + " L/100km";
-                    } else {
-                        reg.consumoCalculado = "N/A";
+        function importarDatos() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.readAsText(file, 'UTF-8');
+                reader.onload = readerEvent => {
+                    try {
+                        const content = JSON.parse(readerEvent.target.result);
+                        if (content.ciclos && content.saldoBase !== undefined) {
+                            appData = content;
+                            guardar();
+                            renderizar();
+                            actualizarPantallaGasolina();
+                            alert("¡Copia de seguridad restaurada con éxito!");
+                        } else {
+                            alert("El archivo subido no tiene el formato correcto.");
+                        }
+                    } catch (err) {
+                        alert("Error al leer el archivo JSON.");
                     }
-                    kmInicialCiclo = reg.odometro;
-                    litrosAcumulados = 0;
-                } else {
-                    reg.consumoCalculado = "Parcial";
                 }
             }
-
-            // --- FASE 2: RENDERIZADO (Hacia atrás, el más reciente primero) ---
-            let ahora = new Date();
-            let mesActual = ahora.getMonth();
-            let anoActual = ahora.getFullYear();
-            let totalMesActual = 0;
-
-            let resumenMeses = {};
-
-            for (let i = historial.length - 1; i >= 0; i--) {
-                let reg = historial[i];
-                let costeVal = reg.coste || 0;
-                
-                if (reg.mes === mesActual && reg.ano === anoActual) {
-                    totalMesActual += costeVal;
-                }
-
-                let claveMes = `${reg.ano}-${reg.mes}`;
-                if (!resumenMeses[claveMes]) {
-                    resumenMeses[claveMes] = {
-                        nombre: `${NOMBRES_MESES[reg.mes]} ${reg.ano}`,
-                        total: 0
-                    };
-                }
-                resumenMeses[claveMes].total += costeVal;
-
-                let fila = `<tr>
-                    <td>${reg.fechaTxt}</td>
-                    <td>${reg.odometro.toLocaleString()}</td>
-                    <td><strong>${reg.distanciaCalculada}</strong></td>
-                    <td>${reg.litros} L ${reg.tanqueLleno ? '' : '<span style="color:#f39c12; font-size:11px;">(Parcial)</span>'}</td>
-                    <td>${costeVal.toFixed(2)} €</td>
-                    <td><strong>${reg.consumoCalculado}</strong></td>
-                </tr>`;
-                tabla.innerHTML += fila;
-            }
-
-            let clavesOrdenadas = Object.keys(resumenMeses).sort().reverse();
-            
-            if (clavesOrdenadas.length === 0) {
-                contenedorMeses.innerHTML = "<p style='color:#7f8c8d; margin:0; font-size:0.9rem;'>No hay datos acumulados todavía.</p>";
-            } else {
-                clavesOrdenadas.forEach(clave => {
-                    let item = resumenMeses[clave];
-                    let HTMLMes = `<div class="mes-item">
-                        <span>${item.nombre}</span>
-                        <strong>${item.total.toFixed(2)} €</strong>
-                    </div>`;
-                    contenedorMeses.innerHTML += HTMLMes;
-                });
-            }
-
-            document.getElementById('gasto-mes').innerText = totalMesActual.toFixed(2) + " €";
+            input.click();
         }
 
-        function borrarTodoGasolina() {
-            if (confirm("¿Seguro que quieres borrar todo el historial de gasolina?")) {
-                localStorage.removeItem('historial_consumo');
-                cargarHistorialGasolina();
+        function restablecerFabrica() {
+            if (confirm("¿Quieres restablecer la plantilla con todos los valores predeterminados?")) {
+                localStorage.removeItem('controlFinanciero_v6');
+                openCycles = new Set([0]);
+                appData = crearEstadoInicial();
+                renderizar();
+                actualizarPantallaGasolina();
             }
         }
 
-        // --- LÓGICA: ALCANCÍA ---
-        let saldoAlcancia = parseFloat(localStorage.getItem('saldoGuardado')) || 0;
-        const balanceEl = document.getElementById('total-balance');
-        const pigEl = document.getElementById('pig');
-
-        function modificarSaldoAlcancia(cantidad) {
-            saldoAlcancia += cantidad;
-            if (saldoAlcancia < 0) {
-                saldoAlcancia = 0;
-            }
-            saldoAlcancia = Math.round(saldoAlcancia * 100) / 100; 
-            guardarYActualizarAlcancia();
-            
-            if(pigEl) {
-                pigEl.classList.add('pig-bounce');
-                setTimeout(() => pigEl.classList.remove('pig-bounce'), 100);
-            }
-        }
-
-        function vaciarAlcancia() {
-            if (confirm('¿Seguro que quieres vaciar la alcancía?')) {
-                saldoAlcancia = 0;
-                guardarYActualizarAlcancia();
-            }
-        }
-
-        function guardarYActualizarAlcancia() {
-            localStorage.setItem('saldoGuardado', saldoAlcancia);
-            actualizarPantallaAlcancia();
-        }
-
-        function actualizarPantallaAlcancia() {
-            if(balanceEl) balanceEl.textContent = `${saldoAlcancia.toFixed(2)} €`;
-        }
-
-        // --- INICIALIZACIÓN GLOBAL ---
+        // =====================================================
+        // ===== INICIALIZACIÓN GLOBAL =========================
+        // =====================================================
         document.addEventListener("DOMContentLoaded", () => {
-            inicializarFinanzas();
-            cargarHistorialGasolina();
-            actualizarPantallaAlcancia();
+            // Enter pasa al siguiente campo; en el último, registra
+            document.getElementById('odometro').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('litros').focus(); } });
+            document.getElementById('litros').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('coste').focus(); } });
+            document.getElementById('coste').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); guardarRegistroGasolina(); } });
+
+            resetearFormulario();
+            actualizarPantallaGasolina();
+            renderizar();
+            finanzasListo = true;
         });
     </script>
 </body>
