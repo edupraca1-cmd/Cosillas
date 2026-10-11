@@ -335,6 +335,42 @@
         .cliente-item-orden .cliente-nombre { flex: 1; min-width: 0; overflow-wrap: anywhere; padding-right: 6px; }
         .cliente-acciones { display: flex; align-items: center; gap: 4px; }
         .btn-mini { background: #f1f5f9; border: 1px solid var(--border); border-radius: 6px; width: 38px; height: 38px; font-size: 15px; padding: 0; cursor: pointer; }
+
+        /* Pesquisa na Ordem da Rota */
+        .busca-ruta { position: relative; margin-bottom: 6px; }
+        .busca-ruta input { width: 100%; padding: 11px 42px 11px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; background: #fff; -webkit-appearance: none; appearance: none; }
+        .busca-ruta input::-webkit-search-cancel-button { display: none; }
+        .busca-ruta button { display: none; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border: none; background: transparent; font-size: 16px; color: #64748b; cursor: pointer; }
+        .busca-ruta.com-texto button { display: block; }
+        .busca-ruta-info { font-size: 12px; color: #64748b; min-height: 16px; margin-bottom: 8px; }
+        #mapa-ruta-contenedor.filtrando .handle-aldea, #mapa-ruta-contenedor.filtrando .handle-cliente { display: none; }
+        .cliente-item-orden.resaltado { background: #fef9c3; border-radius: 6px; }
+
+        /* Seletor de dias (um só calendário: tocar ou deslizar o dedo) */
+        .sd { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+        .sd-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+        .sd-nav button { width: 44px; height: 38px; border: 1px solid var(--border); border-radius: 6px; background: #f1f5f9; font-size: 14px; cursor: pointer; padding: 0; }
+        .sd-titulo { font-weight: bold; font-size: 14px; }
+        .sd-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; touch-action: none; }
+        .sd-cab { text-align: center; font-size: 10px; font-weight: bold; color: #64748b; padding: 2px 0; }
+        .sd-dia { height: 38px; border: 1px solid var(--border); border-radius: 6px; background: #fff; font-size: 13px; padding: 0; color: #1e293b; touch-action: none; -webkit-tap-highlight-color: transparent; cursor: pointer; }
+        .sd-dia.dom { color: #94a3b8; background: #f8fafc; }
+        .sd-dia.hoy { border-color: var(--primary); font-weight: bold; box-shadow: inset 0 0 0 1px var(--primary); }
+        .sd-dia.sel { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: bold; }
+        .sd-dia.nocuenta { color: #94a3b8; background: #f8fafc; }
+        .sd-dia.marca { position: relative; background: #dbeafe; border-color: #93c5fd; }
+        .sd-dia.marca::after { content: ''; position: absolute; left: 7px; right: 7px; bottom: 3px; height: 3px; border-radius: 2px; background: #2563eb; }
+        .sd-dia.marca.sel { background: var(--primary); border-color: var(--primary); }
+        .sd-dia.marca.sel::after { background: #fff; }
+        .sd-leyenda { font-size: 11px; color: #64748b; margin-top: 6px; }
+        .sd-leyenda i { display: inline-block; width: 14px; height: 10px; vertical-align: -1px; margin-right: 4px; border: 1px solid #93c5fd; border-radius: 3px; background: #dbeafe; position: relative; }
+        .sd-pie { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-top: 8px; }
+        .sd-resumen { font-size: 13px; font-weight: 600; color: #334155; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+        .sd-limpiar { border: 1px solid var(--border); background: #f1f5f9; border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer; flex-shrink: 0; }
+        .dias-resumen { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: #fff; font-size: 14px; font-weight: 600; color: #1e293b; text-align: left; cursor: pointer; }
+        .dias-resumen .dias-flecha { flex-shrink: 0; font-size: 12px; font-weight: 700; color: var(--primary); }
+        .dias-resumen.vacio { border-color: var(--danger); color: var(--danger); }
+        .sd-ayuda { font-size: 11px; color: #64748b; margin-top: 6px; line-height: 1.4; }
         .arrastrando { background: #fffbeb !important; box-shadow: 0 6px 16px rgba(15,23,42,0.28); outline: 2px solid var(--primary); position: relative; z-index: 5; }
 
         /* Diário de Atividade */
@@ -534,6 +570,11 @@
         <button class="btn-close" style="padding: 8px 14px; margin-bottom: 10px; border-radius: 6px;" onclick="switchTab('mais')">◀ Voltar</button>
         <h2>Configurar Rota e Clientes</h2>
         <p style="font-size: 12px; color: #64748b; margin: 0 0 12px 0;">Arraste ☰ para ordenar aldeias e clientes. Use ✏️ para editar o nome ou a aldeia e 🗑 para eliminar.</p>
+        <div class="busca-ruta">
+            <input type="search" id="buscar-ruta" placeholder="🔍 Procurar cliente ou aldeia…" autocomplete="off" autocapitalize="off" spellcheck="false" oninput="aplicarFiltroRuta()">
+            <button type="button" id="buscar-ruta-limpar" aria-label="Limpar pesquisa" title="Limpar pesquisa" onclick="limpiarBusquedaRuta()">✕</button>
+        </div>
+        <div id="buscar-ruta-info" class="busca-ruta-info"></div>
         <div id="mapa-ruta-contenedor"></div>
     </div>
 
@@ -561,27 +602,11 @@
                 <label for="enc-pedir-dia-anterior">📌 Pedir na véspera</label>
             </div>
             <div class="form-group">
-                <label>1. Datas / Dias (Exclui Domingos no Rango):</label>
-                <div class="date-type-selector">
-                    <button class="type-btn active" id="btn-tipo-sueltos" onclick="setTipoFecha('sueltos')">Dias Isolados</button>
-                    <button class="type-btn" id="btn-tipo-rango" onclick="setTipoFecha('rango')">Intervalo</button>
-                </div>
-                <div id="input-fecha-sueltos">
-                    <input type="date" id="input-dia-suelto" onchange="agregarDiaSuelto()">
-                    <div class="selected-days-list" id="lista-dias-sueltos"></div>
-                </div>
-                <div id="input-fecha-rango" style="display: none;">
-                    <div style="display: flex; gap: 10px;">
-                        <div style="flex: 1;">
-                            <span style="font-size: 11px; color: #64748b;">Início</span>
-                            <input type="date" id="rango-inicio">
-                        </div>
-                        <div style="flex: 1;">
-                            <span style="font-size: 11px; color: #64748b;">Fim</span>
-                            <input type="date" id="rango-fin">
-                        </div>
-                    </div>
-                </div>
+                <label>1. Dias da encomenda:</label>
+                <button type="button" id="btn-dias-enc" class="dias-resumen" onclick="alternarCalendarioEnc()" aria-expanded="false" aria-controls="selector-dias-enc">
+                    <span id="dias-enc-resumen"></span><span class="dias-flecha">📅 Alterar ▾</span>
+                </button>
+                <div id="selector-dias-enc" style="display: none; margin-top: 8px;"></div>
             </div>
             <div class="form-group">
                 <label for="enc-nombre">2. Nome do Cliente:</label>
@@ -676,11 +701,13 @@
     <div id="modal-ferias" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0; font-size:17px;">🏖 Marcar dias de férias</h3>
-            <div class="form-group"><label for="ferias-desde">Desde</label><input type="date" id="ferias-desde"></div>
-            <div class="form-group"><label for="ferias-hasta">Até</label><input type="date" id="ferias-hasta"></div>
-            <p style="font-size:12px; color:#64748b; margin:0;">Domingos e feriados nacionais não contam como dias de férias.</p>
+            <div id="selector-dias-ferias" style="margin-bottom: 6px;"></div>
+            <div class="sd-leyenda"><i></i>Dia já marcado como férias</div>
+            <div id="ferias-info" class="dr-sub" style="min-height:18px; margin-top:6px;"></div>
+            <p style="font-size:12px; color:#64748b; margin:6px 0 0 0;">Sábados, domingos e feriados nacionais não contam como dias de férias.</p>
             <div class="modal-actions">
                 <button class="btn-close" type="button" onclick="diarioCerrarIntervaloFerias()">Cancelar</button>
+                <button class="btn-danger" type="button" onclick="diarioDesmarcarIntervaloFerias()">Desmarcar</button>
                 <button class="btn-success" type="button" onclick="diarioAplicarIntervaloFerias()">Marcar</button>
             </div>
         </div>
@@ -854,8 +881,6 @@
         }
         autoRepararIndiceClientes();
 
-        let diasSueltosSeleccionados = [];
-        let tipoFechaActual = 'sueltos';
         let fechaHoy = new Date(); 
         let fechaConsulta = new Date(); 
         let fechaCalendarioVisual = new Date();
@@ -932,7 +957,7 @@
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(`subview-${subId}`).classList.add('active');
 
-            if (subId === 'config') renderConfigRuta();
+            if (subId === 'config') { document.getElementById('buscar-ruta').value = ''; renderConfigRuta(); }
             if (subId === 'jornada') renderJornadaUI();
             if (subId === 'diario') renderDiario();
             if (subId === 'calendario') renderCalendarioMensual();
@@ -1073,6 +1098,7 @@
                     titulo.textContent = `${block.classList.contains('abierta') ? '▾' : '▸'} 📍 ${aldea} (${(estado.orden_clientes[aldea] || []).length})`;
                 };
                 pintarTitulo();
+                titulo._pintar = pintarTitulo;
                 titulo.addEventListener('click', () => {
                     block.classList.toggle('abierta');
                     if (block.classList.contains('abierta')) aldeasAbiertas.add(aldea); else aldeasAbiertas.delete(aldea);
@@ -1097,6 +1123,55 @@
 
                 activarArrastre(handle, block, () => cont, '.aldea-block', () => guardarNuevoOrdenAldeas(cont));
             });
+            aplicarFiltroRuta();
+        }
+
+        // ---- Pesquisa por nome de cliente ou aldeia (ignora maiúsculas e acentos) ----
+        function normalizarBusqueda(s) {
+            return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+        }
+
+        function aplicarFiltroRuta() {
+            const input = document.getElementById('buscar-ruta');
+            const cont = document.getElementById('mapa-ruta-contenedor');
+            const info = document.getElementById('buscar-ruta-info');
+            if (!input || !cont) return;
+            const q = normalizarBusqueda(input.value);
+            input.parentElement.classList.toggle('com-texto', input.value !== '');
+            cont.classList.toggle('filtrando', !!q);
+
+            let aldeasVisibles = 0, clientesCoinciden = 0;
+            cont.querySelectorAll('.aldea-block').forEach(block => {
+                const aldea = block.dataset.aldea;
+                const aldeaCoincide = !!q && normalizarBusqueda(aldea).includes(q);
+                let alguno = false;
+                block.querySelectorAll('.cliente-item-orden').forEach(item => {
+                    const nombreCoincide = !!q && normalizarBusqueda(item.dataset.cliente).includes(q);
+                    const visible = !q || aldeaCoincide || nombreCoincide;
+                    item.style.display = visible ? '' : 'none';
+                    item.classList.toggle('resaltado', nombreCoincide);
+                    if (visible) alguno = true;
+                    if (nombreCoincide) clientesCoinciden++;
+                });
+                const mostrar = !q || aldeaCoincide || alguno;
+                block.style.display = mostrar ? '' : 'none';
+                if (mostrar && q) aldeasVisibles++;
+                // com pesquisa, abre as aldeias com resultados; sem pesquisa, volta ao estado que o utilizador tinha
+                block.classList.toggle('abierta', q ? true : aldeasAbiertas.has(aldea));
+                const t = block.querySelector('.aldea-titulo');
+                if (t && t._pintar) t._pintar();
+            });
+
+            if (!q) info.textContent = '';
+            else if (!aldeasVisibles) info.textContent = 'Nenhum resultado.';
+            else info.textContent = `${clientesCoinciden} cliente(s) · ${aldeasVisibles} aldeia(s). Para reordenar, limpe a pesquisa.`;
+        }
+
+        function limpiarBusquedaRuta() {
+            const input = document.getElementById('buscar-ruta');
+            input.value = '';
+            aplicarFiltroRuta();
+            input.focus();
         }
 
         // Arrastar com Pointer Events (rato e toque), sem bibliotecas externas.
@@ -1460,22 +1535,9 @@
         }
 
         function renderCalculoHorasSemana() {
-            const hoy = new Date();
-            const diaSemana = hoy.getDay();
-            const diffLunes = hoy.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1);
-            const lunesSemana = new Date(hoy.setDate(diffLunes));
-            lunesSemana.setHours(0,0,0,0);
-
-            let minutosTotales = 0;
-
-            (estado.jornadas || []).forEach(j => {
-                const fJ = new Date(j.inicio);
-                if (fJ >= lunesSemana) {
-                    minutosTotales += calcularMinutosTrabajados(j);
-                }
-            });
-
-            if (estado.jornada_activa) minutosTotales += calcularMinutosTrabajados(estado.jornada_activa);
+            // Mesma regra do Diário: semana de segunda a sábado; os domingos não contam.
+            const hoyStr = formatearFechaLocal(new Date());
+            const minutosTotales = diarioMinSemana(hoyStr);
 
             const horas = Math.floor(minutosTotales / 60);
             const mins = minutosTotales % 60;
@@ -1498,6 +1560,11 @@
             } else {
                 barra.className = "progress-bar-fill";
                 alerta.style.display = "none";
+            }
+            if (diarioEsDomingo(hoyStr)) {
+                alerta.style.display = "block";
+                if (minutosTotales <= 2400) alerta.style.color = "#64748b";
+                alerta.innerText = (minutosTotales > 2400 ? alerta.innerText + "\n" : "") + "ℹ️ Hoje é domingo: as horas de domingo não contam para as 40h semanais (semana de segunda a sábado).";
             }
         }
 
@@ -1524,12 +1591,188 @@
             document.getElementById('titulo-modal-crear').innerText = esAviso ? "Novo Aviso / Nota" : "Nova Encomenda";
         }
 
+        // ===================================================================
+        // SELETOR DE DIAS — um só calendário: tocar num dia ou deslizar o dedo
+        //  modo 'multi' : dias soltos e intervalos (os intervalos deslizados não incluem domingos)
+        //  modo 'rango' : um único intervalo contínuo (tocar no primeiro e no último dia, ou deslizar)
+        // ===================================================================
+        function crearSelectorDias(cont, opts) {
+            opts = opts || {};
+            const modo = opts.modo === 'rango' ? 'rango' : 'multi';
+            const st = { mes: new Date(), sel: new Set(), ancla: null, drag: null, recortado: false };
+            st.mes.setDate(1);
+            const fmt = d => d.slice(8, 10) + '/' + d.slice(5, 7);
+            const plural = n => n + ' dia' + (n === 1 ? '' : 's');
+
+            cont.innerHTML = `<div class="sd">
+                <div class="sd-nav"><button type="button" class="sd-prev" aria-label="Mês anterior">◀</button><span class="sd-titulo"></span><button type="button" class="sd-next" aria-label="Mês seguinte">▶</button></div>
+                <div class="sd-grid"></div>
+                <div class="sd-pie"><div class="sd-resumen"></div><button type="button" class="sd-limpiar">Limpar</button></div>
+                <div class="sd-ayuda">${modo === 'rango'
+                    ? 'Toque no primeiro e no último dia, ou deslize o dedo sobre os dias.'
+                    : 'Toque num dia para o marcar ou desmarcar. Deslize o dedo para marcar vários dias seguidos (sem domingos). Para desmarcar vários, comece o deslize num dia já marcado.'}</div>
+            </div>`;
+            const grid = cont.querySelector('.sd-grid');
+
+            function rangoDias(a, b) {
+                st.recortado = false;
+                // Com limite (saldo de férias): conta a partir do primeiro dia tocado e pára quando o saldo acabar
+                if (modo === 'rango' && opts.consume && opts.limite) {
+                    const paso = a <= b ? 1 : -1, lim = Math.max(0, opts.limite());
+                    const r = []; let usados = 0;
+                    for (let d = a, n = 0; n < 400; d = diarioSumarDias(d, paso), n++) {
+                        if (opts.consume(d)) {
+                            if (usados >= lim && r.length) { st.recortado = true; break; }
+                            usados++;
+                        }
+                        r.push(d);
+                        if (d === b) break;
+                    }
+                    if (st.recortado) while (r.length > 1 && !opts.consume(r[r.length - 1])) r.pop();   // não acabar em fim de semana/feriado
+                    return r.sort();
+                }
+                if (a > b) { const t = a; a = b; b = t; }
+                const r = [];
+                for (let d = a; d <= b && r.length < 400; d = diarioSumarDias(d, 1)) {
+                    if (modo === 'multi' && a !== b && diarioDate(d).getDay() === 0) continue;
+                    r.push(d);
+                }
+                return r;
+            }
+
+            // Seleção que se vê agora (inclui o deslize em curso, antes de soltar o dedo)
+            function efectiva() {
+                const d = st.drag;
+                if (!d || !d.movido || d.actual === d.inicio) return st.sel;
+                const r = rangoDias(d.inicio, d.actual);
+                if (modo === 'rango') return new Set(r);
+                const s = new Set(st.sel);
+                r.forEach(x => { if (d.accion === 'quitar') s.delete(x); else s.add(x); });
+                return s;
+            }
+
+            // Com "contar" (férias) só entram na contagem os dias úteis: sem sábados, domingos nem feriados
+            const unidad = l => { if (!opts.contar) return plural(l.length); const n = l.filter(opts.contar).length; return n + (n === 1 ? ' dia útil' : ' dias úteis'); };
+
+            function textoResumen(s) {
+                s = Array.from(s).sort();
+                if (modo === 'rango') {
+                    if (!s.length) return 'Nenhum dia selecionado.';
+                    if (st.ancla && s.length === 1) return `Início: ${fmt(s[0])} — toque no último dia (ou deslize).`;
+                    if (s.length === 1) return `${fmt(s[0])} (${unidad(s)}) — toque no primeiro e no último dia para outro intervalo.`;
+                    return `${fmt(s[0])} → ${fmt(s[s.length - 1])} (${unidad(s)})`;
+                }
+                if (!s.length) return 'Nenhum dia selecionado.';
+                const runs = []; let ini = s[0], prev = s[0], sinDomingos = false;
+                for (let i = 1; i < s.length; i++) {
+                    let seguido = s[i] === diarioSumarDias(prev, 1);
+                    if (!seguido) {
+                        let n = diarioSumarDias(prev, 1);
+                        if (diarioDate(n).getDay() === 0) { n = diarioSumarDias(n, 1); if (s[i] === n) { seguido = true; sinDomingos = true; } }
+                    }
+                    if (seguido) prev = s[i]; else { runs.push([ini, prev]); ini = prev = s[i]; }
+                }
+                runs.push([ini, prev]);
+                return `${plural(s.length)}: ` + runs.map(([a, b]) => a === b ? fmt(a) : `${fmt(a)}–${fmt(b)}`).join(', ') + (sinDomingos ? ' (sem domingos)' : '');
+            }
+
+            function pintar() {
+                const s = efectiva();
+                grid.querySelectorAll('.sd-dia').forEach(b => b.classList.toggle('sel', s.has(b.dataset.dia)));
+                cont.querySelector('.sd-resumen').textContent = textoResumen(s);
+                if (opts.onPintar) opts.onPintar(Array.from(s).sort(), st.recortado);
+            }
+
+            function render() {
+                const y = st.mes.getFullYear(), m = st.mes.getMonth();
+                const mes = `${y}-${String(m + 1).padStart(2, '0')}`;
+                const hoy = formatearFechaLocal(new Date());
+                let html = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(n => `<div class="sd-cab">${n}</div>`).join('');
+                for (let i = 0; i < new Date(y, m, 1).getDay(); i++) html += '<div></div>';
+                const total = new Date(y, m + 1, 0).getDate();
+                for (let d = 1; d <= total; d++) {
+                    const dia = `${mes}-${String(d).padStart(2, '0')}`;
+                    html += `<button type="button" class="sd-dia${diarioDate(dia).getDay() === 0 ? ' dom' : ''}${dia === hoy ? ' hoy' : ''}${opts.noCuenta && opts.noCuenta(dia) ? ' nocuenta' : ''}${opts.marca && opts.marca(dia) ? ' marca' : ''}" data-dia="${dia}">${d}</button>`;
+                }
+                cont.querySelector('.sd-titulo').textContent = `${DIARIO_MESES[m]} ${y}`;
+                grid.innerHTML = html;
+                pintar();
+            }
+
+            function avisar() { if (opts.onChange) opts.onChange(api.getSeleccion()); }
+
+            function tocar(dia) {
+                if (modo === 'multi') { if (st.sel.has(dia)) st.sel.delete(dia); else st.sel.add(dia); return; }
+                if (st.ancla && st.sel.size === 1) { st.sel = new Set(rangoDias(st.ancla, dia)); st.ancla = null; }   // 2.º toque fecha o intervalo
+                else { st.ancla = dia; st.sel = new Set([dia]); st.recortado = false; }
+            }
+
+            function celdaEn(x, y) {
+                const el = document.elementFromPoint(x, y);
+                const c = el && el.closest ? el.closest('.sd-dia') : null;
+                return c && grid.contains(c) ? c : null;
+            }
+
+            grid.addEventListener('pointerdown', ev => {
+                const cel = ev.target.closest ? ev.target.closest('.sd-dia') : null;
+                if (!cel) return;
+                if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+                ev.preventDefault();
+                const inicio = cel.dataset.dia;
+                st.drag = { id: ev.pointerId, inicio, actual: inicio, movido: false, accion: (modo === 'multi' && st.sel.has(inicio)) ? 'quitar' : 'añadir' };
+                try { grid.setPointerCapture(ev.pointerId); } catch (e) {}
+            });
+            grid.addEventListener('pointermove', ev => {
+                const d = st.drag;
+                if (!d || ev.pointerId !== d.id) return;
+                const c = celdaEn(ev.clientX, ev.clientY);
+                if (c && c.dataset.dia !== d.actual) { d.actual = c.dataset.dia; d.movido = true; pintar(); }
+            });
+            const terminar = (ev, cancelado) => {
+                const d = st.drag;
+                if (!d || ev.pointerId !== d.id) return;
+                if (!cancelado) {
+                    if (d.movido && d.actual !== d.inicio) { st.sel = new Set(efectiva()); st.ancla = null; }
+                    else tocar(d.inicio);
+                }
+                st.drag = null;
+                pintar(); avisar();
+            };
+            grid.addEventListener('pointerup', ev => terminar(ev, false));
+            grid.addEventListener('pointercancel', ev => terminar(ev, true));
+            grid.addEventListener('contextmenu', ev => ev.preventDefault());
+            // Acessibilidade (teclado / leitores de ecrã): o "clique" sem ponteiro também marca o dia
+            grid.addEventListener('click', ev => {
+                if (ev.detail !== 0) return;
+                const c = ev.target.closest ? ev.target.closest('.sd-dia') : null;
+                if (c) { tocar(c.dataset.dia); pintar(); avisar(); }
+            });
+
+            cont.querySelector('.sd-prev').addEventListener('click', () => { st.mes.setMonth(st.mes.getMonth() - 1); render(); });
+            cont.querySelector('.sd-next').addEventListener('click', () => { st.mes.setMonth(st.mes.getMonth() + 1); render(); });
+            cont.querySelector('.sd-limpiar').addEventListener('click', () => { st.sel = new Set(); st.ancla = null; st.recortado = false; pintar(); avisar(); });
+
+            const api = {
+                getSeleccion: () => Array.from(st.sel).sort(),
+                getResumen: () => textoResumen(st.sel),
+                setSeleccion(lista) {
+                    st.sel = new Set(lista); st.drag = null;
+                    st.ancla = null; st.recortado = false;   // o primeiro toque é sempre o início de um intervalo novo
+                    if (lista.length) { const f = Array.from(st.sel).sort()[0]; st.mes = new Date(+f.slice(0, 4), +f.slice(5, 7) - 1, 1); }
+                    render();
+                },
+                limpiar() { st.sel = new Set(); st.ancla = null; st.recortado = false; pintar(); },
+                refrescar() { render(); }   // volta a desenhar o mês (por exemplo, depois de marcar/desmarcar férias)
+            };
+            render();
+            return api;
+        }
+
         function abrirModalApuntar() {
             const fechaStr = formatearFechaLocal(fechaConsulta);
-            diasSueltosSeleccionados = [fechaStr];
-            setTipoFecha('sueltos');
-            renderBadgesDias();
-            document.getElementById('input-dia-suelto').value = fechaStr;
+            if (!selectorDiasEnc) selectorDiasEnc = crearSelectorDias(document.getElementById('selector-dias-enc'), { modo: 'multi', onChange: actualizarResumenDiasEnc });
+            selectorDiasEnc.setSeleccion([fechaStr]);
+            alternarCalendarioEnc(false);          // o calendário começa fechado; só se abre quando é preciso
             document.getElementById('enc-nombre').value = '';
             document.getElementById('enc-pedido').value = '';
             document.getElementById('enc-aldea').selectedIndex = 0; // evita arrastrar la aldea del pedido anterior
@@ -1540,35 +1783,39 @@
             alternarModoAvisoFormulario();
             document.getElementById('modal-apuntar').classList.add('active');
         }
+
+        // Linha-resumo dos dias escolhidos (visível com o calendário fechado)
+        function actualizarResumenDiasEnc() {
+            if (!selectorDiasEnc) return;
+            const sel = selectorDiasEnc.getSeleccion();
+            const btn = document.getElementById('btn-dias-enc');
+            let texto;
+            if (!sel.length) texto = 'Nenhum dia selecionado';
+            else if (sel.length === 1) {
+                const d = sel[0];
+                texto = `${DIARIO_DIAS[diarioDate(d).getDay()]}, ${d.slice(8, 10)}/${d.slice(5, 7)}${d === formatearFechaLocal(new Date()) ? ' · hoje' : ''}`;
+            } else texto = selectorDiasEnc.getResumen();
+            document.getElementById('dias-enc-resumen').textContent = texto;
+            btn.classList.toggle('vacio', !sel.length);
+        }
+
+        function alternarCalendarioEnc(abrir) {
+            const cont = document.getElementById('selector-dias-enc');
+            const mostrar = typeof abrir === 'boolean' ? abrir : cont.style.display === 'none';
+            cont.style.display = mostrar ? 'block' : 'none';
+            const btn = document.getElementById('btn-dias-enc');
+            btn.setAttribute('aria-expanded', mostrar ? 'true' : 'false');
+            btn.querySelector('.dias-flecha').textContent = mostrar ? '▴ Fechar calendário' : '📅 Alterar ▾';
+            actualizarResumenDiasEnc();
+        }
+
+        let selectorDiasEnc = null;
+        let selectorDiasFerias = null;
         
         function cerrarModalApuntar() { document.getElementById('modal-apuntar').classList.remove('active'); }
 
-        function setTipoFecha(tipo) {
-            tipoFechaActual = tipo;
-            document.getElementById('btn-tipo-sueltos').classList.toggle('active', tipo === 'sueltos');
-            document.getElementById('btn-tipo-rango').classList.toggle('active', tipo === 'rango');
-            document.getElementById('input-fecha-sueltos').style.display = tipo === 'sueltos' ? 'block' : 'none';
-            document.getElementById('input-fecha-rango').style.display = tipo === 'rango' ? 'block' : 'none';
-        }
 
-        function agregarDiaSuelto() {
-            const input = document.getElementById('input-dia-suelto');
-            if (input.value && !diasSueltosSeleccionados.includes(input.value)) {
-                diasSueltosSeleccionados.push(input.value);
-                renderBadgesDias();
-            }
-        }
 
-        function renderBadgesDias() {
-            const cont = document.getElementById('lista-dias-sueltos');
-            cont.innerHTML = '';
-            diasSueltosSeleccionados.sort().forEach((d, idx) => {
-                const b = document.createElement('div');
-                b.className = 'day-badge';
-                b.innerHTML = `${d} <span onclick="diasSueltosSeleccionados.splice(${idx},1);renderBadgesDias();">×</span>`;
-                cont.appendChild(b);
-            });
-        }
 
         // Indica si la aldea del formulario fue puesta automáticamente (y no elegida a mano).
         let aldeaAutoRellenada = false;
@@ -1649,20 +1896,8 @@
             const existente = (estado.orden_clientes[aldea] || []).find(c => c.toLowerCase() === nombre.toLowerCase());
             if (existente) nombre = existente;
 
-            let fechas = [];
-            if (tipoFechaActual === 'sueltos') {
-                fechas = [...diasSueltosSeleccionados];
-            } else {
-                const ini = new Date(document.getElementById('rango-inicio').value);
-                const fin = new Date(document.getElementById('rango-fin').value);
-                let cur = new Date(ini);
-                while (cur <= fin) {
-                    if (cur.getDay() !== 0) {
-                        fechas.push(formatearFechaLocal(cur));
-                    }
-                    cur.setDate(cur.getDate() + 1);
-                }
-            }
+            const fechas = selectorDiasEnc ? selectorDiasEnc.getSeleccion() : [];
+            if (!fechas.length) { alert("Selecione pelo menos um dia no calendário."); alternarCalendarioEnc(true); return; }
 
             fechas.forEach(f => {
                 estado.encomiendas.push({
@@ -1974,6 +2209,7 @@
             const c = estado.diario_cfg;
             if (typeof c.ferias_saldo_base !== 'number') c.ferias_saldo_base = 18;   // 18 dias por gozar (indicado em 11/10/2026)
             if (!Array.isArray(c.ferias_dias)) c.ferias_dias = [];
+            if (!c.ferias_ultima || typeof c.ferias_ultima !== 'object' || !Array.isArray(c.ferias_ultima.dias)) c.ferias_ultima = null;   // última marcação em bloco (para desfazer)
             if (!c.feriado_manual || typeof c.feriado_manual !== 'object') c.feriado_manual = {};
             if (!c.feriado_pago || typeof c.feriado_pago !== 'object') c.feriado_pago = {};
             return c;
@@ -2024,11 +2260,14 @@
             d.setDate(d.getDate() - (wd === 0 ? 6 : wd - 1));
             return formatearFechaLocal(d);
         }
-        function diarioMinSemana(dia) {          // semana completa de segunda a domingo
+        // Semana de trabalho: segunda a sábado (40h). Os domingos NÃO contam para a semana.
+        // (Se "dia" for domingo, devolve a semana de segunda a sábado que acabou de terminar.)
+        function diarioMinSemana(dia) {
             const lunes = diarioLunesDe(dia); let t = 0;
-            for (let i = 0; i < 7; i++) t += diarioMinDia(diarioSumarDias(lunes, i));
+            for (let i = 0; i < 6; i++) t += diarioMinDia(diarioSumarDias(lunes, i));
             return t;
         }
+        function diarioEsDomingo(dia) { return diarioDate(dia).getDay() === 0; }
         function diarioFmtHM(min) { min = Math.max(0, Math.round(min)); return `${Math.floor(min / 60)}h ${String(min % 60).padStart(2, '0')}m`; }
         function diarioFmtHora(iso) { return iso ? new Date(iso).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }) : '—'; }
         function diarioFmtEuro(v) { return (v || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'; }
@@ -2041,6 +2280,29 @@
         function diarioFeriadoTrabalhado(dia) { return diarioEsFeriado(dia) && diarioJornadasDia(dia).length > 0; }
         function diarioFeriadoPago(dia) { const p = diarioCfg().feriado_pago[dia]; return !!(p && p.pago); }
         function esDiaDeFerias(dia) { return diarioCfg().ferias_dias.includes(dia); }
+        // Em Portugal as férias contam-se em dias úteis: sábados, domingos e feriados nacionais não contam.
+        function diarioFeriasNoCuenta(dia) { return diarioDate(dia).getDay() === 0 || diarioDate(dia).getDay() === 6 || !!diarioNombreFeriadoNacional(dia); }
+        // Classifica os dias de um intervalo: a marcar / já marcados / que não contam
+        function diarioFeriasPlan(lista) {
+            const p = { novos: [], ja: [], dom: 0, sab: 0, fer: 0 };
+            lista.forEach(d => {
+                if (esDiaDeFerias(d)) p.ja.push(d);
+                else if (diarioDate(d).getDay() === 0) p.dom++;
+                else if (diarioDate(d).getDay() === 6) p.sab++;
+                else if (diarioNombreFeriadoNacional(d)) p.fer++;
+                else p.novos.push(d);
+            });
+            p.saltados = p.dom + p.sab + p.fer + p.ja.length;
+            return p;
+        }
+        function diarioFeriasDetalleSaltados(p) {
+            const x = [];
+            if (p.dom) x.push(p.dom + (p.dom === 1 ? ' domingo' : ' domingos'));
+            if (p.sab) x.push(p.sab + (p.sab === 1 ? ' sábado' : ' sábados'));
+            if (p.fer) x.push(p.fer + (p.fer === 1 ? ' feriado nacional' : ' feriados nacionais'));
+            if (p.ja.length) x.push(p.ja.length + (p.ja.length === 1 ? ' já marcado' : ' já marcados'));
+            return x.join(', ');
+        }
         function diarioFeriasPorGozar() { const c = diarioCfg(); return c.ferias_saldo_base - c.ferias_dias.length; }
 
         // ===== Diário: ecrã (calendário, dia, férias e feriados) =====
@@ -2078,6 +2340,7 @@
             const feriados = [...fechas].filter(f => f && f.startsWith(anio) && diarioFeriadoTrabalhado(f)).sort();
             const porPagar = feriados.filter(f => !diarioFeriadoPago(f)).length;
             const saldo = diarioFeriasPorGozar();
+            const ultimas = diarioUltimasFeriasActivas();
 
             const lista = feriados.length ? feriados.map(f => {
                 const pago = diarioFeriadoPago(f);
@@ -2094,8 +2357,9 @@
                     <div class="dr-sub">${c.ferias_dias.length} dia(s) já marcado(s) como gozado(s)</div>
                     <div class="dr-botones">
                         <button type="button" onclick="diarioEditarSaldoFerias()">Ajustar saldo</button>
-                        <button type="button" onclick="diarioAbrirIntervaloFerias()">Marcar vários dias</button>
+                        <button type="button" onclick="diarioAbrirIntervaloFerias()">Marcar / desmarcar dias</button>
                     </div>
+                    ${ultimas.length ? `<div class="dr-botones"><button type="button" onclick="diarioDesfazerUltimasFerias()">↩ Desfazer última marcação (${ultimas.length} dia${ultimas.length === 1 ? '' : 's'})</button></div>` : ''}
                 </div>
                 <div class="dr-card">
                     <details>
@@ -2103,6 +2367,13 @@
                         <div style="margin-top:8px;">${lista}</div>
                     </details>
                 </div>`;
+        }
+
+        // Última marcação em bloco que ainda está ativa (os dias entretanto removidos já não contam)
+        function diarioUltimasFeriasActivas() {
+            const u = diarioCfg().ferias_ultima;
+            if (!u) return [];
+            return u.dias.filter(d => esDiaDeFerias(d));
         }
 
         function diarioNavMes(delta) {
@@ -2133,9 +2404,9 @@
             if (estado.jornada_activa && estado.jornada_activa.fecha.startsWith(mes)) conActividad.add(estado.jornada_activa.fecha);
 
             const hoy = formatearFechaLocal(new Date());
-            let html = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(n => `<div class="dr-cab">${n}</div>`).join('');
+            let html = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(n => `<div class="dr-cab">${n}</div>`).join('');
             const primero = new Date(y, m, 1);
-            const hueco = (primero.getDay() + 6) % 7;
+            const hueco = primero.getDay();   // a semana do calendário começa ao domingo
             for (let i = 0; i < hueco; i++) html += '<div></div>';
             const total = new Date(y, m + 1, 0).getDate();
             for (let d = 1; d <= total; d++) {
@@ -2224,7 +2495,9 @@
             }).join('') : '<div class="dr-sub">Sem jornada registada neste dia.</div>';
 
             const extra = minSem > 2400 ? ` <span class="dr-extra">(+${diarioFmtHM(minSem - 2400)} acima de 40h)</span>` : '';
-            const semana = `<div class="dr-sub">Semana de ${diarioFechaCorta(lunes)} (seg–dom): <b>${diarioFmtHM(minSem)}</b> / 40h${extra}</div>`;
+            const semana = diarioEsDomingo(dia)
+                ? `<div class="dr-sub">Domingo — não conta para as 40h semanais (a semana é de segunda a sábado).</div>`
+                : `<div class="dr-sub">Semana de ${diarioFechaCorta(lunes)} (seg–sáb): <b>${diarioFmtHM(minSem)}</b> / 40h${extra}</div>`;
 
             let estadoDia = `<label class="dr-check"><input type="checkbox" ${esFer ? 'checked' : ''} ${nacional ? 'disabled' : ''} onchange="diarioToggleFeriado('${dia}')"> Dia feriado${nacional ? ' · ' + esc(nacional) : ''}</label>`;
             if (diarioFeriadoTrabalhado(dia)) {
@@ -2233,8 +2506,9 @@
                 estadoDia += `<div class="dr-fila"><span>Feriado trabalhado${pago && p.fecha ? ' · pago a ' + diarioFechaCorta(formatearFechaLocal(new Date(p.fecha))) : ''}</span>
                     <button type="button" class="dr-chip ${pago ? 'pago' : 'porpagar'}" onclick="diarioTogglePago('${dia}')">${pago ? '✓ Pago' : 'Por pagar'}</button></div>`;
             }
-            estadoDia += `<div class="dr-fila"><span>🏖 ${ferias ? 'Dia de férias' : 'Não é dia de férias'}</span>
-                <button type="button" class="dr-chip" onclick="diarioToggleFerias('${dia}')">${ferias ? 'Remover' : 'Marcar como férias'}</button></div>`;
+            const finde = !ferias && (diarioDate(dia).getDay() === 0 || diarioDate(dia).getDay() === 6);
+            estadoDia += `<div class="dr-fila"><span>🏖 ${ferias ? 'Dia de férias' : (finde ? 'Fim de semana (não conta como férias)' : 'Não é dia de férias')}</span>
+                ${finde ? '' : `<button type="button" class="dr-chip" onclick="diarioToggleFerias('${dia}')">${ferias ? 'Remover' : 'Marcar como férias'}</button>`}</div>`;
 
             const chips = [];
             chips.push(`📦 ${res.entregas} entrega(s)`);
@@ -2310,27 +2584,85 @@
         }
 
         function diarioAbrirIntervaloFerias() {
-            document.getElementById('ferias-desde').value = diarioSel;
-            document.getElementById('ferias-hasta').value = diarioSel;
+            if (!selectorDiasFerias) selectorDiasFerias = crearSelectorDias(document.getElementById('selector-dias-ferias'), {
+                modo: 'rango',
+                marca: esDiaDeFerias,
+                noCuenta: diarioFeriasNoCuenta,
+                contar: d => !diarioFeriasNoCuenta(d),                                  // o resumo só conta dias úteis
+                consume: d => !diarioFeriasNoCuenta(d) && !esDiaDeFerias(d),            // dias que gastam saldo
+                limite: diarioFeriasPorGozar,                                           // o deslize pára quando o saldo acaba
+                onPintar: diarioInfoFerias
+            });
+            selectorDiasFerias.setSeleccion([diarioSel]);
             document.getElementById('modal-ferias').classList.add('active');
+        }
+
+        // Linha de ajuda por baixo do calendário: o que vai acontecer com o intervalo escolhido
+        function diarioInfoFerias(lista, recortado) {
+            const el = document.getElementById('ferias-info');
+            if (!el) return;
+            if (!lista || !lista.length) { el.textContent = ''; return; }
+            const p = diarioFeriasPlan(lista);
+            const saldo = diarioFeriasPorGozar();
+            if (p.novos.length && saldo <= 0) { el.textContent = 'Já não tem dias de férias por gozar (use «Ajustar saldo» se precisar).'; return; }
+            const partes = [`Marcar: ${p.novos.length}`, `saldo depois: ${saldo - p.novos.length}`];
+            if (p.ja.length) partes.push(`já são férias: ${p.ja.length}`);
+            const nc = p.dom + p.sab + p.fer;
+            if (nc) partes.push(`não contam: ${nc}`);
+            el.textContent = partes.join(' · ') + (recortado ? ` — limite do saldo atingido (${saldo} dia${saldo === 1 ? '' : 's'} por gozar)` : '');
         }
         function diarioCerrarIntervaloFerias() { document.getElementById('modal-ferias').classList.remove('active'); }
 
         function diarioAplicarIntervaloFerias() {
-            const desde = document.getElementById('ferias-desde').value;
-            const hasta = document.getElementById('ferias-hasta').value;
-            if (!desde || !hasta || desde > hasta) return alert('Indique um intervalo de datas válido.');
+            const sel = selectorDiasFerias ? selectorDiasFerias.getSeleccion() : [];
+            if (!sel.length) return alert('Selecione os dias de férias no calendário.');
+            const desde = sel[0], hasta = sel[sel.length - 1];
             if (diarioDate(hasta) - diarioDate(desde) > 90 * 86400000) return alert('O intervalo não pode ter mais de 90 dias.');
             const c = diarioCfg();
-            let marcados = 0, saltados = 0;
-            for (let cur = desde; cur <= hasta; cur = diarioSumarDias(cur, 1)) {
-                if (diarioDate(cur).getDay() === 0 || diarioNombreFeriadoNacional(cur) || esDiaDeFerias(cur)) { saltados++; continue; }
-                c.ferias_dias.push(cur); marcados++;
+            const p = diarioFeriasPlan(sel);
+            const saldo = diarioFeriasPorGozar();
+            if (p.novos.length > Math.max(0, saldo)) return alert(saldo <= 0 ? 'Já não tem dias de férias por gozar. Use «Ajustar saldo» se precisar de marcar mais.' : `Só tem ${saldo} dia(s) de férias por gozar. Escolha menos dias.`);
+            if (p.novos.length) {
+                p.novos.forEach(d => c.ferias_dias.push(d));
+                c.ferias_dias.sort();
+                c.ferias_ultima = { fecha: new Date().toISOString(), dias: p.novos.slice() };   // para "Desfazer última marcação"
             }
-            c.ferias_dias.sort();
             guardarEstado();
             diarioCerrarIntervaloFerias();
-            alert(`${marcados} dia(s) marcado(s) como férias. ${saltados} dia(s) saltado(s) (domingos, feriados nacionais ou já marcados).`);
+            const det = diarioFeriasDetalleSaltados(p);
+            alert(`${p.novos.length} dia(s) marcado(s) como férias.` + (p.saltados ? ` ${p.saltados} dia(s) saltado(s) (${det}).` : ''));
+            renderDiario();
+            actualizarPuntoJornada();
+        }
+
+        // Tira as férias de todos os dias do intervalo escolhido no calendário
+        async function diarioDesmarcarIntervaloFerias() {
+            const sel = selectorDiasFerias ? selectorDiasFerias.getSeleccion() : [];
+            if (!sel.length) return alert('Selecione no calendário os dias que quer desmarcar.');
+            const c = diarioCfg();
+            const quitar = sel.filter(d => esDiaDeFerias(d));
+            if (!quitar.length) return alert('Nenhum dos dias selecionados está marcado como férias.');
+            const rango = sel.length === 1 ? diarioFechaCorta(sel[0]) : `${diarioFechaCorta(sel[0])} → ${diarioFechaCorta(sel[sel.length - 1])}`;
+            if (!(await confirmarApp(`Desmarcar ${quitar.length} dia(s) de férias (${rango})? Os dias voltam ao saldo de férias.`, 'Desmarcar'))) return;
+            const set = new Set(quitar);
+            c.ferias_dias = c.ferias_dias.filter(d => !set.has(d));
+            guardarEstado();
+            diarioCerrarIntervaloFerias();
+            renderDiario();
+            actualizarPuntoJornada();
+        }
+
+        // Desfaz a última marcação em bloco (só os dias que ainda estão marcados)
+        async function diarioDesfazerUltimasFerias() {
+            const dias = diarioUltimasFeriasActivas();
+            if (!dias.length) return;
+            const rango = dias.length === 1 ? diarioFechaCorta(dias[0]) : `${diarioFechaCorta(dias[0])} → ${diarioFechaCorta(dias[dias.length - 1])}`;
+            if (!(await confirmarApp(`Desfazer a última marcação de férias: ${dias.length} dia(s) (${rango})?`, 'Desfazer'))) return;
+            const c = diarioCfg();
+            const set = new Set(dias);
+            c.ferias_dias = c.ferias_dias.filter(d => !set.has(d));
+            c.ferias_ultima = null;
+            guardarEstado();
             renderDiario();
             actualizarPuntoJornada();
         }
@@ -2409,7 +2741,9 @@
                 <table style="width:100%; border-collapse:collapse;"><thead><tr>
                     <th style="${DIARIO_TH}">Entrada</th><th style="${DIARIO_TH}">Saída</th><th style="${DIARIO_TH}">Pausas</th><th style="${DIARIO_TH}">Horas líquidas</th><th style="${DIARIO_TH}">Notas</th>
                 </tr></thead><tbody>${filasHorario}</tbody></table>
-                <div style="font-size:12px; margin-top:4px;">Total do dia: <b>${diarioFmtHM(diarioMinDia(dia))}</b> · Semana (seg–dom, ${diarioFechaCorta(diarioLunesDe(dia))}): <b>${diarioFmtHM(minSem)}</b> de 40h${minSem > 2400 ? ' (+' + diarioFmtHM(minSem - 2400) + ')' : ''}</div>
+                <div style="font-size:12px; margin-top:4px;">Total do dia: <b>${diarioFmtHM(diarioMinDia(dia))}</b> · ${diarioEsDomingo(dia)
+                    ? 'Domingo: não conta para as 40h semanais (semana de segunda a sábado)'
+                    : `Semana (seg–sáb, ${diarioFechaCorta(diarioLunesDe(dia))}): <b>${diarioFmtHM(minSem)}</b> de 40h${minSem > 2400 ? ' (+' + diarioFmtHM(minSem - 2400) + ')' : ''}`}</div>
                 <h3 style="font-size:14px; margin:12px 0 4px;">Resumo</h3>
                 <div style="font-size:12px;">Entregas: <b>${res.entregas}</b>${res.avisos ? ' · Avisos: <b>' + res.avisos + '</b>' : ''} · Fiados dados: <b>${diarioFmtEuro(res.dado)}</b> · Fiados recebidos: <b>${diarioFmtEuro(res.recibido)}</b> · Vendas na calculadora: <b>${diarioFmtEuro(res.ventas)}</b>${res.aldeas.length ? '<br>Aldeias: ' + res.aldeas.map(esc).join(', ') : ''}</div>
                 <h3 style="font-size:14px; margin:12px 0 4px;">Linha do tempo</h3>
@@ -2425,12 +2759,12 @@
             const porDia = {};
             evsMes.forEach(e => { (porDia[e.dia] = porDia[e.dia] || []).push(e); });
 
-            let filas = '', minMes = 0, diasTrab = 0, ferTrab = 0, ferPagos = 0, diasFerias = 0, semMin = 0, semIni = null;
+            let filas = '', minMes = 0, diasTrab = 0, ferTrab = 0, ferPagos = 0, diasFerias = 0, semMin = 0, semIni = null, minDom = 0;
             const cerrarSemana = (ultimoDia) => {
                 if (!semIni) return;
                 const completa = diarioMinSemana(semIni);
                 filas += `<tr style="background:#f4f4f4;"><td style="${DIARIO_TD}" colspan="4"><b>Semana de ${diarioFechaCorta(diarioLunesDe(semIni))}</b> — horas neste mês: <b>${diarioFmtHM(semMin)}</b></td>
-                    <td style="${DIARIO_TD}" colspan="3">Semana completa (seg–dom): <b>${diarioFmtHM(completa)}</b>${completa > 2400 ? ' <b>(+' + diarioFmtHM(completa - 2400) + ' acima de 40h)</b>' : ''}</td></tr>`;
+                    <td style="${DIARIO_TD}" colspan="3">Semana completa (seg–sáb): <b>${diarioFmtHM(completa)}</b>${completa > 2400 ? ' <b>(+' + diarioFmtHM(completa - 2400) + ' acima de 40h)</b>' : ''}</td></tr>`;
                 semMin = 0; semIni = null;
             };
             for (let d = 1; d <= total; d++) {
@@ -2440,10 +2774,11 @@
                 const estadoTxt = diarioEstadoDiaTexto(dia);
                 if (diarioDate(dia).getDay() === 1 && semIni) cerrarSemana();
                 if (jornadas.length || evs.length || diarioFeriadoTrabalhado(dia) || esDiaDeFerias(dia)) {
-                    if (!semIni) semIni = dia;
+                    const esDom = diarioEsDomingo(dia);
+                    if (!semIni && !esDom) semIni = dia;
                     const min = jornadas.reduce((s, j) => s + calcularMinutosTrabajados(j), 0);
                     const pausas = jornadas.reduce((s, j) => s + diarioMinPausas(j), 0);
-                    minMes += min; semMin += min;
+                    minMes += min; if (esDom) minDom += min; else semMin += min;
                     if (jornadas.length) diasTrab++;
                     if (diarioFeriadoTrabalhado(dia)) { ferTrab++; if (diarioFeriadoPago(dia)) ferPagos++; }
                     if (esDiaDeFerias(dia)) diasFerias++;
@@ -2453,7 +2788,7 @@
                     const act = evs.length ? `${res.entregas} entrega(s) · fiados ${diarioFmtEuro(res.dado)} / recebidos ${diarioFmtEuro(res.recibido)} · vendas ${diarioFmtEuro(res.ventas)}` : '';
                     filas += `<tr style="page-break-inside:avoid;"><td style="${DIARIO_TD} white-space:nowrap;">${diarioFechaCorta(dia)}<br><span style="color:#666;">${DIARIO_DIAS[diarioDate(dia).getDay()]}</span></td>
                         <td style="${DIARIO_TD}">${entradas}</td><td style="${DIARIO_TD}">${saidas}</td><td style="${DIARIO_TD}">${diarioFmtHM(pausas)}</td>
-                        <td style="${DIARIO_TD}"><b>${min ? diarioFmtHM(min) : '—'}</b></td><td style="${DIARIO_TD}">${esc(estadoTxt)}</td><td style="${DIARIO_TD}">${esc(act)}</td></tr>`;
+                        <td style="${DIARIO_TD}"><b>${min ? diarioFmtHM(min) : '—'}</b>${esDom && min ? '<br><span style="color:#666;">domingo: fora das 40h</span>' : ''}</td><td style="${DIARIO_TD}">${esc(estadoTxt)}</td><td style="${DIARIO_TD}">${esc(act)}</td></tr>`;
                 }
             }
             cerrarSemana();
@@ -2475,7 +2810,7 @@
                     <th style="${DIARIO_TH}">Horas líquidas</th><th style="${DIARIO_TH}">Feriado / Férias</th><th style="${DIARIO_TH}">Atividade</th>
                 </tr></thead><tbody>${filas || `<tr><td style="${DIARIO_TD}" colspan="7">Sem registos neste mês.</td></tr>`}</tbody></table>
                 <h3 style="font-size:14px; margin:12px 0 4px;">Totais do mês</h3>
-                <div style="font-size:12px; line-height:1.6;">Dias trabalhados: <b>${diasTrab}</b> · Horas líquidas: <b>${diarioFmtHM(minMes)}</b><br>
+                <div style="font-size:12px; line-height:1.6;">Dias trabalhados: <b>${diasTrab}</b> · Horas líquidas: <b>${diarioFmtHM(minMes)}</b> (segunda a sábado: ${diarioFmtHM(minMes - minDom)} · domingos: ${diarioFmtHM(minDom)}, fora das 40h semanais)<br>
                 Feriados trabalhados: <b>${ferTrab}</b> (pagos: <b>${ferPagos}</b> · por pagar: <b>${ferTrab - ferPagos}</b>)<br>
                 Dias de férias marcados neste mês: <b>${diasFerias}</b> · Férias por gozar (saldo atual): <b>${diarioFeriasPorGozar()}</b> dias</div>` + detalle + diarioDocPie();
             diarioImprimir(html);
