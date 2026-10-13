@@ -75,20 +75,13 @@
 
         /* Punto de estado de la jornada (sobre "Mais") */
         .icono-mais { position: relative; display: inline-block; line-height: 1; }
-        #aviso-fora-jornada { position: fixed; left: 16px; right: 16px; bottom: 84px; z-index: 3500; background: #334155; color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.35; text-align: center; box-shadow: 0 6px 18px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .25s, transform .25s; }
-        #aviso-fora-jornada.visivel { opacity: 1; transform: none; }
-        .punto-jornada { position: absolute; top: -5px; right: -17px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid #fff; box-sizing: content-box; }
-        .punto-jornada.fuera { background: #ef4444; animation: parpadeo 1s ease-in-out infinite; }
-        .punto-jornada.trabajando { background: #10b981; }
-        .punto-jornada.pausa { background: #f59e0b; animation: parpadeo 1s ease-in-out infinite; }
-        .punto-jornada.ferias { background: #94a3b8; }
-        /* O mesmo ponto, no canto superior direito da tarjeta «Jornada» (Mais) */
         .menu-card { position: relative; }
-        .punto-jornada-card { position: absolute; top: 10px; right: 10px; width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 3px #fff; }
-        .punto-jornada-card.fuera { background: #ef4444; animation: parpadeo 1s ease-in-out infinite; }
-        .punto-jornada-card.trabajando { background: #10b981; }
-        .punto-jornada-card.pausa { background: #f59e0b; animation: parpadeo 1s ease-in-out infinite; }
-        .punto-jornada-card.ferias { background: #94a3b8; }
+        /* v19.4 · aviso fixo enquanto a jornada está em pausa (em todos os ecrãs) */
+        #banner-pausa { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 1500; height: 48px; background: #f59e0b; color: #1f2937; padding: 6px 12px; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; font-weight: 600; line-height: 1.25; box-shadow: 0 2px 8px rgba(0,0,0,.22); }
+        #banner-pausa button { flex: none; background: #1f2937; color: #fff; border: 0; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        body.en-pausa #banner-pausa { display: flex; }
+        body.en-pausa { padding-top: 60px; }
+        body.en-pausa #fiados-host { top: 48px; }
         /* v18 · registo único de clientes e aldeias */
         .dias-checks { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 14px; }
         .dias-checks label { display: flex; align-items: center; gap: 4px; margin: 0; font-weight: normal; }
@@ -608,7 +601,6 @@
         <h2>Definições e Ferramentas</h2>
         <div class="menu-grid">
             <div class="menu-card" onclick="abrirSubModulo('jornada')">
-                <span id="punto-jornada-card" class="punto-jornada-card fuera" title="Jornada"></span>
                 <div class="menu-card-icon">⏱️</div>
                 <div class="menu-card-title">Jornada</div>
             </div>
@@ -629,7 +621,7 @@
                 <div class="menu-card-title">Cópias de Segurança<span id="badge-copia" class="badge-copia" style="display:none;">⚠️</span></div>
             </div>
         </div>
-        <p class="app-version" id="app-version">Versão 19.3</p>
+        <p class="app-version" id="app-version">Versão 19.5</p>
     </div>
 
     <!-- SUBMÓDULOS -->
@@ -872,7 +864,20 @@
         </div>
     </div>
 
-    <div id="aviso-fora-jornada" role="status">Jornada não iniciada: o que fizer agora não fica no Diário nem nos documentos.</div>
+    <div id="banner-pausa" role="status">
+        <span>⏸️ Jornada em pausa</span>
+        <button type="button" onclick="alternarPausaJornada()">▶️ Retomar</button>
+    </div>
+
+    <div id="modal-inicio-jornada" class="modal">
+        <div class="modal-content">
+            <h3 style="margin:0 0 16px 0; font-size:18px;">Quer iniciar a jornada agora?</h3>
+            <div class="modal-actions">
+                <button class="btn-close" type="button" onclick="inicioJornadaEspreitar()">👀 Só espreitar</button>
+                <button class="btn-success" type="button" onclick="inicioJornadaIniciar()">▶️ Iniciar jornada</button>
+            </div>
+        </div>
+    </div>
 
     <div id="modal-chip-aldea" class="modal" onclick="if (event.target === this) chipCerrarMenu()">
         <div class="modal-content">
@@ -964,7 +969,7 @@
             <span>💳</span><span>Fiados</span>
         </button>
         <button class="tab-btn" id="tab-mais" onclick="switchTab('mais')">
-            <span class="icono-mais"><span>☰</span><span id="punto-jornada" class="punto-jornada fuera" title="Jornada"></span></span><span>Mais<span id="badge-mais-copia" title="Falta fazer uma cópia de segurança" style="display:none; font-size:10px; margin-left:2px;">⚠️</span></span>
+            <span class="icono-mais"><span>☰</span></span><span>Mais<span id="badge-mais-copia" title="Falta fazer uma cópia de segurança" style="display:none; font-size:10px; margin-left:2px;">⚠️</span></span>
         </button>
     </nav>
 
@@ -2457,8 +2462,8 @@
             } else {
                 if (!estado.jornada_activa.pausas) estado.jornada_activa.pausas = [];
                 estado.jornada_activa.pausas.push({ inicio: agora.toISOString(), fin: null });
+                registrarEvento('pausa');   // antes de ficar em pausa: a pausa em si regista-se
                 estado.jornada_activa.enPausa = true;
-                registrarEvento('pausa');
             }
             guardarEstado();
             renderJornadaUI();
@@ -2471,21 +2476,11 @@
             document.getElementById('modal-saida-jornada').classList.add('active');
         }
 
-        // Punto de estado sobre "Mais": rojo parpadeante = sin iniciar, verde fijo = en jornada, naranja parpadeante = en pausa
+        // v19.4: já não há pontos. (O nome antigo mantém-se porque o chamam todas as mudanças de estado da jornada.)
+        // Mostra / esconde o aviso fixo de pausa em todos os ecrãs.
         function actualizarPuntoJornada() {
-            const p = document.getElementById('punto-jornada');
-            if (!p) return;
-            let clase = 'fuera', titulo = 'Jornada não iniciada';
-            if (estado.jornada_activa) {
-                if (estado.jornada_activa.enPausa) { clase = 'pausa'; titulo = 'Jornada em pausa'; }
-                else { clase = 'trabajando'; titulo = 'Em jornada'; }
-            } else if (typeof esDiaDeFerias === 'function' && esDiaDeFerias(formatearFechaLocal(new Date()))) {
-                clase = 'ferias'; titulo = 'Dia de férias';
-            }
-            p.className = 'punto-jornada ' + clase;
-            p.title = titulo;
-            const pc = document.getElementById('punto-jornada-card');
-            if (pc) { pc.className = 'punto-jornada-card ' + clase; pc.title = titulo; }
+            const j = estado.jornada_activa;
+            document.body.classList.toggle('en-pausa', !!(j && j.enPausa));
         }
 
         function cerrarModalSaidaJornada() {
@@ -2511,6 +2506,7 @@
                     if (ultimaPausa && !ultimaPausa.fin) {
                         ultimaPausa.fin = agora.toISOString();
                     }
+                    estado.jornada_activa.enPausa = false;   // a saída regista-se (em pausa não se regista nada)
                 }
 
                 const jornadaCompleta = {
@@ -3480,23 +3476,12 @@
             try { return JSON.parse(localStorage.getItem('panaderia_diario_ubic') || 'null'); } catch (e) { return null; }
         }
 
-        // Fora da jornada (não iniciada ou já terminada) nada fica no Diário nem nos documentos, nem mexe na localização / botão 📍:
-        // assim pode testar à vontade sem deixar rasto. Em pausa a jornada está em curso e regista normalmente.
-        let _avisoForaJornadaFeito = false;
-        function avisarForaJornada() {
-            if (_avisoForaJornadaFeito) return;
-            _avisoForaJornadaFeito = true;
-            try {
-                const el = document.getElementById('aviso-fora-jornada');
-                if (!el) return;
-                el.classList.add('visivel');
-                setTimeout(() => el.classList.remove('visivel'), 4200);
-            } catch (e) {}
-        }
-
+        // Fora da jornada (não iniciada, terminada ou EM PAUSA) nada fica no Diário nem nos documentos, nem mexe na localização / botão 📍:
+        // assim pode testar à vontade sem deixar rasto.
         // tipo: ver DIARIO_TIPOS. datos: { cliente, aldea, valor, detalle, ref, sub }
         function registrarEvento(tipo, datos) {
-            if (!estado.jornada_activa) { avisarForaJornada(); return Promise.resolve(); }
+            const _j = estado.jornada_activa;
+            if (!_j || _j.enPausa) return Promise.resolve();
             try {
                 datos = datos || {};
                 const ahora = new Date();
@@ -4505,6 +4490,26 @@
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', abrirVistaInicial);
         else abrirVistaInicial();
         regArranque();   // v18: lista única de clientes e aldeias (a primeira vez mostra o resumo antes de unir)
+
+        // v19.4 · Ao abrir a app sem jornada iniciada pergunta o que fazer. «Só espreitar» não ativa nada.
+        let _inicioJornadaTentativas = 0;
+        function inicioJornadaPerguntar() {
+            try {
+                if (estado.jornada_activa) return;
+                if (typeof esDiaDeFerias === 'function' && esDiaDeFerias(formatearFechaLocal(new Date()))) return;
+                if (document.querySelector('.modal.active')) {      // outra janela aberta (ex.: resumo inicial): tenta mais tarde
+                    if (++_inicioJornadaTentativas < 15) setTimeout(inicioJornadaPerguntar, 1000);
+                    return;
+                }
+                document.getElementById('modal-inicio-jornada').classList.add('active');
+            } catch (e) {}
+        }
+        function inicioJornadaEspreitar() { document.getElementById('modal-inicio-jornada').classList.remove('active'); }
+        function inicioJornadaIniciar() {
+            document.getElementById('modal-inicio-jornada').classList.remove('active');
+            registrarEntradaJornada();
+        }
+        setTimeout(inicioJornadaPerguntar, 700);
     </script>
     <!-- Segunda app (Calculadora e Fiados) incrustada tal como era, só com o menu inferior escondido. -->
     <script id="fiados-modulo">
