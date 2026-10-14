@@ -498,6 +498,9 @@
         .folha-bloco { margin: -2px 0 6px 0; padding: 0 0 2px 12px; }
         .folha-bloco .fb-lin { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: #475569; padding: 3px 0; }
         .folha-bloco .fb-lin b { color: #1e293b; white-space: nowrap; }
+        .folha-bloco .fb-fat-t { font-size: 11.5px; color: #64748b; margin: 6px 0 1px 0; }
+        .folha-bloco .fb-lin.fat { color: #64748b; }
+        .folha-bloco .fb-lin.fat b { color: #475569; font-weight: 600; }
         .folha-total { background: #ecfdf5; border: 2px solid var(--success); border-radius: 10px; padding: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 16px; font-weight: bold; margin-bottom: 15px; }
         .folha-total.neg { background: #fef2f2; border-color: var(--danger); }
         .folha-total .ft-v { font-size: 22px; }
@@ -663,7 +666,7 @@
                 <div class="menu-card-title">Cópias de Segurança<span id="badge-copia" class="badge-copia" style="display:none;">⚠️</span></div>
             </div>
         </div>
-        <p class="app-version" id="app-version">Versão 22.7</p>
+        <p class="app-version" id="app-version">Versão 22.8</p>
     </div>
 
     <!-- SUBMÓDULOS -->
@@ -769,7 +772,7 @@
         <div class="jornada-card" id="folha-contas">
             <div class="folha-fila"><label for="folha-guia">Valor da Guia de Transporte</label><input type="number" id="folha-guia" inputmode="decimal" step="0.01" min="0" placeholder="0,00" oninput="folhaCampo('guia', this.value)" onchange="folhaGravar()"></div>
             <div class="folha-fila"><span>− Fiados do dia</span><span class="fv" id="folha-fiados"></span></div>
-            <div class="folha-bloco" id="folha-fiados-sub"><div class="fb-lin"><span>Fiados do Dia</span><b id="folha-fb-dia"></b></div><div class="fb-lin"><span>Laranjeira</span><b id="folha-fb-lar"></b></div></div>
+            <div class="folha-bloco" id="folha-fiados-sub"><div class="fb-lin"><span>Fiados do Dia</span><b id="folha-fb-dia"></b></div><div class="fb-lin"><span>Laranjeira</span><b id="folha-fb-lar"></b></div><div id="folha-fb-fat"></div></div>
             <div class="folha-sub" id="folha-fiados-sub2"></div>
             <div class="folha-fila"><span>+ Fiados recebidos</span><span class="fv" id="folha-recebidos"></span></div>
             <div class="folha-fila"><label for="folha-gasoleo">− Gasóleo</label><input type="number" id="folha-gasoleo" inputmode="decimal" step="0.01" min="0" placeholder="0,00" oninput="folhaCampo('gasoleo', this.value)" onchange="folhaGravar()"></div>
@@ -1728,6 +1731,17 @@
             r.recebidos = folhaR2(received);
             r.outras = folhaR2(r.linhas.filter(x => !x.fiado).reduce((t, x) => t + x.valor, 0));
             r.smTotal = folhaR2(r.sm.reduce((t, x) => t + x.valor, 0));
+            {   // v22.8: faturas cobradas neste dia — só para mostrar, não entram em nenhuma conta
+                const m = {};
+                (folhaLS('faturas', []) || []).forEach(f => {
+                    if (!f || !f.cobrada || typeof f.valor !== 'number') return;
+                    if (formatearFechaLocal(new Date(f.cobrada)) !== iso) return;
+                    const c = clientes.find(x => x.id === f.cid);
+                    const nome = c ? c.name : (f.cliente || '?');
+                    m[nome] = folhaR2((m[nome] || 0) + f.valor);
+                });
+                r.faturasDia = Object.keys(m).map(n => ({ nome: n, valor: m[n] }));
+            }
             const dv = (folhaLS('devolucaoDia', {}) || {})[iso];
             r.devolucao = (typeof dv === 'number' && dv > 0) ? folhaR2(dv) : null;   // v22.3: pão que sobrou (subtrai-se)
             r.dinheiro = folhaR2((r.guia || 0) - (r.devolucao || 0) - r.fiadosDia + r.recebidos - (r.gasoleo || 0) + r.outras - r.smTotal);
@@ -1744,6 +1758,9 @@
             e('folha-fiados').textContent = diarioFmtEuro(r.fiadosDia);
             e('folha-fb-dia').textContent = diarioFmtEuro(folhaR2(r.A + r.C));   // v22.6: como a folha de papel: «Fiados do Dia» (inclui pontuais e só conta) e «Laranjeira»
             e('folha-fb-lar').textContent = diarioFmtEuro(r.B);
+            e('folha-fb-fat').innerHTML = (r.faturasDia && r.faturasDia.length)
+                ? '<div class="fb-fat-t">Faturas recebidas (à parte, não somam)</div>' + r.faturasDia.map(x => `<div class="fb-lin fat"><span>${esc(x.nome)}</span><b>${diarioFmtEuro(x.valor)}</b></div>`).join('')
+                : '';
             e('folha-fiados-sub2').textContent = r.fiadosOutras > 0 ? `Sacos/barras a fiado (não contam): ${diarioFmtEuro(r.fiadosOutras)}` : '';
             e('folha-recebidos').textContent = diarioFmtEuro(r.recebidos);
             e('folha-outras').textContent = diarioFmtEuro(r.outras);
