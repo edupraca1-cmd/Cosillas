@@ -663,7 +663,7 @@
                 <div class="menu-card-title">Cópias de Segurança<span id="badge-copia" class="badge-copia" style="display:none;">⚠️</span></div>
             </div>
         </div>
-        <p class="app-version" id="app-version">Versão 22.6</p>
+        <p class="app-version" id="app-version">Versão 22.7</p>
     </div>
 
     <!-- SUBMÓDULOS -->
@@ -768,8 +768,6 @@
         </div>
         <div class="jornada-card" id="folha-contas">
             <div class="folha-fila"><label for="folha-guia">Valor da Guia de Transporte</label><input type="number" id="folha-guia" inputmode="decimal" step="0.01" min="0" placeholder="0,00" oninput="folhaCampo('guia', this.value)" onchange="folhaGravar()"></div>
-            <div class="folha-fila"><label for="folha-devolucao">− Devolução da Volta</label><input type="number" id="folha-devolucao" inputmode="decimal" step="0.01" min="0" placeholder="0,00" oninput="folhaDevolucaoCampo(this.value)"></div>
-            <div class="folha-sub">Pão que sobrou. Na calculadora, o botão «📦 Devolução» soma aqui o valor; também pode escrevê-lo à mão.</div>
             <div class="folha-fila"><span>− Fiados do dia</span><span class="fv" id="folha-fiados"></span></div>
             <div class="folha-bloco" id="folha-fiados-sub"><div class="fb-lin"><span>Fiados do Dia</span><b id="folha-fb-dia"></b></div><div class="fb-lin"><span>Laranjeira</span><b id="folha-fb-lar"></b></div></div>
             <div class="folha-sub" id="folha-fiados-sub2"></div>
@@ -778,6 +776,8 @@
             <div class="folha-fila"><span>+ Outras vendas</span><span class="fv" id="folha-outras"></span></div>
             <div class="folha-fila"><span>− Importe diário</span><span class="fv" id="folha-sm"></span></div>
             <div class="folha-sub" id="folha-sm-sub"></div>
+            <div class="folha-fila"><label for="folha-devolucao">− Devolução da Volta</label><input type="number" id="folha-devolucao" inputmode="decimal" step="0.01" min="0" placeholder="0,00" oninput="folhaDevolucaoCampo(this.value)"></div>
+            <div class="folha-sub">Pão que sobrou. Na calculadora, o botão «📦 Devolução» soma aqui o valor; também pode escrevê-lo à mão.</div>
         </div>
         <div class="folha-total" id="folha-total"><span>💶 Dinheiro a entregar</span><span class="ft-v" id="folha-dinheiro"></span></div>
         <div class="jornada-card">
