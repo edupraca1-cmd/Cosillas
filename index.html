@@ -627,6 +627,27 @@
         .ped-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
         .ped-nav button { width: 44px; height: 44px; border-radius: 12px; border: 1px solid #cbd5e1; background: #fff; color: #334155; font-size: 18px; cursor: pointer; }
         .ped-nav button:disabled { opacity: .35; }
+        .ped-fxcard { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 8px 12px 6px 12px; margin-bottom: 10px; }
+        .ped-fxcard h3 { margin: 0 0 6px 0; font-size: 13px; color: #334155; }
+        .ped-fxl { display: flex; flex-wrap: wrap; gap: 6px; }
+        .ped-fx { border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; max-width: 100%; text-align: left; }
+        .ped-fx small { font-weight: 700; font-size: 10px; text-transform: uppercase; color: #b45309; text-decoration: none; }
+        .ped-fx.off { background: #f1f5f9; color: #94a3b8; text-decoration: line-through; }
+        .ped-fxcard .ped-dia-s { font-size: 12px; line-height: 1.4; color: #64748b; margin: 6px 0 2px 0; }
+        .ped-fixo { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; }
+        .ped-fixo-t { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+        .ped-fixo-t b { font-size: 15px; color: #1e293b; }
+        .ped-fixo-t span { font-size: 12px; color: #64748b; }
+        .ped-fixo-q { font-size: 13px; color: #334155; margin-top: 2px; }
+        .ped-fixo-e { font-size: 12px; font-weight: 700; color: #b45309; margin-top: 2px; }
+        .ped-fixadd { display: flex; gap: 8px; margin-top: 10px; }
+        .ped-fixadd select { flex: 1 1 0; min-width: 0; padding: 0 8px; }
+        .ped-fixadd button { flex: 0 0 112px; height: 48px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; border: 0; background: var(--primary); color: #fff; }
+        .fixo-l { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 0 0 6px 0; font-weight: normal; font-size: 14px; }
+        .fixo-l input { width: 84px; flex: 0 0 84px; height: 40px; border: 1px solid var(--border); border-radius: 8px; text-align: center; font-size: 15px; background: var(--card); color: var(--text); }
+        .fixo-p { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+        .fixo-p label { margin: 0; font-size: 12px; font-weight: 600; flex: 1 1 0; min-width: 0; }
+        .fixo-p input { margin-top: 2px; }
         .ped-nav b { flex: 1; text-align: center; font-size: 16px; }
         .ped-dia { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 8px 12px; margin-bottom: 10px; font-size: 13px; line-height: 1.4; color: #475569; }
         .ped-dia.vesp { background: #fffbeb; border-color: #fcd34d; color: #78350f; }
@@ -763,7 +784,7 @@
                 <div class="menu-card-title">Cópias de Segurança<span id="badge-copia" class="badge-copia" style="display:none;">⚠️</span></div>
             </div>
         </div>
-        <p class="app-version" id="app-version">Versão 23.7</p>
+        <p class="app-version" id="app-version">Versão 23.8</p>
     </div>
 
     <!-- SUBMÓDULOS -->
@@ -1062,6 +1083,18 @@
                 <label style="display:flex; align-items:center; gap:8px; font-weight:600; cursor:pointer;"><input type="checkbox" id="editar-cli-cobra" style="width:18px; height:18px;"> 🕐 Deixo o pão cedo e cobro mais tarde</label>
                 <p style="font-size:12px; color:#64748b; margin:4px 0 0 0;">Em Fiados, ao acumular a dívida o cliente não fica riscado: continua pendente, no fim da lista "Hoje", até pagar ou carregar em "Não pagou".</p>
             </div>
+            <div class="form-group" id="editar-cli-fixo-box">
+                <label style="display:flex; align-items:center; gap:8px; font-weight:600; cursor:pointer;"><input type="checkbox" id="editar-cli-fixo" style="width:18px; height:18px;" onchange="editarCliFixoUI()"> 📌 Cliente fixo (pão habitual no pedido)</label>
+                <div id="editar-cli-fixo-det" style="display:none; margin-top:8px;">
+                    <p style="font-size:12px; color:#64748b; margin:0 0 8px 0;">Pão que ele leva sempre nos dias de visita e que já está dentro da base. Nas encomendas só se soma o que passar disto. Os dias são os de visita acima.</p>
+                    <div id="editar-cli-fixo-q"></div>
+                    <div class="fixo-p">
+                        <label>Pausa de<input type="date" id="editar-cli-fixo-de"></label>
+                        <label>até<input type="date" id="editar-cli-fixo-ate"></label>
+                    </div>
+                    <p style="font-size:12px; color:#64748b; margin:4px 0 0 0;">Em pausa (férias), o pão dele sai do pedido. Deixe em branco se não há pausa.</p>
+                </div>
+            </div>
             <p id="editar-cli-info" style="font-size:12px; color:#64748b; margin:0;"></p>
             <div class="modal-actions">
                 <button class="btn-close" type="button" onclick="cerrarModalEditarCliente()">Cancelar</button>
@@ -1297,6 +1330,7 @@
             if (actual.pedidos && typeof actual.pedidos === 'object') estado.pedidos = actual.pedidos;   // v23.1: pedidos por data
             if (actual.pedido_sobras && typeof actual.pedido_sobras === 'object') estado.pedido_sobras = actual.pedido_sobras;   // v23.1: sobras por data
             if (actual.pedido_fechos && typeof actual.pedido_fechos === 'object') estado.pedido_fechos = actual.pedido_fechos;   // v23.7: dias sem trabalho
+            if (Array.isArray(actual.pedido_fixos)) estado.pedido_fixos = actual.pedido_fixos;   // v23.8: clientes fixos
 
             // Férias e feriados do Diário
             if (actual.diario_cfg && typeof actual.diario_cfg === 'object') estado.diario_cfg = actual.diario_cfg;
@@ -2103,7 +2137,7 @@
             }).join('');
             return pedCab('Pedido', 'O meu dia', atual <= 5 ? 'Passo ' + atual + ' de 5' : 'Dia concluído', false)
                 + '<p class="ped-ayuda">Os passos pela ordem do teu dia. Toca no passo em que estás.</p>' + av + html
-                + '<div style="text-align:center; margin-top:6px;"><button type="button" class="ped-link" onclick="pedIr(\'bases\')">Bases por dia · configuração</button></div>';
+                + '<div style="text-align:center; margin-top:6px;"><button type="button" class="ped-link" onclick="pedIr(\'bases\')">Bases por dia · configuração</button> <button type="button" class="ped-link" onclick="pedIr(\'fixos\')">Clientes fixos</button></div>';
         }
         function pedVendidoTotal(d) {
             return Object.keys(d.p).reduce((a, id) => a + Math.max(0, (d.p[id] || 0) - pedFicaram(d, id)), 0);
@@ -2248,16 +2282,42 @@
             }
             return { q, desc };
         }
+        // ---- clientes fixos: o pão habitual já está dentro da base (como os parênteses do Keep)
+        // estado.pedido_fixos = [ { cid: id do cliente, q: {pão: habitual}, de, ate } ]  (nome, aldeia e dias de visita vêm da ficha do cliente)
+        const PED_SIGLA = { gm: 'GM', pm: 'PM', pmc: 'PMC', b: 'B', bico: 'Bicos', ps: 'PS', pq: 'PQ', pf: 'PF', bg: 'BG', bp: 'BP', int: 'Int.', pc: 'PC', gc: 'GC', cap: 'Cap.', ba: 'Ba' };
+        function pedFixos() { return Array.isArray(estado.pedido_fixos) ? estado.pedido_fixos.filter(f => f && typeof f === 'object' && f.cid !== undefined && f.cid !== null) : []; }
+        function pedFixCli(f) { return regClientes().find(c => c.id === f.cid) || null; }
+        function pedFixDias(c) { return (Array.isArray(c.days) ? c.days : []).map(d => DIARIO_DIAS.indexOf(String(d).toLowerCase())).filter(n => n > 0); }
+        function pedFixAtivo(f, iso) { const c = pedFixCli(f); return !!c && pedFixDias(c).includes(pedDiaSem(iso)); }
+        function pedFixPausa(f, iso) { return !!(f.de || f.ate) && (!f.de || iso >= f.de) && (!f.ate || iso <= f.ate); }
+        function pedAusentes(iso) {   // fixos que nesse dia não levam o habitual: em pausa ou «não vem»
+            const p = pedPedLer(iso), nv = pedObj(p && p.nv), r = {};
+            pedFixos().forEach(f => { if (!pedFixAtivo(f, iso)) return; if (pedFixPausa(f, iso)) r[f.cid] = 'pausa'; else if (nv[f.cid]) r[f.cid] = 'nv'; });
+            return r;
+        }
+        function pedFixDaEnc(nome, aldea, iso) {
+            const n = normalizarBusqueda(nome);
+            return pedFixos().find(f => { const c = pedFixCli(f); return c && c.village === aldea && normalizarBusqueda(c.name) === n && pedFixDias(c).includes(pedDiaSem(iso)); }) || null;
+        }
+        function pedEf(q, h) {   // o que se soma de uma encomenda: só o que passa do habitual; os negativos passam como estão
+            const r = {};
+            Object.keys(q).forEach(id => { r[id] = q[id] > 0 ? Math.max(0, q[id] - (pedObj(h)[id] || 0)) : q[id]; });
+            return r;
+        }
+        function pedFixResumo(q) { const l = PED_ORDEM.filter(id => pedObj(q)[id] > 0).map(id => q[id] + ' ' + PED_SIGLA[id]); return l.length ? l.join(' · ') : 'sem pão habitual'; }
         function pedEncs(iso) {
+            const aus = pedAusentes(iso);
             return (estado.encomiendas || []).filter(e => e.fecha === iso && !e.esAviso).map(e => {
-                const pr = pedParse(e.pedido);
-                return { id: String(e.id), nome: e.nombre || '', aldea: e.aldea || '', texto: e.pedido || '', q: pr.q, desc: pr.desc, tem: Object.keys(pr.q).length > 0, lar: /laranjeira/.test(pedNorm(e.nombre)), vesp: !!e.pedirDiaAnterior };
+                const pr = pedParse(e.pedido), fix = pedFixDaEnc(e.nombre, e.aldea, iso), ausente = !!(fix && aus[fix.cid]);
+                const ef = (fix && !ausente) ? pedEf(pr.q, fix.q) : Object.assign({}, pr.q);
+                const dif = Object.keys(pr.q).some(id => ef[id] !== pr.q[id]);
+                return { id: String(e.id), nome: e.nombre || '', aldea: e.aldea || '', texto: e.pedido || '', q: pr.q, ef, dif, fix, aus: ausente, desc: pr.desc, tem: Object.keys(pr.q).length > 0, lar: /laranjeira/.test(pedNorm(e.nombre)), vesp: !!e.pedirDiaAnterior };
             });
         }
         function pedIncluida(p, e) {
             if (!e.tem) return false;
             const v = p && p.inc ? p.inc[e.id] : undefined;
-            return v === undefined ? !e.lar : !!v;   // Laranjeira não vem marcada: só soma o que passa do que já deixaste
+            return v === undefined ? !(e.lar && !e.fix) : !!v;   // Laranjeira sem ficha de cliente fixo não vem marcada: só soma o que passa do que já deixaste
         }
         function pedQTxt(q) {
             return PED_ORDEM.filter(id => q[id]).map(id => (q[id] < 0 ? '−' + Math.abs(q[id]) : q[id]) + ' ' + pedNome(id)).join(' · ');
@@ -2267,11 +2327,13 @@
         function pedCalc(iso) {
             const w = pedDiaSem(iso), base = pedBaseLer(w), p = pedPedLer(iso), encs = pedEncs(iso);
             const en = {};
-            encs.forEach(e => { if (pedIncluida(p, e)) Object.keys(e.q).forEach(id => { en[id] = (en[id] || 0) + e.q[id]; }); });
+            encs.forEach(e => { if (pedIncluida(p, e)) Object.keys(e.ef).forEach(id => { en[id] = (en[id] || 0) + e.ef[id]; }); });
+            const aus = pedAusentes(iso);
+            pedFixos().forEach(f => { if (aus[f.cid]) Object.keys(pedObj(f.q)).forEach(id => { en[id] = (en[id] || 0) - (f.q[id] || 0); }); });   // fixo que não vem: sai o habitual dele
             const aj = pedObj(p && p.aj);
             const tot = {};
             PED_ORDEM.forEach(id => { tot[id] = Math.max(0, (PED_SO_ENC.includes(id) ? 0 : (base[id] || 0)) + (en[id] || 0) + (aj[id] || 0)); });
-            return { w, base, en, aj, tot, encs, p };
+            return { w, base, en, aj, tot, encs, p, aus };
         }
         function pedTotDe(iso) { const p = pedPedLer(iso); return (p && p.tot) ? p.tot : pedCalc(iso).tot; }
 
@@ -2464,6 +2526,57 @@
             }
             return null;
         }
+        // ---- clientes fixos: passo 5 e lista
+        function pedFixNv(cid) {
+            const D = pedDataAtual(), p = pedPedEsc(D);
+            p.nv = pedObj(p.nv);
+            if (p.nv[cid]) delete p.nv[cid]; else p.nv[cid] = true;
+            p.feito = false; guardarEstado(); renderPedido();
+        }
+        function pedFixCard(D, c) {
+            const lista = pedFixos().filter(f => pedFixAtivo(f, D));
+            if (!lista.length) return '';
+            const aus = c.aus || {};
+            const chips = lista.map(f => {
+                const cl = pedFixCli(f), m = aus[f.cid], rot = esc(cl.name) + ' · ' + esc(pedFixResumo(f.q));
+                if (m === 'pausa') return `<span class="ped-fx off">⏸ ${rot} <small>em pausa</small></span>`;
+                return `<button type="button" class="ped-fx ${m ? 'off' : ''}" aria-label="${esc(cl.name)}: ${m ? 'não vem' : 'vem'}" onclick="pedFixNv('${f.cid}')">${m ? '🚫 ' : ''}${rot}${m ? ' <small>não vem</small>' : ''}</button>`;
+            }).join('');
+            return `<div class="ped-fxcard"><h3>📌 Clientes fixos de ${esc(DIARIO_DIAS[c.w].split('-')[0])} (${lista.length})</h3><div class="ped-fxl">${chips}</div><p class="ped-dia-s">O pão habitual deles já está na base. Toca num cliente que neste dia não vem para o tirar do pedido.</p></div>`;
+        }
+        function pedFixEditar(cid) {
+            const c = regClientes().find(x => String(x.id) === String(cid));
+            if (c) abrirModalEditarCliente(c.village, c.name);
+        }
+        function pedFixAdd() {
+            const v = (document.getElementById('ped-fix-add') || {}).value;
+            if (!v) { avisoRapido('Escolhe primeiro um cliente'); return; }
+            const c = regClientes().find(x => String(x.id) === v);
+            if (!c) return;
+            abrirModalEditarCliente(c.village, c.name);
+            document.getElementById('editar-cli-fixo').checked = true;
+            editarCliFixoUI();
+        }
+        function pedFixDT(iso) { return iso.slice(8, 10) + '/' + iso.slice(5, 7); }
+        function pedFixosEc() {
+            const hj = pedHoje(), ab = ['', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            const lista = pedFixos().map(f => ({ f, c: pedFixCli(f) })).filter(x => x.c).sort((a, b) => a.c.name.localeCompare(b.c.name, 'pt'));
+            const filas = lista.map(x => {
+                const f = x.f, c = x.c, dias = pedFixDias(c).map(n => ab[n]).join(' ') || 'sem dias de visita';
+                let est = '';
+                if (pedFixPausa(f, hj)) est = '⏸ Em pausa' + (f.ate ? ' até ' + pedFixDT(f.ate) : '');
+                else if (f.de && f.de > hj) est = 'Pausa a partir de ' + pedFixDT(f.de) + (f.ate ? ' até ' + pedFixDT(f.ate) : '');
+                return `<div class="ped-fixo"><div class="ped-fixo-t"><b>${esc(c.name)}</b><span>${esc(c.village)} · ${esc(dias)}</span></div><div class="ped-fixo-q">${esc(pedFixResumo(f.q))}</div>${est ? '<div class="ped-fixo-e">' + esc(est) + '</div>' : ''}<button type="button" class="ped-link" aria-label="Editar ${esc(c.name)}" onclick="pedFixEditar('${f.cid}')">Editar</button></div>`;
+            }).join('');
+            const livres = regClientes().filter(c => !pedFixos().some(f => f.cid === c.id));
+            const por = {}; livres.forEach(c => { (por[c.village] = por[c.village] || []).push(c); });
+            const sel = '<select id="ped-fix-add" aria-label="Escolher cliente"><option value="">Escolher cliente…</option>'
+                + regAldeas().filter(a => por[a]).map(a => `<optgroup label="${esc(a)}">` + por[a].map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('') + '</optgroup>').join('') + '</select>';
+            return pedCab2('Pedido · configuração', 'Clientes fixos', lista.length + (lista.length === 1 ? ' cliente' : ' clientes'), true, 'Pão habitual já incluído na base')
+                + '<p class="ped-ayuda">Clientes que levam sempre o mesmo pão. Esse pão já está dentro da base (como os parênteses da tua nota do Keep). Quando fazem uma encomenda, só se soma o que passa do habitual; se um dia não vêm, tocas nele no passo 5 e o pão sai do pedido. Os dias de visita vêm da ficha do cliente.</p>'
+                + (filas || '<div class="ped-vazio">Ainda não há clientes fixos.<br>Escolhe um cliente aqui em baixo, ou abre a ficha dele em Configurar Rota e marca «Cliente fixo».</div>')
+                + '<div class="ped-fixadd">' + sel + '<button type="button" onclick="pedFixAdd()">Adicionar</button></div>';
+        }
         // ---- dias sem trabalho e vésperas (prevenção)
         function pedFechoSet(iso, v) {
             const m = pedMapa('pedido_fechos');
@@ -2499,8 +2612,13 @@
             if (fech) return pedCab2('Pedido · passo 5 de 5', 'Pedido para ' + dn, 'Sem trabalho', true, 'Dia sem trabalho') + nav + pedFechoCard(D, c);
             const encs = c.encs.length ? `<div class="ped-enc"><h3>${c.encs.length === 1 ? '1 encomenda' : c.encs.length + ' encomendas'} para ${esc(dn)}</h3>` + c.encs.map(e => {
                 const inc = pedIncluida(p, e);
-                const lido = e.tem ? esc(pedQTxt(e.q)) : 'sem pão do pedido';
-                const extra = (e.desc.length ? ' · <b>não percebi:</b> ' + esc(e.desc.join(', ')) : '') + (e.vesp ? ' · 📌 Pedir na véspera' : '') + (e.lar ? '<br>Laranjeira: só se soma o que passa do que já deixaste.' : '');
+                let lido = e.tem ? esc(pedQTxt(e.q)) : 'sem pão do pedido';
+                if (e.tem && e.fix && e.dif) {
+                    const hb = {}; Object.keys(e.q).forEach(id => { if (e.q[id] > 0 && e.fix.q[id]) hb[id] = e.fix.q[id]; });
+                    const sm = pedQTxt(e.ef);
+                    lido += ' → ' + (sm ? 'soma só ' + esc(sm) : 'nada a somar') + ' (já tem ' + esc(pedQTxt(hb)) + ' na base)';
+                }
+                const extra = (e.desc.length ? ' · <b>não percebi:</b> ' + esc(e.desc.join(', ')) : '') + (e.vesp ? ' · 📌 Pedir na véspera' : '') + (e.lar && !e.fix ? '<br>Laranjeira: só se soma o que passa do que já deixaste.' : '') + (e.aus ? ' · fixo que não vem neste dia: soma tudo' : '');
                 return `<label class="${e.tem ? '' : 'off'}"><input type="checkbox" ${inc ? 'checked' : ''} ${e.tem ? '' : 'disabled'} aria-label="Somar ${esc(e.nome)}" onchange="pedEncInc('${esc(e.id)}', this.checked)"><span><b>${esc(e.nome)}</b> · ${esc(e.texto)}<br>= ${lido}${extra}</span></label>`;
             }).join('') + '</div>' : `<p class="ped-ayuda">Sem encomendas para ${esc(dn)} na pestaña Encomendas.</p>`;
             const filas = PED_ORDEM.map(id => {
@@ -2525,6 +2643,7 @@
             return pedCab2('Pedido · passo 5 de 5', amanha ? 'Pedido para amanhã' : 'Pedido para ' + dn, nPaes + (nPaes === 1 ? ' pão' : ' pães'), true, p && p.feito ? '✔ Marcado como pedido' : 'Ainda por marcar')
                 + nav
                 + pedDiaCard(D, vesp)
+                + pedFixCard(D, c)
                 + (semBase ? `<div class="ped-aviso">Ainda não tens a base de ${esc(dn)}. ${vesp ? 'Como é véspera, o pedido deste dia não fica como base.' : 'Escreve os números como na tua nota do Keep: ao marcares o pedido ficam guardados como base dos próximos dias iguais.'} <button type="button" class="ped-link" onclick="pedBW = ${c.w}; pedIr('bases')">Definir as bases</button></div>` : '')
                 + encs + filas
                 + '<div class="ped-duo"><button type="button" class="ped-sec" onclick="pedBW = ' + c.w + '; pedIr(\'bases\')">Base de ' + esc(dn.split('-')[0]) + '</button><button type="button" class="ped-pri" onclick="pedMarcar()">Marcar como pedido</button></div>'
@@ -2560,7 +2679,7 @@
             const raiz = document.getElementById('ped-raiz');
             if (!raiz) return;
             raiz.innerHTML = pedPant === 'manha' ? pedManha() : pedPant === 'rota' ? pedRota() : pedPant === 'fim' ? pedFim()
-                : pedPant === 'sobras' ? pedSobras() : pedPant === 'pedido' ? pedPedido() : pedPant === 'bases' ? pedBases() : pedHub();
+                : pedPant === 'sobras' ? pedSobras() : pedPant === 'pedido' ? pedPedido() : pedPant === 'bases' ? pedBases() : pedPant === 'fixos' ? pedFixosEc() : pedHub();
         }
 
         function navegarMes(delta) {
@@ -3337,6 +3456,32 @@
             const q = a.split('-');
             return { t: 'q', f: new Date(+q[0], +q[1] - 1, +q[2], 12).getDay(), a };
         }
+        function editarCliFixoAbrir(cid) {
+            const f = cid === null ? null : (pedFixos().find(x => x.cid === cid) || null);
+            const q = f ? pedObj(f.q) : {};
+            document.getElementById('editar-cli-fixo').checked = !!f;
+            document.getElementById('editar-cli-fixo-q').innerHTML = PED_BASE_IDS.map(id => `<label class="fixo-l"><span>${esc(pedNome(id))}</span><input type="number" inputmode="numeric" min="0" max="999" data-pao="${id}" value="${q[id] > 0 ? q[id] : ''}" placeholder="0" aria-label="Habitual ${esc(pedNome(id))}" onfocus="this.select()"></label>`).join('');
+            document.getElementById('editar-cli-fixo-de').value = f && f.de ? f.de : '';
+            document.getElementById('editar-cli-fixo-ate').value = f && f.ate ? f.ate : '';
+            editarCliFixoUI();
+        }
+        function editarCliFixoUI() {
+            document.getElementById('editar-cli-fixo-det').style.display = document.getElementById('editar-cli-fixo').checked ? '' : 'none';
+        }
+        function editarCliFixoLer() {
+            const q = {};
+            document.querySelectorAll('#editar-cli-fixo-q input').forEach(i => { const n = pedN9(i.value); if (n > 0) q[i.dataset.pao] = n; });
+            return { on: document.getElementById('editar-cli-fixo').checked, q, de: document.getElementById('editar-cli-fixo-de').value || '', ate: document.getElementById('editar-cli-fixo-ate').value || '' };
+        }
+        function editarCliFixoGuardar(cid, fx) {
+            if (!fx.on && !Array.isArray(estado.pedido_fixos)) return;
+            const lista = (Array.isArray(estado.pedido_fixos) ? estado.pedido_fixos : []).filter(f => f);
+            const i = lista.findIndex(f => f.cid === cid);
+            if (fx.on) { const novo = { cid, q: fx.q, de: fx.de, ate: fx.ate }; if (i >= 0) lista[i] = novo; else lista.push(novo); }
+            else if (i >= 0) lista.splice(i, 1);
+            estado.pedido_fixos = lista;
+            guardarEstado();
+        }
         function editarCliTipoUI() {
             const t = document.getElementById('editar-cli-tipo').value;
             const ct = t ? '' : document.getElementById('editar-cli-ciclo-t').value;
@@ -3366,6 +3511,7 @@
             document.getElementById('editar-cli-ciclo-dm').value = cf0 && cf0.t === 'm' ? String(cf0.f) : '31';
             document.getElementById('editar-cli-ciclo-dq').value = cf0 && cf0.t === 'q' ? cicloQProximo(cf0.a) : '';
             editarCliTipoUI();
+            editarCliFixoAbrir(c.id);
             const pend = (estado.encomiendas || []).filter(e => normalizarBusqueda(e.nombre) === normalizarBusqueda(c.name) && e.aldea === c.village && !estado.entregados_ids[e.id]).length;
             const partes = [];
             if (c.balance > 0) partes.push(`Dívida em Fiados: ${Number(c.balance).toFixed(2)}€.`);
@@ -3389,6 +3535,7 @@
             document.getElementById('editar-cli-ciclo-dm').value = '31';
             document.getElementById('editar-cli-ciclo-dq').value = '';
             editarCliTipoUI();
+            editarCliFixoAbrir(null);
             document.getElementById('editar-cli-info').textContent = 'O cliente fica logo disponível em Encomendas, Fiados e Calculadora.';
             document.getElementById('modal-editar-cliente').classList.add('active');
         }
@@ -3418,12 +3565,17 @@
             }
             const duplicado = regBuscar(nombreNuevo, aldeaNueva).some(c => c.id !== id);
             if (duplicado) return alert(`Já existe um cliente "${nombreNuevo}" na aldeia ${aldeaNueva}.`);
+            const fx = editarCliFixoLer();
+            if (fx.on && !dias.length) return alert('Escolha pelo menos um dia de visita: o cliente fixo só conta nesses dias.');
+            if (fx.on && !Object.keys(fx.q).length) return alert('Escreva o pão habitual do cliente fixo (ou desmarque a casilla).');
+            if (fx.on && fx.de && fx.ate && fx.de > fx.ate) return alert('A pausa acaba antes de começar. Corrija as datas.');
 
             if (id === null) {
                 const nuevoCli = regCrearCliente(nombreNuevo, aldeaNueva, dias);
                 if (nuevoCli && cobra) regEditarCliente(nuevoCli.id, { cobraDepois: true });
                 if (nuevoCli && tipo) regEditarCliente(nuevoCli.id, { tipo });
                 if (nuevoCli && ciclo) regEditarCliente(nuevoCli.id, { ciclo });
+                if (nuevoCli) editarCliFixoGuardar(nuevoCli.id, fx);
                 aldeasAbiertas.add(aldeaNueva);
             } else {
                 const cambioAldea = aldeaNueva !== aldeaVieja;
@@ -3435,12 +3587,14 @@
                     e.aldea = aldeaNueva;
                 });
                 regEditarCliente(id, { name: nombreNuevo, village: aldeaNueva, days: dias, cobraDepois: cobra, tipo, ciclo });
+                editarCliFixoGuardar(id, fx);
                 if (cambioAldea) aldeasAbiertas.add(aldeaNueva);
                 guardarEstado();
             }
             cerrarModalEditarCliente();
             renderConfigRuta();
             renderReparto();
+            renderPedido();
         }
 
         // ===== Diálogos próprios (não dependem do confirm()/prompt() do navegador, que alguns telemóveis bloqueiam) =====
