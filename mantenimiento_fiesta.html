@@ -1,0 +1,1187 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Mantenimiento Fiesta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=Share+Tech+Mono&display=swap">
+<style>
+/* Layout: libro de taller en una columna pensada para el móvil. Cuentakilómetros arriba, lista de vencimientos por urgencia debajo, navegación fija abajo. */
+:root{
+  --font-display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
+  --font-body:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-mono:'Share Tech Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  --bg:#ECEFF2;
+  --surface:#FFFFFF;
+  --surface-2:#F3F5F7;
+  --ink:#13202B;
+  --muted:#566673;
+  --line:#D6DDE3;
+  --accent:#0A4D8C;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#DCE8F5;
+  --ok:#1B7249;
+  --ok-soft:#DDF1E6;
+  --warn:#8A5000;
+  --warn-soft:#FBEBCB;
+  --bad:#B3261E;
+  --bad-soft:#F9DEDA;
+  --odo-a:#05090E;
+  --odo-b:#101A25;
+  --odo-fg:#F2F5F7;
+  --odo-line:#2A3947;
+  --odo-dim:#586C7E;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D141B;
+    --surface:#152029;
+    --surface-2:#1B2833;
+    --ink:#E8EEF3;
+    --muted:#9AAAB7;
+    --line:#293A46;
+    --accent:#6FAEEA;
+    --accent-ink:#071320;
+    --accent-soft:#1B3550;
+    --ok:#52C58B;
+    --ok-soft:#163528;
+    --warn:#F2B04C;
+    --warn-soft:#3B2D12;
+    --bad:#FF8A7D;
+    --bad-soft:#40201C;
+    --odo-a:#04070B;
+    --odo-b:#0B131B;
+    --odo-line:#233240;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D141B;
+  --surface:#152029;
+  --surface-2:#1B2833;
+  --ink:#E8EEF3;
+  --muted:#9AAAB7;
+  --line:#293A46;
+  --accent:#6FAEEA;
+  --accent-ink:#071320;
+  --accent-soft:#1B3550;
+  --ok:#52C58B;
+  --ok-soft:#163528;
+  --warn:#F2B04C;
+  --warn-soft:#3B2D12;
+  --bad:#FF8A7D;
+  --bad-soft:#40201C;
+  --odo-a:#04070B;
+  --odo-b:#0B131B;
+  --odo-line:#233240;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);color:var(--ink);
+  font:400 15px/1.45 var(--font-body);
+  padding-block:0 96px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.wrap{max-width:720px;margin:0 auto}
+button,input,select,textarea{font:inherit;color:inherit}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Cabecera */
+.top{padding-top:20px;padding-bottom:14px}
+.eyebrow{margin:0 0 2px;font:600 11px/1.2 var(--font-body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{margin:0;font:700 2rem/1 var(--font-display);letter-spacing:.01em;text-wrap:balance}
+.sub{margin:4px 0 0;color:var(--muted);font-size:14px}
+
+/* Contenedores */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.pad{padding:16px}
+.h2{margin:26px 0 10px;font:600 1.05rem/1.2 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-wrap:balance}
+.meta{margin:0;color:var(--muted);font-size:13.5px}
+.note{margin:8px 0 0;font-size:13.5px;color:var(--muted)}
+.err{margin:8px 0 0;color:var(--bad);font-size:13.5px;font-weight:500}
+
+/* Cuentakilómetros */
+.hero{padding:18px 16px 16px}
+.odo-wrap{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.odo{display:flex;align-items:stretch;gap:3px}
+.cell{
+  width:clamp(30px,9.4vw,44px);height:clamp(46px,13vw,60px);
+  display:grid;place-items:center;border-radius:3px;
+  background:linear-gradient(180deg,var(--odo-a) 0,var(--odo-b) 49%,var(--odo-a) 51%,var(--odo-b) 100%);
+  color:var(--odo-fg);font:400 clamp(26px,8vw,38px)/1 var(--font-mono);
+  box-shadow:inset 0 0 0 1px var(--odo-line);
+}
+.cell.gap{margin-left:7px}
+.cell.dim{color:var(--odo-dim)}
+.unit{font:600 1.1rem/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-bottom:6px}
+.hero .meta{margin-top:12px}
+.hero-actions{margin-top:12px}
+.kmbox{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+
+/* Controles */
+label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:4px}
+input[type=text],input[type=number],input[type=date],select,textarea{
+  width:100%;min-height:44px;padding:10px 12px;font-size:16px;
+  background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;
+}
+textarea{resize:vertical}
+input[type=number]{-moz-appearance:textfield}
+.inline{display:flex;gap:8px}
+.inline input{flex:1;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.form{display:flex;flex-direction:column;gap:16px}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{font-size:13px;font-weight:500;color:var(--muted);padding:0;margin-bottom:8px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;
+  background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:8px;
+  font-weight:600;font-size:15px;cursor:pointer;text-align:center;
+}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.block{width:100%}
+.btn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.btn.small{min-height:36px;padding:0 12px;font-size:14px}
+.link{background:none;border:0;padding:6px 0;color:var(--accent);font-weight:600;font-size:14px;cursor:pointer;min-height:36px}
+.link.danger{color:var(--bad)}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+
+/* Avisos de estado */
+.demo{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 14px;padding:12px 14px;border:1px dashed var(--accent);border-radius:12px;background:var(--accent-soft)}
+.demo p{margin:0;font-size:14px;flex:1 1 220px}
+.start{margin-top:14px;padding:16px}
+.start h3{margin:0 0 6px;font:600 1.2rem/1.2 var(--font-display)}
+.start ol{margin:8px 0 0;padding-left:20px}
+.start li{margin:4px 0}
+
+/* Filtros y lista */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 10px}
+.fchip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:14px;font-weight:500;cursor:pointer}
+.fchip b{font-variant-numeric:tabular-nums}
+.fchip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.list{overflow:hidden}
+.row{padding:14px 16px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.row-h>div{min-width:0}
+.cat{display:block;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.nm{display:block;font-size:16px;font-weight:600;line-height:1.3}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;background:var(--surface-2);color:var(--muted)}
+.s-over .pill{background:var(--bad-soft);color:var(--bad)}
+.s-soon .pill{background:var(--warn-soft);color:var(--warn)}
+.s-ok .pill{background:var(--ok-soft);color:var(--ok)}
+.bar{height:6px;margin:10px 0 8px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px;background:var(--muted)}
+.s-over .bar i{background:var(--bad)}
+.s-soon .bar i{background:var(--warn)}
+.s-ok .bar i{background:var(--ok)}
+.s-none .bar{background:repeating-linear-gradient(90deg,var(--line) 0 6px,transparent 6px 10px)}
+.due{margin:0;font-weight:500;font-variant-numeric:tabular-nums}
+.s-over .due{color:var(--bad)}
+.s-soon .due{color:var(--warn)}
+.row .meta{margin-top:2px}
+.row-f{display:flex;gap:14px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.docinput{margin-top:10px;max-width:240px}
+.empty{padding:22px 16px;text-align:center;color:var(--muted)}
+
+/* Registrar */
+.grp{margin-bottom:12px}
+.grp-t{margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative;display:block;margin:0;font-size:inherit;color:inherit}
+.chip input{position:absolute;opacity:0;width:1px;height:1px}
+.chip span{display:inline-flex;align-items:center;min-height:40px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:14px;font-weight:500;cursor:pointer;text-align:left;line-height:1.25}
+.chip input:checked+span{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chip input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Historial */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.stat b{display:block;font:600 1.3rem/1.15 var(--font-display);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stat span{font-size:12px;color:var(--muted)}
+.entry{padding:14px 16px;border-top:1px solid var(--line)}
+.entry:first-child{border-top:0}
+.entry-h{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.entry .d{font:600 1.15rem/1.2 var(--font-display);letter-spacing:.02em}
+.entry .k{margin-left:10px;color:var(--muted);font-size:13.5px;font-variant-numeric:tabular-nums}
+.entry .cost{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag{padding:2px 9px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);font-size:13px}
+.entry-f{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.who{font-size:13px;color:var(--muted)}
+
+/* Plan */
+.prow{padding:14px 16px;border-top:1px solid var(--line)}
+.prow:first-child{border-top:0}
+.prow-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.switch{display:inline-flex;align-items:center;gap:8px;margin:0;color:var(--ink);font-size:14px;white-space:nowrap}
+.switch input{width:20px;height:20px;accent-color:var(--accent)}
+.pfields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:10px}
+.mod{margin-left:8px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+details.card{padding:0}
+details.card summary{padding:14px 16px;font-weight:600;cursor:pointer;min-height:44px}
+details.card .inner{padding:0 16px 16px}
+.spec{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:6px 14px;margin:0}
+.spec dt{color:var(--muted);font-size:13.5px}
+.spec dd{margin:0;font-size:14px;font-variant-numeric:tabular-nums}
+
+/* Navegación inferior */
+.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:10;
+  background:var(--surface);border-top:1px solid var(--line);
+  padding:6px max(16px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+}
+.tabs-in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:52px;padding:6px 2px;background:none;border:0;border-radius:8px;color:var(--muted);font-size:11.5px;font-weight:600;cursor:pointer}
+.tab svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
+
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:20;
+  max-width:calc(100vw - 32px);padding:10px 16px;border-radius:10px;background:var(--ink);color:var(--bg);font-size:14px;font-weight:500;text-align:center;
+}
+@media (min-width:640px){
+  .h2{margin-top:30px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .bar i{transition:width .3s ease}
+}
+/* Orçamento */
+.chip small{margin-left:6px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.sheet textarea{min-height:380px;padding:16px;font:400 15px/1.55 var(--font-body);white-space:pre-wrap}
+#printArea{display:none}
+@media print{
+  :root{padding:0}
+  html,body{background:#fff!important}
+  body{padding:0}
+  body>*:not(#printArea){display:none!important}
+  #printArea{display:block;white-space:pre-wrap;font:12pt/1.55 var(--font-body);color:#000;background:#fff;padding:0 4px}
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">Libro de mantenimiento</p>
+    <h1>Fiesta 1.0 Duratec</h1>
+    <p class="sub">2015 · 65 cv · gasolina</p>
+  </header>
+
+  <div id="backupBar" class="demo" hidden>
+    <p><b>Haz una copia de seguridad.</b> Tus datos solo están en este navegador. Guarda un archivo de copia por si cambias de teléfono o borras los datos del navegador.</p>
+    <button class="btn primary small" type="button" data-act="exportJson">Guardar copia</button>
+  </div>
+
+  <main>
+    <!-- ESTADO -->
+    <section id="tab-estado" aria-labelledby="h-estado">
+      <h2 class="sr" id="h-estado">Estado del coche</h2>
+      <div class="card hero">
+        <div class="odo-wrap">
+          <div id="odo" class="odo" role="img" aria-label="Kilometraje actual"></div>
+          <span class="unit">km</span>
+        </div>
+        <p id="odoMeta" class="meta"></p>
+        <div class="hero-actions">
+          <button class="btn" type="button" data-act="kmToggle">Actualizar km</button>
+        </div>
+        <form id="kmForm" class="kmbox" hidden novalidate>
+          <label for="kmInput">Kilometraje del cuentakilómetros</label>
+          <div class="inline">
+            <input id="kmInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Por ejemplo 118450">
+            <button class="btn primary" type="submit">Guardar</button>
+          </div>
+          <p id="kmErr" class="err" role="alert" hidden></p>
+        </form>
+      </div>
+
+      <div id="start" class="card start" hidden>
+        <h3>Primeros pasos</h3>
+        <p class="meta">La app calcula cada vencimiento a partir de la última vez que se hizo cada trabajo.</p>
+        <ol>
+          <li>Anota los km que marca ahora el cuentakilómetros.</li>
+          <li>En Registrar, apunta lo último que recuerdes haber hecho, aunque la fecha sea aproximada.</li>
+          <li>Más abajo, pon las fechas de la inspección técnica, el seguro y el impuesto.</li>
+        </ol>
+      </div>
+
+      <div id="filters" class="filters" role="group" aria-label="Filtrar por estado"></div>
+      <div id="list" class="card list"></div>
+
+      <h3 class="h2">Documentos y vencimientos</h3>
+      <div id="docs" class="card list"></div>
+    </section>
+
+    <!-- REGISTRAR -->
+    <section id="tab-registrar" aria-labelledby="h-reg" hidden>
+      <h2 class="h2" id="h-reg" style="margin-top:8px">Registrar servicio</h2>
+      <form id="svcForm" class="card pad form" novalidate>
+        <div class="grid2">
+          <div>
+            <label for="svcDate">Fecha</label>
+            <input id="svcDate" type="date">
+          </div>
+          <div>
+            <label for="svcKm">Kilometraje</label>
+            <input id="svcKm" type="text" inputmode="numeric" autocomplete="off" placeholder="km">
+          </div>
+        </div>
+        <fieldset>
+          <legend>Qué se ha hecho</legend>
+          <div id="checklist"></div>
+        </fieldset>
+        <div>
+          <label for="svcExtra">Otro trabajo (opcional)</label>
+          <input id="svcExtra" type="text" autocomplete="off" placeholder="Cambio de neumáticos, escape…">
+        </div>
+        <div class="grid2">
+          <div>
+            <label for="svcCost">Coste total (€)</label>
+            <input id="svcCost" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00">
+          </div>
+          <div>
+            <label for="svcWho">Quién lo ha hecho</label>
+            <select id="svcWho">
+              <option value="taller">Taller</option>
+              <option value="yo">Yo mismo</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label for="svcNotes">Notas</label>
+          <textarea id="svcNotes" rows="3" placeholder="Marca del aceite, piezas cambiadas, avisos del mecánico…"></textarea>
+        </div>
+        <p id="svcErr" class="err" role="alert" hidden></p>
+        <button class="btn primary block" type="submit">Guardar servicio</button>
+      </form>
+    </section>
+
+    <!-- HISTORIAL -->
+    <section id="tab-historial" aria-labelledby="h-his" hidden>
+      <h2 class="h2" id="h-his" style="margin-top:8px">Historial</h2>
+      <div id="histStats" class="stats"></div>
+      <div id="histList" class="card list" style="margin-top:12px"></div>
+
+      <h3 class="h2">Copia de seguridad</h3>
+      <div class="card pad">
+        <p class="meta" style="margin-bottom:12px">Los datos solo se guardan en este navegador. Haz una copia completa de vez en cuando: si cambias de teléfono o borras los datos del navegador, la recuperas con «Importar copia», que reemplaza los datos actuales. El CSV sirve para abrir el historial en una hoja de cálculo.</p>
+        <div class="btns">
+          <button id="btnCsv" class="btn" type="button" data-act="exportCsv">Exportar historial (CSV)</button>
+          <button id="btnJson" class="btn" type="button" data-act="exportJson">Exportar copia (JSON)</button>
+          <label class="btn" style="margin:0;color:var(--ink);font-size:15px">Importar copia
+            <input id="importFile" class="vh" type="file" accept="application/json,.json" data-chg="import">
+          </label>
+        </div>
+        <p id="backupInfo" class="meta" style="margin-top:12px"></p>
+      </div>
+    </section>
+
+    <!-- PLAN -->
+    <section id="tab-plan" aria-labelledby="h-plan" hidden>
+      <h2 class="h2" id="h-plan" style="margin-top:8px">Plan de mantenimiento</h2>
+      <p class="meta" style="margin-bottom:12px">Los intervalos parten del plan de Ford y de la guía Haynes del Fiesta 2013-2017. Ajústalos a tu uso: los trayectos cortos y la parada y arranque piden intervalos más cortos.</p>
+      <div id="planList"></div>
+
+      <h3 class="h2">Añadir trabajo propio</h3>
+      <form id="customForm" class="card pad form" novalidate>
+        <div>
+          <label for="cName">Nombre</label>
+          <input id="cName" type="text" autocomplete="off" placeholder="Por ejemplo: Lavado del motor">
+        </div>
+        <div class="grid2">
+          <div>
+            <label for="cKm">Cada (km)</label>
+            <input id="cKm" type="text" inputmode="numeric" autocomplete="off" placeholder="Opcional">
+          </div>
+          <div>
+            <label for="cMonths">Cada (meses)</label>
+            <input id="cMonths" type="text" inputmode="numeric" autocomplete="off" placeholder="Opcional">
+          </div>
+        </div>
+        <p id="cErr" class="err" role="alert" hidden></p>
+        <button class="btn primary block" type="submit">Añadir al plan</button>
+      </form>
+
+      <div class="btns" style="margin-top:14px">
+        <button id="btnResetAll" class="btn" type="button" data-act="resetAll">Restablecer intervalos originales</button>
+      </div>
+
+      <h3 class="h2">Ficha técnica</h3>
+      <details class="card">
+        <summary>Datos de referencia del motor</summary>
+        <div class="inner">
+          <dl class="spec">
+            <dt>Aceite de motor</dt><dd>5W-20, norma Ford WSS-M2C948-B</dd>
+            <dt>Cantidad de aceite</dt><dd>Unos 4,6 L con filtro (dato Haynes para el 1.0). Confirma con la varilla.</dd>
+            <dt>Tapón del cárter</dt><dd>25 Nm</dd>
+            <dt>Bujías</dt><dd>13 Nm</dd>
+            <dt>Refrigerante</dt><dd>Motorcraft Super Plus (violeta), mezcla 50/50, unos 5,8 L</dd>
+            <dt>Líquido de frenos</dt><dd>DOT 4</dd>
+            <dt>Caja manual</dt><dd>SAE 75W FE, unos 2,3 L</dd>
+          </dl>
+          <p class="note">Fuente: guía de mantenimiento Haynes del Fiesta Mk7 2013-2017 y plan de servicio de Ford. Son valores de referencia para los motores 1.0 de gasolina; comprueba el manual de tu coche antes de comprar piezas o fluidos.</p>
+        </div>
+      </details>
+    </section>
+
+    <!-- ORÇAMENTO -->
+    <section id="tab-orcamento" aria-labelledby="h-orc" hidden>
+      <h2 class="h2" id="h-orc" style="margin-top:8px">Pedido de orçamento</h2>
+      <p class="meta" style="margin-bottom:12px">Elige los trabajos y la app prepara un documento en portugués de Portugal para enviar a uno o varios talleres.</p>
+      <form id="quoteForm" class="card pad form" novalidate>
+        <fieldset>
+          <legend>Qué quieres que presupuesten</legend>
+          <div class="row-btns">
+            <button class="btn small" type="button" data-act="qSuggest">Seleccionar lo que toca</button>
+            <button class="btn small" type="button" data-act="qClear">Quitar selección</button>
+          </div>
+          <div id="qChecklist"></div>
+        </fieldset>
+        <div>
+          <label for="qExtra">Otros trabajos o averías (uno por línea)</label>
+          <textarea id="qExtra" rows="3" placeholder="Ruido al frenar, luz del tablero encendida…"></textarea>
+        </div>
+        <div class="grid2">
+          <div>
+            <label for="qName">Tu nombre</label>
+            <input id="qName" type="text" autocomplete="name">
+          </div>
+          <div>
+            <label for="qPhone">Teléfono (opcional)</label>
+            <input id="qPhone" type="text" inputmode="tel" autocomplete="tel">
+          </div>
+        </div>
+        <div class="grid2">
+          <div>
+            <label for="qPlate">Matrícula</label>
+            <input id="qPlate" type="text" autocomplete="off" placeholder="00-AA-00">
+          </div>
+          <div>
+            <label for="qKm">Kilometraje</label>
+            <input id="qKm" type="text" inputmode="numeric" autocomplete="off">
+          </div>
+        </div>
+        <div>
+          <label for="qDest">Taller o destinatario (opcional)</label>
+          <input id="qDest" type="text" autocomplete="off" placeholder="Oficina…">
+        </div>
+        <div>
+          <label for="qNotes">Observaciones (opcional)</label>
+          <textarea id="qNotes" rows="3" placeholder="Por ejemplo: disponible por las tardes, piezas de calidad equivalente a la original…"></textarea>
+        </div>
+        <p id="qErr" class="err" role="alert" hidden></p>
+        <button class="btn primary block" type="submit">Generar documento</button>
+      </form>
+
+      <div id="qOut" hidden>
+        <h3 class="h2">Documento</h3>
+        <div class="card sheet pad">
+          <label for="quoteText">Puedes corregir el texto antes de enviarlo.</label>
+          <textarea id="quoteText" rows="18" spellcheck="false"></textarea>
+          <div class="btns" style="margin-top:12px">
+            <button class="btn primary" type="button" data-act="qCopy">Copiar texto</button>
+            <button id="qShare" class="btn" type="button" data-act="qShare" hidden>Compartir</button>
+            <button class="btn" type="button" data-act="qSave">Guardar .txt</button>
+            <button id="qPrint" class="btn" type="button" data-act="qPrint" hidden>Imprimir o PDF</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="tabs" aria-label="Secciones">
+  <div class="tabs-in">
+    <button class="tab" type="button" data-act="tab" data-tab="estado" aria-current="page">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-6"/><path d="M4 17h2M18 17h2"/></svg>Estado
+    </button>
+    <button class="tab" type="button" data-act="tab" data-tab="registrar">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Registrar
+    </button>
+    <button class="tab" type="button" data-act="tab" data-tab="historial">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h9"/></svg>Historial
+    </button>
+    <button class="tab" type="button" data-act="tab" data-tab="orcamento">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>Orçamento
+    </button>
+    <button class="tab" type="button" data-act="tab" data-tab="plan">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>Plan
+    </button>
+  </div>
+</nav>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<div id="printArea" aria-hidden="true"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Utilidades ---------- */
+const $=(s,r)=>(r||document).querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');return m?new Date(+m[1],+m[2]-1,+m[3]):null;};
+const TODAY=()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate());};
+const addDays=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+const addMonths=(d,n)=>{const r=new Date(d.getFullYear(),d.getMonth()+n,1);const last=new Date(r.getFullYear(),r.getMonth()+1,0).getDate();r.setDate(Math.min(d.getDate(),last));return r;};
+const diffDays=(a,b)=>Math.round((a-b)/86400000);
+const fmtKm=n=>Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const fmtDate=s=>{const d=parse(s);return d?d.toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'}):'';};
+const fmtMoney=n=>(Math.round(n*100)/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+const parseKm=v=>{const n=parseInt(String(v||'').replace(/[^\d]/g,''),10);return isNaN(n)?null:n;};
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+function span(days){
+  days=Math.abs(days);
+  if(days<45) return days+(days===1?' día':' días');
+  const m=Math.round(days/30.4);
+  if(m<24) return m+(m===1?' mes':' meses');
+  return (Math.round(days/365.25*10)/10).toString().replace('.',',')+' años';
+}
+function relDate(s){
+  const d=parse(s); if(!d) return '';
+  const n=diffDays(TODAY(),d);
+  if(n<=0) return 'hoy';
+  if(n===1) return 'ayer';
+  if(n<45) return 'hace '+n+' días';
+  return 'el '+fmtDate(s);
+}
+
+/* ---------- Plan base (valores de referencia) ---------- */
+const CATS=['Motor','Fluidos','Frenos y neumáticos','Transmisión','Eléctrico y confort','Revisiones','Otros'];
+const TASKS=[
+ {id:'oil',cat:'Motor',name:'Aceite de motor y filtro de aceite',km:10000,months:12,
+  note:'Aceite 5W-20 con norma Ford WSS-M2C948-B. Ford marca 20.000 km o 12 meses; con trayectos cortos, arranques en frío o mucha parada y arranque conviene no pasar de 10.000 km. Cambia también la arandela del tapón del cárter (par de apriete 25 Nm).'},
+ {id:'airf',cat:'Motor',name:'Filtro de aire',km:60000,months:36,
+  note:'Haynes indica 60.000 km o 3 años. Adelántalo si circulas a menudo por pistas de tierra o con mucho polvo.'},
+ {id:'plugs',cat:'Motor',name:'Bujías',km:60000,months:36,
+  note:'Haynes indica 60.000 km o 3 años. Par de apriete 13 Nm. Usa la referencia exacta de tu motor.'},
+ {id:'belt',cat:'Motor',name:'Correa de distribución, tensor y rodillos',km:160000,months:96,
+  note:'Haynes lista correa de distribución, tensor y rodillos en los motores 1.0 de este modelo: 160.000 km (100.000 millas) u 8 años, con ajuste de holguras de válvulas. Si la correa se rompe, el motor sufre daños graves. Confirma con tu manual o con el número de bastidor si tu motor de 65 cv lleva correa o cadena.'},
+ {id:'drive',cat:'Motor',name:'Correa de accesorios',km:240000,months:120,
+  note:'Haynes indica 240.000 km (150.000 millas) o 10 años. Revisa su estado (grietas, desgaste) en cada revisión anual.'},
+ {id:'coolant',cat:'Fluidos',name:'Líquido refrigerante',km:null,months:60,
+  note:'Mezcla 50/50 con Motorcraft Super Plus (violeta), unos 5,8 L. Haynes indica cada 2 años; Ford admite 10 años si lleva Super Plus desde nuevo. Por defecto se usa 5 años como punto intermedio.'},
+ {id:'brakefl',cat:'Fluidos',name:'Líquido de frenos',km:null,months:24,
+  note:'DOT 4. Absorbe humedad y baja su punto de ebullición: cámbialo cada 2 años aunque hagas pocos km.'},
+ {id:'brakes',cat:'Frenos y neumáticos',name:'Frenos: pastillas, discos y tambores',km:20000,months:12,
+  note:'Mide el grosor de las pastillas y el estado de los discos. Revisa zapatas y tambores traseros, latiguillos y freno de mano.'},
+ {id:'tires',cat:'Frenos y neumáticos',name:'Neumáticos: presión, desgaste y rotación',km:10000,months:6,
+  note:'Presión en frío, profundidad del dibujo (mínimo legal 1,6 mm; conviene cambiarlos hacia 3 mm), grietas y edad. Rota las ruedas si el desgaste es desigual.'},
+ {id:'gearbox',cat:'Transmisión',name:'Nivel de aceite de la caja de cambios',km:null,months:24,
+  note:'Haynes no marca cambio periódico en la caja manual: comprueba el nivel cada 2 años. Aceite SAE 75W FE, unos 2,3 L. Si nunca se ha cambiado, un cambio hacia los 120.000 km es buena práctica.'},
+ {id:'cabin',cat:'Eléctrico y confort',name:'Filtro de habitáculo (polen)',km:20000,months:12,
+  note:'Mejora el flujo de aire y evita malos olores. Ford y Haynes: cada 20.000 km o 12 meses.'},
+ {id:'battery',cat:'Eléctrico y confort',name:'Batería: test de carga y bornes',km:null,months:12,
+  note:'Test de arranque y de carga del alternador, y limpieza de bornes. A partir de 5 años conviene revisarla antes del invierno.'},
+ {id:'wipers',cat:'Eléctrico y confort',name:'Escobillas limpiaparabrisas',km:null,months:12,
+  note:'Cámbialas si dejan rayas o chirrían. Revisa también el nivel del líquido lavaparabrisas.'},
+ {id:'ac',cat:'Eléctrico y confort',name:'Aire acondicionado: revisión y desinfección',km:null,months:24,
+  note:'Comprueba que enfría bien y desinfecta el circuito para evitar malos olores.'},
+ {id:'annual',cat:'Revisiones',name:'Revisión general anual',km:20000,months:12,
+  note:'Inspección de Ford cada 20.000 km o 12 meses: niveles, luces, holguras de rótulas, amortiguadores, escape, fugas y estado de correas.'}
+];
+const PT={
+ oil:'Substituição do óleo do motor e do filtro do óleo (óleo 5W-20, norma Ford WSS-M2C948-B)',
+ airf:'Substituição do filtro do ar',
+ plugs:'Substituição das velas de ignição',
+ belt:'Substituição da correia de distribuição, do tensor e dos rolos, com ajuste das folgas das válvulas, se aplicável',
+ drive:'Substituição da correia de acessórios',
+ coolant:'Substituição do líquido de refrigeração (tipo Motorcraft Super Plus, ou equivalente compatível)',
+ brakefl:'Substituição do líquido dos travões (DOT 4)',
+ brakes:'Revisão do sistema de travagem: pastilhas, discos, tambores e sapatas, tubos flexíveis e travão de mão',
+ tires:'Verificação dos pneus (pressão, desgaste e rotação) e, se necessário, alinhamento e equilibragem',
+ gearbox:'Verificação do nível do óleo da caixa de velocidades (SAE 75W FE)',
+ cabin:'Substituição do filtro do habitáculo (filtro de pólen)',
+ battery:'Teste da bateria e do alternador, com limpeza dos terminais',
+ wipers:'Substituição das escovas do limpa-para-brisas',
+ ac:'Revisão e desinfeção do ar condicionado',
+ annual:'Revisão geral: níveis, luzes, folgas da suspensão e da direção, escape, fugas e estado das correias'
+};
+const DEFAULT_PLATE='07-QD-14';
+const DOCS=[
+ {id:'itv',name:'Inspección técnica (ITV / IPO)',warn:60},
+ {id:'seguro',name:'Seguro del coche',warn:30},
+ {id:'impuesto',name:'Impuesto de circulación',warn:30}
+];
+const STATUS_LABEL={over:'Vencido',soon:'Próximo',ok:'Al día',none:'Sin registro'};
+const RANK={over:0,soon:1,ok:2,none:3};
+
+/* ---------- Estado ---------- */
+const LS='fiesta-mantenimiento-v1';
+const getBackup=()=>{try{return localStorage.getItem('fiesta-backup')||'';}catch(e){return '';}};
+const setBackup=()=>{try{localStorage.setItem('fiesta-backup',iso(TODAY()));}catch(e){} renderExports(); renderBanners();};
+let state=null, demo=false, ready=false, dbDoc=null, dl=null;
+let filter='all', kmOpen=false, kmLowOk=false, armed=null, armT=null, toastT=null;
+const openNotes=new Set(), selected=new Set(), qSel=new Set();
+
+const blank=()=>({v:1,km:null,kmDate:null,kmLog:[],services:[],plan:{},custom:[],docs:{itv:'',seguro:'',impuesto:''},profile:{name:'',phone:'',plate:DEFAULT_PLATE},updated:0});
+
+function normalize(d){
+  const b=blank(); d=JSON.parse(JSON.stringify(d||{}));
+  b.km=typeof d.km==='number'?d.km:null;
+  b.kmDate=d.kmDate||null;
+  b.kmLog=Array.isArray(d.kmLog)?d.kmLog.filter(e=>e&&e.d&&typeof e.k==='number'):[];
+  b.services=Array.isArray(d.services)?d.services.filter(s=>s&&s.d&&typeof s.k==='number').map(s=>({
+    id:s.id||uid(),d:s.d,k:s.k,items:Array.isArray(s.items)?s.items:[],extra:s.extra||'',cost:+s.cost||0,who:s.who==='yo'?'yo':'taller',notes:s.notes||''
+  })):[];
+  b.plan=d.plan&&typeof d.plan==='object'&&!Array.isArray(d.plan)?d.plan:{};
+  b.custom=Array.isArray(d.custom)?d.custom.filter(c=>c&&c.id&&c.name).map(c=>({id:c.id,name:c.name,cat:'Otros',km:+c.km||null,months:+c.months||null,note:c.note||'',on:c.on!==false})):[];
+  b.docs=Object.assign({itv:'',seguro:'',impuesto:''},d.docs||{});
+  b.profile=Object.assign({name:'',phone:'',plate:DEFAULT_PLATE},d.profile&&typeof d.profile==='object'?d.profile:{});
+  b.updated=+d.updated||0;
+  return b;
+}
+
+/* ---------- Almacenamiento ---------- */
+let saving=false, again=false;
+async function persist(){
+  if(demo||!state) return;
+  const snap=JSON.parse(JSON.stringify(state));
+  if(dbDoc){
+    if(saving){again=true;return;}
+    saving=true;
+    try{ await dbDoc.set(snap); }
+    catch(e){ toast('No se pudo guardar. Comprueba la conexión e inténtalo de nuevo.'); }
+    finally{ saving=false; if(again){again=false;persist();} }
+  }else{
+    try{ localStorage.setItem(LS,JSON.stringify(snap)); }
+    catch(e){ toast('Este navegador no deja guardar datos.'); }
+  }
+}
+function commit(){ state.updated=Date.now(); persist(); renderAll(); }
+
+function startBlank(){ state=blank(); demo=false; ready=true; renderAll(); }
+function loadLocal(){
+  ready=true;
+  try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  try{
+    const raw=localStorage.getItem(LS);
+    if(raw){ state=normalize(JSON.parse(raw)); demo=false; renderAll(); return; }
+  }catch(e){}
+  startBlank();
+}
+function onSnap(snap){
+  if(snap.metadata&&snap.metadata.hasPendingWrites) return;
+  if(!snap.exists){ if(!ready){ startBlank(); } return; }
+  const remote=normalize(snap.data());
+  if(!ready||(!saving&&remote.updated!==state.updated)){ state=remote; demo=false; ready=true; renderAll(); }
+}
+function onSnapErr(){ if(!ready){ dbDoc=null; loadLocal(); } }
+
+async function boot(){
+  renderAll();
+  const c=window.claude;
+  if(!c||!c.use){ loadLocal(); return; }
+  let db=null;
+  try{
+    const r=await Promise.all([c.use('db').catch(()=>null),c.use('downloads').catch(()=>null)]);
+    db=r[0]; dl=r[1];
+  }catch(e){}
+  renderExports();
+  if(db){
+    try{ dbDoc=db.doc('garage/state'); dbDoc.onSnapshot(onSnap,onSnapErr); }
+    catch(e){ dbDoc=null; loadLocal(); }
+  }else{ loadLocal(); }
+}
+
+/* ---------- Lógica de mantenimiento ---------- */
+const isCustom=t=>String(t.id).indexOf('c_')===0;
+const allTasks=()=>TASKS.concat(state?state.custom:[]);
+function eff(t){
+  if(isCustom(t)) return {km:t.km||null,months:t.months||null,on:t.on!==false};
+  const o=state.plan[t.id]||{};
+  return {km:('km' in o)?o.km:t.km,months:('months' in o)?o.months:t.months,on:('on' in o)?o.on!==false:true};
+}
+function setEff(t,patch){
+  if(isCustom(t)){ Object.assign(t,patch); }
+  else{ state.plan[t.id]=Object.assign({},state.plan[t.id]||{},patch); }
+}
+function taskName(id){ const t=allTasks().find(x=>x.id===id); return t?t.name:'Trabajo eliminado'; }
+function lastDone(id){
+  let best=null;
+  state.services.forEach(s=>{
+    if(s.items.indexOf(id)>=0&&(!best||s.d>best.d||(s.d===best.d&&s.k>best.k))) best={d:s.d,k:s.k};
+  });
+  return best;
+}
+function calc(t){
+  const ef=eff(t), last=lastDone(t.id);
+  const r={ef,last,status:'none',remKm:null,remDays:null,frac:0};
+  if(!last||(!ef.km&&!ef.months)) return r;
+  let frac=0, over=false, soon=false, seen=false;
+  if(ef.km&&state.km!=null){
+    seen=true;
+    r.remKm=last.k+ef.km-state.km;
+    frac=Math.max(frac,(state.km-last.k)/ef.km);
+    if(r.remKm<=0) over=true; else if(r.remKm<=Math.min(2000,ef.km*0.15)) soon=true;
+  }
+  if(ef.months){
+    seen=true;
+    const ld=parse(last.d), due=addMonths(ld,ef.months), tot=diffDays(due,ld)||1;
+    r.remDays=diffDays(due,TODAY());
+    frac=Math.max(frac,(tot-r.remDays)/tot);
+    if(r.remDays<=0) over=true; else if(r.remDays<=30) soon=true;
+  }
+  if(!seen) return r;
+  r.frac=Math.max(0,Math.min(1,frac));
+  r.status=over?'over':soon?'soon':'ok';
+  return r;
+}
+function docCalc(d){
+  const v=state.docs[d.id], dt=parse(v);
+  if(!dt) return {status:'none',days:null,label:'Sin fecha'};
+  const days=diffDays(dt,TODAY());
+  const status=days<0?'over':days<=d.warn?'soon':'ok';
+  return {status,days,label:status==='over'?'Caducado':status==='soon'?'Próximo':'Al día'};
+}
+function rate(){
+  if(!state||state.kmLog.length<2) return null;
+  const log=state.kmLog.slice().sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:a.k-b.k);
+  const cut=iso(addDays(TODAY(),-365));
+  const win=log.filter(e=>e.d>=cut), use=win.length>=2?win:log;
+  const a=use[0], z=use[use.length-1];
+  const days=diffDays(parse(z.d),parse(a.d)), dk=z.k-a.k;
+  return (days>=14&&dk>0)?dk/days:null;
+}
+function pushLog(d,k){
+  const ex=state.kmLog.find(e=>e.d===d);
+  if(ex) ex.k=Math.max(ex.k,k); else state.kmLog.push({d,k});
+}
+const sortedServices=()=>state.services.slice().sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:b.k-a.k);
+function evalAll(){ return allTasks().filter(t=>eff(t).on).map(t=>({t,c:calc(t)})); }
+function catsOf(tasks){
+  const used=new Set(tasks.map(t=>t.cat));
+  return CATS.filter(c=>used.has(c));
+}
+
+/* ---------- Renderizado ---------- */
+function cellsHtml(str,dim){
+  const n=str.length;
+  return str.split('').map((c,i)=>'<span class="cell'+((n-i)%3===0&&i>0?' gap':'')+(dim?' dim':'')+'">'+c+'</span>').join('');
+}
+function renderHero(){
+  const odo=$('#odo'), meta=$('#odoMeta'), box=$('#kmForm');
+  if(!state){
+    odo.innerHTML=cellsHtml('------',true);
+    meta.textContent='Cargando tus datos…';
+    box.hidden=true; return;
+  }
+  if(state.km==null){
+    odo.innerHTML=cellsHtml('------',true);
+    meta.textContent='Anota los km del cuentakilómetros para calcular cuánto falta para cada revisión.';
+  }else{
+    odo.innerHTML=cellsHtml(String(Math.round(state.km)).padStart(6,'0'),false);
+    const r=rate(), since=state.kmDate?diffDays(TODAY(),parse(state.kmDate)):0;
+    let txt='Actualizado '+relDate(state.kmDate);
+    if(r) txt+=' · ritmo de unos '+fmtKm(r*30.4)+' km al mes';
+    if(r&&since>=10) txt+=' · hoy serían unos '+fmtKm(state.km+r*since)+' km';
+    meta.textContent=txt;
+  }
+  box.hidden=!(kmOpen||(state.km==null&&!demo));
+}
+function renderBanners(){
+  $('#start').hidden=!(state&&!demo&&state.km==null&&state.services.length===0);
+  const lb=getBackup();
+  $('#backupBar').hidden=!(state&&!demo&&state.services.length>0&&(!lb||diffDays(TODAY(),parse(lb))>30));
+}
+function renderSummary(){
+  const box=$('#filters');
+  if(!state){ box.innerHTML=''; return; }
+  const ev=evalAll(), n={all:ev.length,over:0,soon:0,ok:0,none:0};
+  ev.forEach(x=>n[x.c.status]++);
+  const defs=[['all','Todos'],['over','Vencidos'],['soon','Próximos'],['ok','Al día'],['none','Sin registro']];
+  box.innerHTML=defs.filter(d=>d[0]==='all'||n[d[0]]>0||filter===d[0]).map(d=>
+    '<button type="button" class="fchip" data-act="filter" data-filter="'+d[0]+'" aria-pressed="'+(filter===d[0])+'">'+d[1]+' <b>'+n[d[0]]+'</b></button>').join('');
+}
+function dueText(c){
+  const ef=c.ef;
+  if(c.status==='none'){
+    if(!ef.km&&!ef.months) return 'Sin intervalo definido. Edítalo en Plan.';
+    if(!c.last) return 'Sin registro. Anota cuándo se hizo por última vez.';
+    return 'Anota los km actuales para calcular este vencimiento.';
+  }
+  const p=[];
+  if(c.remKm!=null) p.push(c.remKm<=0?fmtKm(-c.remKm)+' km de más':'faltan '+fmtKm(c.remKm)+' km');
+  if(c.remDays!=null) p.push(c.remDays<0?'vencido hace '+span(c.remDays):c.remDays===0?'vence hoy':'quedan '+span(c.remDays));
+  return cap(p.join(' · '));
+}
+function intervalText(c){
+  const ef=c.ef, p=[];
+  if(ef.km) p.push(fmtKm(ef.km)+' km');
+  if(ef.months) p.push(ef.months+' meses');
+  let s=p.length?'Cada '+p.join(' o '):'';
+  if(c.last) s+=(s?' · ':'')+'último '+fmtDate(c.last.d)+' a '+fmtKm(c.last.k)+' km';
+  return s;
+}
+function renderList(){
+  const box=$('#list');
+  if(!state){
+    box.innerHTML='<div class="empty">Aquí aparecerán los 15 trabajos del plan, cada uno con su estado y lo que falta en km o en tiempo.</div>';
+    return;
+  }
+  let ev=evalAll();
+  if(filter!=='all') ev=ev.filter(x=>x.c.status===filter);
+  ev.sort((a,b)=>RANK[a.c.status]-RANK[b.c.status]||b.c.frac-a.c.frac||a.t.name.localeCompare(b.t.name,'es'));
+  if(!ev.length){ box.innerHTML='<div class="empty">No hay trabajos en esta categoría.</div>'; return; }
+  box.innerHTML=ev.map(x=>{
+    const t=x.t, c=x.c, open=openNotes.has(t.id);
+    return '<article class="row s-'+c.status+'">'+
+      '<div class="row-h"><div><span class="cat">'+esc(t.cat)+'</span><b class="nm">'+esc(t.name)+'</b></div><span class="pill">'+STATUS_LABEL[c.status]+'</span></div>'+
+      '<div class="bar"><i style="width:'+(c.status==='none'?0:Math.max(3,Math.round(c.frac*100)))+'%"></i></div>'+
+      '<p class="due">'+esc(dueText(c))+'</p>'+
+      '<p class="meta">'+esc(intervalText(c))+'</p>'+
+      (open&&t.note?'<p class="note">'+esc(t.note)+'</p>':'')+
+      '<div class="row-f"><button class="btn small" type="button" data-act="done" data-id="'+esc(t.id)+'">Hecho</button>'+
+      (t.note?'<button class="link" type="button" data-act="note" data-id="'+esc(t.id)+'" aria-expanded="'+open+'">'+(open?'Ocultar detalle':'Qué incluye')+'</button>':'')+
+      '</div></article>';
+  }).join('');
+}
+function renderDocs(){
+  const box=$('#docs');
+  if(!state){ box.innerHTML='<div class="empty">Aquí irán la inspección técnica, el seguro y el impuesto, con su fecha de vencimiento.</div>'; return; }
+  box.innerHTML=DOCS.map(d=>{
+    const c=docCalc(d), v=state.docs[d.id]||'';
+    let txt='Sin fecha. Añade cuándo vence.';
+    if(c.days!=null) txt=c.days<0?'Caducó el '+fmtDate(v)+' (hace '+span(c.days)+')':c.days===0?'Vence hoy':'Vence el '+fmtDate(v)+' · quedan '+span(c.days);
+    return '<div class="row s-'+c.status+'"><div class="row-h"><div><span class="cat">Documento</span><b class="nm">'+esc(d.name)+'</b></div><span class="pill">'+c.label+'</span></div>'+
+      '<p class="due" style="margin-top:6px">'+esc(txt)+'</p>'+
+      '<div class="docinput"><label for="doc-'+d.id+'">Fecha de vencimiento</label><input id="doc-'+d.id+'" type="date" value="'+esc(v)+'" data-chg="docDate" data-id="'+d.id+'"></div></div>';
+  }).join('');
+}
+function renderChecklist(){
+  const box=$('#checklist');
+  if(!state){ box.innerHTML=''; return; }
+  const tasks=allTasks().filter(t=>eff(t).on);
+  Array.from(selected).forEach(id=>{ if(!tasks.some(t=>t.id===id)) selected.delete(id); });
+  box.innerHTML=catsOf(tasks).map(cat=>
+    '<div class="grp"><p class="grp-t">'+esc(cat)+'</p><div class="chips">'+
+    tasks.filter(t=>t.cat===cat).map(t=>'<label class="chip"><input type="checkbox" data-chg="chip" value="'+esc(t.id)+'"'+(selected.has(t.id)?' checked':'')+'><span>'+esc(t.name)+'</span></label>').join('')+
+    '</div></div>').join('');
+}
+function renderHistory(){
+  const st=$('#histStats'), box=$('#histList');
+  if(!state){ st.innerHTML=''; box.innerHTML='<div class="empty">Aquí aparecerá cada servicio con su fecha, km, trabajos y coste.</div>'; return; }
+  const list=sortedServices();
+  const total=list.reduce((a,s)=>a+s.cost,0);
+  const cut=iso(addDays(TODAY(),-365));
+  const year=list.filter(s=>s.d>=cut).reduce((a,s)=>a+s.cost,0);
+  st.innerHTML='<div class="stat"><b>'+fmtMoney(total)+'</b><span>Gasto total</span></div>'+
+    '<div class="stat"><b>'+fmtMoney(year)+'</b><span>Últimos 12 meses</span></div>'+
+    '<div class="stat"><b>'+list.length+'</b><span>Servicios</span></div>';
+  if(!list.length){ box.innerHTML='<div class="empty">Todavía no hay servicios. Registra el primero en la pestaña Registrar.</div>'; return; }
+  box.innerHTML=list.map(s=>{
+    const tags=s.items.map(id=>'<span class="tag">'+esc(taskName(id))+'</span>').concat(s.extra?['<span class="tag">'+esc(s.extra)+'</span>']:[]).join('');
+    return '<article class="entry"><div class="entry-h"><div><b class="d">'+esc(fmtDate(s.d))+'</b><span class="k">'+fmtKm(s.k)+' km</span></div><div class="cost">'+(s.cost?fmtMoney(s.cost):'—')+'</div></div>'+
+      '<div class="tags">'+tags+'</div>'+
+      (s.notes?'<p class="note">'+esc(s.notes)+'</p>':'')+
+      '<div class="entry-f"><span class="who">'+(s.who==='yo'?'Hecho por mí':'Taller')+'</span>'+
+      '<button class="link danger" type="button" data-act="delSvc" data-id="'+esc(s.id)+'">'+(armed==='del:'+s.id?'¿Seguro? Pulsa otra vez':'Eliminar')+'</button></div></article>';
+  }).join('');
+}
+function renderPlan(){
+  const box=$('#planList');
+  if(!state){ box.innerHTML=''; return; }
+  const tasks=allTasks();
+  box.innerHTML=catsOf(tasks).map(cat=>{
+    return '<h3 class="h2" style="margin-top:18px">'+esc(cat)+'</h3><div class="card list">'+
+    tasks.filter(t=>t.cat===cat).map(t=>{
+      const ef=eff(t), mod=!isCustom(t)&&state.plan[t.id]&&Object.keys(state.plan[t.id]).length>0;
+      return '<div class="prow"><div class="prow-h"><div><b class="nm">'+esc(t.name)+'</b>'+(mod?'<span class="mod">Modificado</span>':'')+'</div>'+
+        '<label class="switch"><input type="checkbox" data-chg="planOn" data-id="'+esc(t.id)+'"'+(ef.on?' checked':'')+'>Activo</label></div>'+
+        '<div class="pfields"><div><label for="pk-'+esc(t.id)+'">Cada (km)</label><input id="pk-'+esc(t.id)+'" type="text" inputmode="numeric" value="'+(ef.km?ef.km:'')+'" placeholder="Sin límite" data-chg="planKm" data-id="'+esc(t.id)+'"></div>'+
+        '<div><label for="pm-'+esc(t.id)+'">Cada (meses)</label><input id="pm-'+esc(t.id)+'" type="text" inputmode="numeric" value="'+(ef.months?ef.months:'')+'" placeholder="Sin límite" data-chg="planMonths" data-id="'+esc(t.id)+'"></div></div>'+
+        (t.note?'<p class="note">'+esc(t.note)+'</p>':'')+
+        '<div class="row-f">'+(mod?'<button class="link" type="button" data-act="planReset" data-id="'+esc(t.id)+'">Restablecer este</button>':'')+
+        (isCustom(t)?'<button class="link danger" type="button" data-act="delCustom" data-id="'+esc(t.id)+'">'+(armed==='cust:'+t.id?'¿Seguro? Pulsa otra vez':'Eliminar trabajo')+'</button>':'')+'</div></div>';
+    }).join('')+'</div>';
+  }).join('');
+  $('#btnResetAll').textContent=armed==='resetAll'?'¿Seguro? Pulsa otra vez':'Restablecer intervalos originales';
+}
+function renderExports(){
+  const lb=getBackup(), info=$('#backupInfo');
+  if(info) info.textContent=lb?'Última copia: '+fmtDate(lb)+'.':'Todavía no has hecho ninguna copia.';
+}
+function prefill(){
+  if(!state) return;
+  const d=$('#svcDate'); d.max=iso(TODAY());
+  if(!d.value) d.value=iso(TODAY());
+  const k=$('#svcKm'); if(!k.value&&state.km!=null) k.value=state.km;
+}
+function renderAll(){
+  renderHero(); renderBanners(); renderSummary(); renderList(); renderDocs();
+  renderChecklist(); renderHistory(); renderPlan(); renderExports(); prefill(); renderQuote();
+}
+
+/* ---------- Interacción ---------- */
+function toast(msg){
+  const t=$('#toast'); t.textContent=msg; t.hidden=false;
+  clearTimeout(toastT); toastT=setTimeout(()=>{t.hidden=true;},3800);
+}
+function showErr(el,msg){ el.textContent=msg; el.hidden=false; }
+function guard(){
+  if(demo){ toast('Estás viendo datos de ejemplo. Pulsa «Empezar con mis datos» para guardar los tuyos.'); return false; }
+  return !!state;
+}
+function arm(key){
+  if(armed===key){ armed=null; clearTimeout(armT); return true; }
+  armed=key; clearTimeout(armT);
+  armT=setTimeout(()=>{armed=null;renderHistory();renderPlan();},4000);
+  return false;
+}
+function setTab(name){
+  ['estado','registrar','historial','orcamento','plan'].forEach(n=>{ $('#tab-'+n).hidden=n!==name; });
+  document.querySelectorAll('.tab').forEach(b=>{
+    if(b.dataset.tab===name) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+  });
+  window.scrollTo(0,0);
+  try{ localStorage.setItem('fiesta-tab',name); }catch(e){}
+}
+
+function saveKm(){
+  if(!guard()) return;
+  const err=$('#kmErr'), v=parseKm($('#kmInput').value);
+  if(!v||v>2000000){ showErr(err,'Escribe un kilometraje válido, por ejemplo 118450.'); return; }
+  if(state.km!=null&&v<state.km&&!kmLowOk){
+    kmLowOk=true;
+    showErr(err,'Es menor que el último registro ('+fmtKm(state.km)+' km). Si es una corrección, pulsa Guardar otra vez.');
+    return;
+  }
+  kmLowOk=false; err.hidden=true;
+  const today=iso(TODAY());
+  if(state.km!=null&&v<state.km) state.kmLog=state.kmLog.filter(e=>!(e.k===state.km&&e.d===state.kmDate));
+  state.km=v; state.kmDate=today; pushLog(today,v);
+  $('#kmInput').value=''; kmOpen=false;
+  commit(); toast('Kilometraje actualizado.');
+}
+
+function saveService(){
+  if(!guard()) return;
+  const err=$('#svcErr');
+  const date=$('#svcDate').value, km=parseKm($('#svcKm').value);
+  const extra=$('#svcExtra').value.trim(), notes=$('#svcNotes').value.trim();
+  const cost=parseFloat(String($('#svcCost').value).replace(/\s/g,'').replace(',','.'))||0;
+  const items=Array.from(selected);
+  if(!parse(date)){ showErr(err,'Elige la fecha del servicio.'); return; }
+  if(date>iso(TODAY())){ showErr(err,'La fecha no puede ser futura.'); return; }
+  if(!km||km>2000000){ showErr(err,'Escribe el kilometraje del servicio, por ejemplo 118450.'); return; }
+  if(!items.length&&!extra){ showErr(err,'Marca al menos un trabajo o escribe uno en «Otro trabajo».'); return; }
+  if(cost<0){ showErr(err,'El coste no puede ser negativo.'); return; }
+  err.hidden=true;
+  state.services.push({id:uid(),d:date,k:km,items,extra,cost,who:$('#svcWho').value==='yo'?'yo':'taller',notes});
+  if(state.km==null||km>state.km){ state.km=km; state.kmDate=date; }
+  pushLog(date,km);
+  selected.clear();
+  $('#svcExtra').value=''; $('#svcCost').value=''; $('#svcNotes').value=''; $('#svcKm').value=''; $('#svcDate').value='';
+  commit(); setTab('estado'); toast('Servicio guardado.');
+}
+
+function addCustom(){
+  if(!guard()) return;
+  const err=$('#cErr'), name=$('#cName').value.trim(), km=parseKm($('#cKm').value), months=parseKm($('#cMonths').value);
+  if(!name){ showErr(err,'Escribe un nombre para el trabajo.'); return; }
+  if(!km&&!months){ showErr(err,'Indica cada cuántos km o cada cuántos meses se repite.'); return; }
+  err.hidden=true;
+  state.custom.push({id:'c_'+uid(),name,cat:'Otros',km:km||null,months:months||null,note:'',on:true});
+  $('#cName').value=''; $('#cKm').value=''; $('#cMonths').value='';
+  commit(); toast('Trabajo añadido al plan.');
+}
+
+function saveFile(filename,data){
+  try{
+    const blob=new Blob([data],{type:filename.slice(-4)==='.csv'?'text/csv;charset=utf-8':'application/json'});
+    const url=URL.createObjectURL(blob), a=document.createElement('a');
+    a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+    return true;
+  }catch(e){ toast('No se pudo guardar el archivo.'); return false; }
+}
+const csvCell=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+function exportCsv(){
+  if(!state||demo){ toast('Todavía no hay datos tuyos que guardar.'); return; }
+  const rows=[['Fecha','Km','Trabajos','Otro trabajo','Coste (€)','Quién','Notas']];
+  sortedServices().forEach(s=>rows.push([s.d,s.k,s.items.map(id=>taskName(id)).join(' + '),s.extra,String(s.cost).replace('.',','),s.who==='yo'?'Yo mismo':'Taller',s.notes]));
+  saveFile('historial-fiesta.csv','﻿'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n'));
+}
+function exportJson(){
+  if(!state||demo){ toast('Todavía no hay datos tuyos que guardar.'); return; }
+  if(saveFile('copia-mantenimiento-fiesta-'+iso(TODAY())+'.json',JSON.stringify(state,null,2))){ setBackup(); toast('Copia guardada en tu teléfono.'); }
+}
+function importJson(file){
+  if(!file) return;
+  const fr=new FileReader();
+  fr.onload=()=>{
+    try{
+      const obj=JSON.parse(fr.result);
+      if(!obj||!Array.isArray(obj.services)) throw new Error('formato');
+      state=normalize(obj); demo=false; ready=true;
+      commit(); toast('Copia importada.');
+    }catch(e){ toast('Ese archivo no es una copia válida de esta app.'); }
+  };
+  fr.onerror=()=>toast('No se pudo leer el archivo.');
+  fr.readAsText(file);
+}
+
+/* ---------- Pedido de orçamento (documento en portugués de Portugal) ---------- */
+const IN_VIEWER=!!(window.claude&&window.claude.use);
+const MESES_PT=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const kmPT=n=>Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'\u00A0');
+function renderQuote(){
+  const box=$('#qChecklist');
+  if(!state){ box.innerHTML=''; return; }
+  const ev=evalAll();
+  Array.from(qSel).forEach(id=>{ if(!ev.some(x=>x.t.id===id)) qSel.delete(id); });
+  box.innerHTML=catsOf(ev.map(x=>x.t)).map(cat=>
+    '<div class="grp"><p class="grp-t">'+esc(cat)+'</p><div class="chips">'+
+    ev.filter(x=>x.t.cat===cat).map(x=>{
+      const flag=x.c.status==='over'?'Vencido':x.c.status==='soon'?'Próximo':'';
+      return '<label class="chip"><input type="checkbox" data-chg="qchip" value="'+esc(x.t.id)+'"'+(qSel.has(x.t.id)?' checked':'')+'><span>'+esc(x.t.name)+(flag?'<small>'+flag+'</small>':'')+'</span></label>';
+    }).join('')+'</div></div>').join('');
+  $('#qShare').hidden=IN_VIEWER||typeof navigator==='undefined'||typeof navigator.share!=='function';
+  $('#qPrint').hidden=IN_VIEWER||typeof window.print!=='function';
+  const p=state.profile||{};
+  const fill=(sel,v)=>{ const el=$(sel); if(el&&!el.value&&v) el.value=v; };
+  fill('#qName',p.name); fill('#qPhone',p.phone); fill('#qPlate',p.plate);
+  if(state.km!=null) fill('#qKm',String(state.km));
+}
+function makeQuote(){
+  const err=$('#qErr');
+  const name=$('#qName').value.trim(), phone=$('#qPhone').value.trim(), plate=$('#qPlate').value.trim().toUpperCase();
+  const km=parseKm($('#qKm').value), dest=$('#qDest').value.trim(), notes=$('#qNotes').value.trim();
+  const extras=$('#qExtra').value.split('\n').map(x=>x.trim()).filter(Boolean);
+  const tasks=allTasks().filter(t=>qSel.has(t.id));
+  if(!tasks.length&&!extras.length){ showErr(err,'Elige al menos un trabajo o escribe uno en «Otros trabajos o averías».'); return; }
+  if(!name){ showErr(err,'Escribe tu nombre: aparecerá al final del documento.'); return; }
+  err.hidden=true;
+  const d=new Date(), L=[];
+  L.push('PEDIDO DE ORÇAMENTO','','Data: '+d.getDate()+' de '+MESES_PT[d.getMonth()]+' de '+d.getFullYear());
+  if(dest) L.push('Para: '+dest);
+  L.push('','Exmos. Senhores,','','Venho por este meio solicitar um orçamento para os serviços indicados abaixo, relativos ao seguinte veículo:','',
+    'VEÍCULO','Marca e modelo: Ford Fiesta','Ano: 2015','Motorização: 1.0 Duratec, 65 cv, gasolina');
+  if(plate) L.push('Matrícula: '+plate);
+  if(km) L.push('Quilometragem: '+kmPT(km)+' km');
+  L.push('','SERVIÇOS PRETENDIDOS');
+  let n=0;
+  tasks.forEach(t=>{ n++; L.push(n+'. '+(PT[t.id]||t.name)); });
+  extras.forEach(x=>{ n++; L.push(n+'. '+x); });
+  if(notes) L.push('','OBSERVAÇÕES',notes);
+  L.push('','Agradeço que o orçamento discrimine, para cada serviço, as peças (marca e referência), a mão de obra e o IVA, bem como o prazo de execução e a garantia. Agradeço também que indique se os valores apresentados são fixos ou estimativas.',
+    '','Fico a aguardar a vossa resposta.','','Com os melhores cumprimentos,',name);
+  if(phone) L.push('Contacto: '+phone);
+  $('#quoteText').value=L.join('\n');
+  $('#qOut').hidden=false;
+  if(!demo&&state){
+    const p=state.profile||{};
+    if(p.name!==name||p.phone!==phone||p.plate!==plate){ state.profile={name,phone,plate}; state.updated=Date.now(); persist(); }
+  }
+  setTimeout(()=>{ const o=$('#qOut'); if(o&&o.scrollIntoView) o.scrollIntoView({behavior:'smooth',block:'start'}); },0);
+}
+async function copyQuote(){
+  const ta=$('#quoteText');
+  try{ await navigator.clipboard.writeText(ta.value); toast('Texto copiado.'); return; }catch(e){}
+  try{ ta.focus(); ta.select(); if(document.execCommand('copy')){ toast('Texto copiado.'); return; } }catch(e){}
+  toast('No se pudo copiar. Selecciona el texto y cópialo a mano.');
+}
+function shareQuote(){
+  try{ navigator.share({title:'Pedido de orçamento',text:$('#quoteText').value}).catch(()=>{}); }catch(e){}
+}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const a=b.dataset.act, id=b.dataset.id;
+  switch(a){
+    case 'tab': setTab(b.dataset.tab); break;
+    case 'filter': filter=b.dataset.filter; renderSummary(); renderList(); break;
+    case 'kmToggle':
+      kmOpen=!kmOpen; renderHero();
+      if(kmOpen) setTimeout(()=>$('#kmInput').focus(),0);
+      break;
+    case 'note':
+      if(openNotes.has(id)) openNotes.delete(id); else openNotes.add(id);
+      renderList(); break;
+    case 'done':
+      selected.clear(); selected.add(id);
+      $('#svcDate').value=iso(TODAY());
+      $('#svcKm').value=state&&state.km!=null?state.km:'';
+      renderChecklist(); setTab('registrar'); break;
+    case 'delSvc':
+      if(!guard()) break;
+      if(arm('del:'+id)){ state.services=state.services.filter(s=>s.id!==id); commit(); toast('Servicio eliminado.'); }
+      else renderHistory();
+      break;
+    case 'qSuggest': {
+      const hot=evalAll().filter(x=>x.c.status==='over'||x.c.status==='soon').map(x=>x.t.id);
+      if(!hot.length){ toast('No hay nada vencido ni próximo. Elige a mano.'); break; }
+      hot.forEach(i=>qSel.add(i)); renderQuote(); break;
+    }
+    case 'qClear': qSel.clear(); renderQuote(); break;
+    case 'qCopy': copyQuote(); break;
+    case 'qShare': shareQuote(); break;
+    case 'qSave': saveFile('pedido-orcamento-'+iso(TODAY())+'.txt',$('#quoteText').value); break;
+    case 'qPrint': $('#printArea').textContent=$('#quoteText').value; window.print(); break;
+    case 'exportCsv': exportCsv(); break;
+    case 'exportJson': exportJson(); break;
+    case 'planReset':
+      if(!guard()) break;
+      delete state.plan[id]; commit(); break;
+    case 'resetAll':
+      if(!guard()) break;
+      if(arm('resetAll')){ state.plan={}; commit(); toast('Intervalos restablecidos.'); }
+      else renderPlan();
+      break;
+    case 'delCustom':
+      if(!guard()) break;
+      if(arm('cust:'+id)){ state.custom=state.custom.filter(c=>c.id!==id); commit(); toast('Trabajo eliminado del plan.'); }
+      else renderPlan();
+      break;
+  }
+});
+
+document.addEventListener('change',e=>{
+  const el=e.target, a=el.dataset&&el.dataset.chg; if(!a) return;
+  const id=el.dataset.id;
+  if(a==='chip'){ if(el.checked) selected.add(el.value); else selected.delete(el.value); return; }
+  if(a==='qchip'){ if(el.checked) qSel.add(el.value); else qSel.delete(el.value); return; }
+  if(a==='import'){ importJson(el.files&&el.files[0]); el.value=''; return; }
+  if(!guard()){ renderAll(); return; }
+  if(a==='docDate'){ state.docs[id]=el.value||''; commit(); return; }
+  const t=allTasks().find(x=>x.id===id); if(!t) return;
+  if(a==='planOn') setEff(t,{on:el.checked});
+  else if(a==='planKm') setEff(t,{km:parseKm(el.value)||null});
+  else if(a==='planMonths') setEff(t,{months:parseKm(el.value)||null});
+  commit();
+});
+
+document.addEventListener('submit',e=>{
+  e.preventDefault();
+  const id=e.target.id;
+  if(id==='kmForm') saveKm();
+  else if(id==='svcForm') saveService();
+  else if(id==='customForm') addCustom();
+  else if(id==='quoteForm') makeQuote();
+});
+$('#kmInput').addEventListener('input',()=>{ kmLowOk=false; $('#kmErr').hidden=true; });
+
+try{ const t=localStorage.getItem('fiesta-tab'); if(t&&['estado','registrar','historial','orcamento','plan'].indexOf(t)>=0) setTab(t); }catch(e){}
+boot();
+})();
+</script>
+</body>
+</html>
