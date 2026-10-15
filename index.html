@@ -557,6 +557,95 @@
         #chip-sug { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
         #chip-sug button { height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--primary); background: #fff; color: var(--primary); font-weight: bold; font-size: 14px; cursor: pointer; }
 
+        /* v23.0 · Pedido */
+        .ped-head { background: var(--primary); color: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+        .ped-head .ped-hl { display: flex; align-items: flex-end; gap: 10px; min-width: 0; }
+        .ped-head small { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; opacity: .85; }
+        .ped-head h2 { margin: 2px 0 0 0; color: #fff; font-size: 20px; line-height: 1.15; }
+        .ped-head .ped-dt { font-size: 13px; opacity: .9; margin-top: 2px; }
+        .ped-head .ped-chip { flex: none; background: rgba(0,0,0,.18); border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+        .ped-back { flex: 0 0 44px; width: 44px; height: 44px; border: 1.5px solid rgba(255,255,255,.7); border-radius: 12px; background: transparent; color: #fff; font-size: 22px; font-weight: 700; cursor: pointer; }
+        .ped-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+        .ped-tabs button { flex: 1 1 0; min-width: 0; height: 52px; border-radius: 12px; border: 1.5px solid var(--border); background: #fff; color: #475569; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; cursor: pointer; }
+        .ped-tabs button b { font-size: 14px; }
+        .ped-tabs button span { font-size: 11px; }
+        .ped-tabs button.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .ped-ayuda { font-size: 13px; line-height: 1.4; color: #64748b; margin: 0 2px 10px 2px; }
+        .ped-cols { display: flex; justify-content: space-between; padding: 0 12px; margin-bottom: 6px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #64748b; }
+        .ped-cols span:last-child { width: 150px; text-align: center; }
+        .ped-row { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 8px 10px; margin-bottom: 8px; }
+        .ped-row.tem { background: #fffbeb; border-color: #fcd34d; }
+        .ped-row.mudo { opacity: .75; }
+        .ped-l1 { display: flex; align-items: center; gap: 10px; }
+        .ped-chipn { flex: 0 0 56px; height: 44px; border-radius: 12px; background: #f1f5f9; color: #334155; font-weight: 800; font-size: 24px; display: flex; align-items: center; justify-content: center; }
+        .ped-chipn.ok { background: #dcfce7; color: #166534; }
+        .ped-nome { flex: 1 1 0; min-width: 0; font-size: 16px; font-weight: 700; line-height: 1.2; }
+        .ped-row:not(.tem) .ped-nome.solo { font-weight: 500; color: #64748b; }
+        .ped-ctl { display: flex; align-items: center; flex: none; }
+        .ped-ctl button { width: 44px; height: 44px; border-radius: 12px; border: 1px solid #cbd5e1; background: #fff; color: #334155; font-size: 22px; line-height: 1; cursor: pointer; padding: 0; }
+        .ped-ctl input { width: 62px; height: 44px; text-align: center; font-size: 20px; font-weight: 700; border: 0; background: transparent; color: inherit; padding: 0; -moz-appearance: textfield; }
+        .ped-ctl input::-webkit-outer-spin-button, .ped-ctl input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .ped-ctl.off { opacity: .4; pointer-events: none; }
+        .ped-l2 { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-top: 8px; font-size: 12px; color: #64748b; }
+        .ped-pill { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 5px 10px; background: #f1f5f9; color: #475569; }
+        .ped-pill.ok { background: #dcfce7; color: #166534; }
+        .ped-pill.cur { background: #fef3c7; color: #92400e; }
+        .ped-btn2 { width: 100%; height: 44px; margin-top: 8px; border: 0; border-radius: 12px; background: var(--primary); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .ped-link { border: 0; background: none; color: var(--primary-dark); font-size: 12px; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 6px 2px; }
+        .ped-guardar { width: 100%; height: 50px; border: 0; border-radius: 14px; background: var(--primary); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+        .ped-nota { font-size: 12px; color: #64748b; text-align: center; margin: 8px 0 0 0; line-height: 1.4; }
+        .ped-total { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 10px 12px; margin: 4px 0 10px 0; font-size: 14px; color: #166534; line-height: 1.4; }
+        .ped-hub { display: flex; width: 100%; text-align: left; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 8px; color: inherit; cursor: pointer; font: inherit; }
+        .ped-hub.cur { border: 2px solid var(--primary); padding: 11px; }
+        .ped-hub.off { opacity: .6; cursor: default; }
+        .ped-hub .ped-n { flex: 0 0 40px; height: 40px; border-radius: 999px; background: #f1f5f9; color: #334155; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+        .ped-hub.cur .ped-n { background: var(--primary); color: #fff; }
+        .ped-hub.done .ped-n { background: #dcfce7; color: #166534; }
+        .ped-hub .ped-t { flex: 1 1 0; min-width: 0; }
+        .ped-hub .ped-t b { display: block; font-size: 16px; }
+        .ped-hub .ped-t span.d { display: block; font-size: 13px; line-height: 1.35; color: #64748b; margin: 3px 0 6px 0; }
+        .ped-vazio { background: #fff; border: 1px dashed #cbd5e1; border-radius: 14px; padding: 16px; text-align: center; color: #64748b; font-size: 14px; line-height: 1.4; margin-bottom: 10px; }
+        body.en-pedido .btn-float-add { display: none; }
+        .ped-chipin { border: 0; padding: 0; text-align: center; font-family: inherit; -moz-appearance: textfield; width: 56px; }
+        .ped-chipin::-webkit-outer-spin-button, .ped-chipin::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .ped-sub { font-size: 12px; color: #64748b; margin-top: 2px; line-height: 1.3; }
+        .ped-pill.sobe { background: #dbeafe; color: #1e40af; }
+        .ped-pill.desce { background: #ffedd5; color: #9a3412; }
+        .ped-pill.nc { background: #f1f5f9; color: #64748b; }
+        .ped-ctl.peq button { width: 36px; height: 36px; font-size: 18px; }
+        .ped-ctl.peq span { min-width: 30px; text-align: center; font-weight: 700; font-size: 16px; }
+        .ped-chk { display: flex; align-items: center; gap: 8px; font-size: 13px; min-height: 32px; }
+        .ped-chk input { width: 20px; height: 20px; accent-color: var(--primary); }
+        .ped-nota-in { width: 100%; box-sizing: border-box; height: 40px; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0 12px; font-size: 14px; margin-top: 4px; }
+        .ped-enc { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; }
+        .ped-enc h3 { margin: 0 0 6px 0; font-size: 14px; color: #92400e; }
+        .ped-enc label { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: 13px; line-height: 1.35; color: #78350f; border-top: 1px dashed #fcd34d; }
+        .ped-enc label:first-of-type { border-top: 0; }
+        .ped-enc input { width: 20px; height: 20px; flex: none; margin-top: 1px; accent-color: var(--primary); }
+        .ped-enc .off { color: #94a3b8; }
+        .ped-aviso { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; font-size: 13px; line-height: 1.4; color: #1e3a8a; }
+        .ped-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+        .ped-nav button { width: 44px; height: 44px; border-radius: 12px; border: 1px solid #cbd5e1; background: #fff; color: #334155; font-size: 18px; cursor: pointer; }
+        .ped-nav button:disabled { opacity: .35; }
+        .ped-nav b { flex: 1; text-align: center; font-size: 16px; }
+        .ped-duo { display: flex; gap: 8px; margin-top: 4px; }
+        .ped-duo button { flex: 1 1 0; height: 50px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; }
+        .ped-sec { border: 1.5px solid var(--primary); background: #fff; color: var(--primary-dark); }
+        .ped-pri { border: 0; background: var(--primary); color: #fff; }
+        .ped-dias { display: flex; gap: 6px; margin-bottom: 10px; }
+        .ped-dias button { flex: 1 1 0; min-width: 0; height: 44px; border-radius: 12px; border: 1px solid #cbd5e1; background: #fff; color: #334155; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .ped-dias button.on { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700; }
+        @media (max-width: 360px) { .ped-chipin { width: 44px; } .ped-ctl.peq button { width: 32px; height: 32px; } }
+        .ped-head { flex-wrap: wrap; }
+        .ped-head .ped-hl { flex: 1 1 190px; }
+        @media (max-width: 360px) {
+            .ped-chipn { flex: 0 0 44px; font-size: 20px; }
+            .ped-ctl button { width: 40px; height: 40px; }
+            .ped-ctl input { width: 44px; font-size: 18px; }
+            .ped-cols span:last-child { width: 124px; }
+            .ped-nome { font-size: 15px; }
+        }
+        #view-pedido { padding-bottom: 24px; }
         #area-impressao-act { display: none; padding: 20px; }
         @media print {
             body * { visibility: hidden; }
@@ -637,6 +726,9 @@
         </div>
     </div>
 
+    <!-- v23.0 · VISTA PEDIDO -->
+    <div id="view-pedido" class="view"><div id="ped-raiz"></div></div>
+
     <!-- 4. VISTA MAIS -->
     <div id="view-mais" class="view">
         <h2>Definições e Ferramentas</h2>
@@ -666,7 +758,7 @@
                 <div class="menu-card-title">Cópias de Segurança<span id="badge-copia" class="badge-copia" style="display:none;">⚠️</span></div>
             </div>
         </div>
-        <p class="app-version" id="app-version">Versão 22.12</p>
+        <p class="app-version" id="app-version">Versão 23.4</p>
     </div>
 
     <!-- SUBMÓDULOS -->
@@ -1092,6 +1184,9 @@
         <button class="tab-btn" id="tab-fiados" onclick="switchTab('fiados')">
             <span>💳</span><span>Fiados</span>
         </button>
+        <button class="tab-btn" id="tab-pedido" onclick="switchTab('pedido')">
+            <span>🥖</span><span>Pedido</span>
+        </button>
         <button class="tab-btn" id="tab-mais" onclick="switchTab('mais')">
             <span class="icono-mais"><span>☰</span></span><span>Mais<span id="badge-mais-copia" title="Falta fazer uma cópia de segurança" style="display:none; font-size:10px; margin-left:2px;">⚠️</span></span>
         </button>
@@ -1187,6 +1282,10 @@
             if (actual.registro_unido) estado.registro_unido = actual.registro_unido;   // v18: a lista única já foi criada
             if (Array.isArray(actual.lembretes)) estado.lembretes = actual.lembretes;   // v19: lembretes (🔔)
             if (actual.folha && typeof actual.folha === 'object') estado.folha = actual.folha;   // v21: Folha do dia
+            if (actual.pao_mais && typeof actual.pao_mais === 'object') estado.pao_mais = actual.pao_mais;   // v23: pão a mais (cesto cinzento)
+            if (actual.pedido_base && typeof actual.pedido_base === 'object') estado.pedido_base = actual.pedido_base;   // v23.1: base por dia da semana
+            if (actual.pedidos && typeof actual.pedidos === 'object') estado.pedidos = actual.pedidos;   // v23.1: pedidos por data
+            if (actual.pedido_sobras && typeof actual.pedido_sobras === 'object') estado.pedido_sobras = actual.pedido_sobras;   // v23.1: sobras por data
 
             // Férias e feriados do Diário
             if (actual.diario_cfg && typeof actual.diario_cfg === 'object') estado.diario_cfg = actual.diario_cfg;
@@ -1583,6 +1682,8 @@
 
             document.body.classList.toggle('en-reparto', tabId === 'reparto');
             if (tabId === 'reparto') renderReparto();
+            document.body.classList.toggle('en-pedido', tabId === 'pedido');
+            if (tabId === 'pedido') { pedPant = 'hub'; pedDataSel = null; pedMostraTodos = false; renderPedido(); }
 
             // Módulo Calculadora e Fiados (iframe isolado)
             const emModuloFiados = (tabId === 'calc' || tabId === 'fiados');
@@ -1865,6 +1966,546 @@
             if (subId === 'backup') renderSeguridadDatos();
             if (subId === 'calendario') renderCalendarioMensual();
             if (subId === 'folha') folhaAbrir();
+        }
+
+
+        // ===== v23.0 · Pedido: «O meu dia» e pão a mais (cesto cinzento) =====
+        // Só quantidades. estado.pao_mais[dia] = { r: {pão: recebi}, p: {pão: passei ao branco}, f: {pão: ficaram (voltaram ao cinzento)}, fim: bool }
+        const PED_PAES = [
+            { id: 'ps',   nome: 'Paposecos',           cod: 9 },
+            { id: 'b',    nome: 'Bolas de Mistura',    cod: 8 },
+            { id: 'ba',   nome: 'Bolas de água',       cod: 82 },
+            { id: 'bico', nome: 'Bicos',               cod: 12 },
+            { id: 'bg',   nome: 'Broa grande',         cod: 11 },
+            { id: 'bp',   nome: 'Broa pequena',        cod: 41 },
+            { id: 'pmc',  nome: 'Comprido de Mistura', cod: 7 },
+            { id: 'pm',   nome: 'Pequeno de Mistura',  cod: 4 },
+            { id: 'gm',   nome: 'Grande de Mistura',   cod: 1 },
+            { id: 'pc',   nome: 'Moda Antiga Peq.',    cod: 50 },
+            { id: 'gc',   nome: 'Moda Antiga Gr.',     cod: 51 },
+            { id: 'cap',  nome: 'Capeludas',           cod: 55 }
+        ];
+        let pedPant = 'hub';              // 'hub' | 'manha' | 'rota' | 'fim'
+        let pedEditPasei = {};            // pães em que se está a corrigir «Passei» no ecrã 3
+
+        function pedHoje() { return formatearFechaLocal(new Date()); }
+        function pedN(v) { return Math.max(0, Math.min(999, parseInt(v, 10) || 0)); }
+        function pedLer() {
+            const d = estado.pao_mais && estado.pao_mais[pedHoje()];
+            return { r: (d && d.r) || {}, p: (d && d.p) || {}, f: (d && d.f) || {}, fim: !!(d && d.fim), sem: !!(d && d.sem) };
+        }
+        function pedDia() {
+            if (!estado.pao_mais || typeof estado.pao_mais !== 'object') estado.pao_mais = {};
+            const k = pedHoje();
+            const d = estado.pao_mais[k] || (estado.pao_mais[k] = {});
+            d.r = d.r || {}; d.p = d.p || {}; d.f = d.f || {}; d.fim = !!d.fim;
+            return d;
+        }
+        function pedSoma(o) { return Object.keys(o).reduce((a, k) => a + (o[k] || 0), 0); }
+        function pedNomeDe(id) { const x = PED_PAES.find(q => q.id === id); return x ? x.nome : id; }
+        function pedFechaTxt() {
+            const h = pedHoje(), n = DIARIO_DIAS[diarioDate(h).getDay()];
+            return n.charAt(0).toUpperCase() + n.slice(1) + ' · ' + h.slice(8, 10) + '/' + h.slice(5, 7) + '/' + h.slice(2, 4);
+        }
+
+        function pedSet(tipo, id, v) {
+            const d = pedDia();
+            v = pedN(v);
+            if (tipo === 'p') v = Math.min(v, d.r[id] || 0);
+            if (v > 0) d[tipo][id] = v; else delete d[tipo][id];
+            if (tipo === 'r') {
+                if ((d.p[id] || 0) > v) { if (v > 0) d.p[id] = v; else delete d.p[id]; }
+            }
+            if ((d.f[id] || 0) > (d.p[id] || 0)) { if (d.p[id]) d.f[id] = d.p[id]; else delete d.f[id]; }
+            guardarEstado();
+        }
+        function pedMais(tipo, id, delta) {
+            const d = pedLer();
+            const atual = tipo === 'f' ? pedFicaram(d, id) : (d[tipo][id] || 0);
+            if (tipo === 'f') pedSetF(id, atual + delta); else pedSet(tipo, id, atual + delta);
+            renderPedido();
+        }
+        function pedInp(tipo, id, v) {
+            if (tipo === 'f') pedSetF(id, v); else pedSet(tipo, id, v);
+            renderPedido();
+        }
+        function pedFicaram(d, id) { return d.f[id] !== undefined ? d.f[id] : (d.p[id] || 0); }
+        function pedSetF(id, v) {
+            const d = pedDia();
+            d.f[id] = Math.min(pedN(v), d.p[id] || 0);
+            guardarEstado();
+        }
+        function pedPassarTodos(id) { const d = pedLer(); pedSet('p', id, d.r[id] || 0); renderPedido(); }
+        function pedIr(pant) { pedPant = pant; renderPedido(); window.scrollTo(0, 0); }
+        function pedCorrigir(id) { pedEditPasei[id] = !pedEditPasei[id]; renderPedido(); }
+        function pedFimGuardar() {
+            const d = pedDia();
+            Object.keys(d.p).forEach(id => { if (d.p[id] > 0) d.f[id] = pedFicaram(d, id); });
+            d.fim = true;
+            guardarEstado();
+            pedPant = 'hub';
+            renderPedido();
+            window.scrollTo(0, 0);
+        }
+
+        function pedCab(eyebrow, titulo, chip, volta) {
+            return `<div class="ped-head"><div class="ped-hl">${volta ? `<button type="button" class="ped-back" aria-label="Voltar ao meu dia" onclick="pedIr('hub')">←</button>` : ''}<div><small>${esc(eyebrow)}</small><h2>${esc(titulo)}</h2><div class="ped-dt">${esc(pedFechaTxt())}</div></div></div>${chip ? `<span class="ped-chip">${esc(chip)}</span>` : ''}</div>`;
+        }
+        function pedAbas(ativa) {
+            const ab = [['manha', '1 · Manhã', 'Recebi'], ['rota', '2 · Rota', 'Passei'], ['fim', '3 · Fim', 'Ficaram']];
+            return '<div class="ped-tabs">' + ab.map(a => `<button type="button" class="${a[0] === ativa ? 'on' : ''}" onclick="pedIr('${a[0]}')"><b>${a[1]}</b><span>${a[2]}</span></button>`).join('') + '</div>';
+        }
+        function pedCtl(tipo, id, valor, nome, off) {
+            return `<div class="ped-ctl${off ? ' off' : ''}"><button type="button" aria-label="Menos ${esc(nome)}" onclick="pedMais('${tipo}','${id}',-1)">−</button><input type="number" inputmode="numeric" min="0" max="999" value="${valor}" aria-label="${esc(nome)}" onchange="pedInp('${tipo}','${id}',this.value)" onfocus="this.select()"><button type="button" aria-label="Mais ${esc(nome)}" onclick="pedMais('${tipo}','${id}',1)">+</button></div>`;
+        }
+        function pedVazio() {
+            return `<div class="ped-vazio">Hoje ainda não registaste pão a mais.<br><button type="button" class="ped-link" onclick="pedIr('manha')">Ir ao passo 1 · Manhã</button></div>`;
+        }
+
+        function pedHub() {
+            const hj = pedHoje(), d = pedLer(), sr = pedSoma(d.r), sp = pedSoma(d.p);
+            const sem = d.sem && sr === 0;
+            const d1 = sr > 0 || sem, d3 = !!d.fim || sem, d2 = d3;
+            const sb = pedSobLer(hj), tot4 = pedTotDe(hj);
+            const nPed = PED_ORDEM.filter(id => (tot4[id] || 0) > 0).length;
+            const nCont = Object.keys(sb.s).length;
+            const d4 = !!sb.feito;
+            const nAj = PED_ORDEM.filter(id => (sb.d[id] || 0) !== 0).length;
+            const T = pedProxDia(hj), pT = pedPedLer(T), d5 = !!(pT && pT.feito);
+            const diaT = DIARIO_DIAS[pedDiaSem(T)];
+            const passos = [
+                { n: 1, t: 'Pão a mais · manhã', desc: 'Regista o pão do cesto cinzento ao carregar a carrinha.', pill: sem ? 'Hoje sem pão a mais' : (d1 ? 'Feito · ' + sr + (sr === 1 ? ' pão' : ' pães') : 'Por fazer'), done: d1, ir: 'manha' },
+                { n: 2, t: 'Pão a mais · na rota', desc: 'Quando um pão se acaba, passa-o ao cesto branco.', pill: sr === 0 ? 'Sem pão a mais' : (sp > 0 ? 'Passaste ' + sp + (sp === 1 ? ' pão' : ' pães') : 'Nada passado ainda'), done: d2, ir: 'rota' },
+                { n: 3, t: 'Pão a mais · no fim da rota', desc: 'Conta o que volta ao cinzento e vê o que vendeste a mais.', pill: sem ? 'Sem pão a mais' : (d3 ? 'Feito · vendeste ' + pedVendidoTotal(d) + ' a mais' : 'Por fazer'), done: d3, ir: 'fim' },
+                { n: 4, t: 'Sobras de hoje', desc: 'Conta o pão que sobrou. A app sugere subir ou descer a base.', pill: d4 ? 'Feito · ' + nAj + (nAj === 1 ? ' ajuste' : ' ajustes') : (nCont > 0 ? 'Contaste ' + nCont + ' de ' + Math.max(nPed, nCont) : 'Por fazer'), done: d4, ir: 'sobras' },
+                { n: 5, t: 'Pedido para amanhã', desc: 'Base, encomendas e ajustes. Para preencheres a folha do pedido.', pill: d5 ? 'Feito · ' + diaT : 'Por fazer · ' + diaT, done: d5, ir: 'pedido' }
+            ];
+            const atual = (passos.find(q => !q.done) || { n: 6 }).n;
+            const html = passos.map(q => {
+                const cls = q.n === atual ? 'cur' : (q.done ? 'done' : '');
+                const pc = q.done ? 'ok' : (q.n === atual ? 'cur' : '');
+                return `<button type="button" class="ped-hub ${cls}" onclick="${q.ir === 'pedido' ? 'pedDataSel = null; ' : ''}pedIr('${q.ir}')"><div class="ped-n">${q.n}</div><div class="ped-t"><b>${esc(q.t)}</b><span class="d">${esc(q.desc)}</span><span class="ped-pill ${pc}">${esc(q.pill)}</span></div><span aria-hidden="true" style="color:#94a3b8;font-size:20px;">›</span></button>`;
+            }).join('');
+            return pedCab('Pedido', 'O meu dia', atual <= 5 ? 'Passo ' + atual + ' de 5' : 'Dia concluído', false)
+                + '<p class="ped-ayuda">Os passos pela ordem do teu dia. Toca no passo em que estás.</p>' + html
+                + '<div style="text-align:center; margin-top:6px;"><button type="button" class="ped-link" onclick="pedIr(\'bases\')">Bases por dia · configuração</button></div>';
+        }
+        function pedVendidoTotal(d) {
+            return Object.keys(d.p).reduce((a, id) => a + Math.max(0, (d.p[id] || 0) - pedFicaram(d, id)), 0);
+        }
+
+        function pedManhaGuardar() {
+            const sr = pedSoma(pedLer().r);
+            if (sr === 0) { pedDia().sem = true; }
+            else { const d = pedDia(); delete d.sem; }
+            guardarEstado();
+            pedIr('hub');
+        }
+        function pedManha() {
+            const d = pedLer(), sr = pedSoma(d.r);
+            const filas = PED_PAES.map(x => {
+                const v = d.r[x.id] || 0;
+                return `<div class="ped-row ${v > 0 ? 'tem' : ''}"><div class="ped-l1"><div class="ped-nome ${v > 0 ? '' : 'solo'}">${esc(x.nome)}</div>${pedCtl('r', x.id, v, x.nome)}</div></div>`;
+            }).join('');
+            return pedCab('Pão a mais · cesto cinzento', 'Ao carregar a carrinha', sr + (sr === 1 ? ' pão a mais' : ' pães a mais'), true)
+                + pedAbas('manha')
+                + '<p class="ped-ayuda">Conta o pão que te dão no cesto cinzento antes de saíres. A lista é sempre a mesma; as quantidades voltam a 0 todos os dias.</p>'
+                + '<div class="ped-cols"><span>Pão</span><span>Recebi</span></div>' + filas
+                + `<button type="button" class="ped-guardar" onclick="pedManhaGuardar()">${sr > 0 ? 'Guardar e sair para a rota' : 'Hoje não há pão a mais'}</button>`
+                + '<p class="ped-nota">Fica guardado ao tocar. Podes corrigir os números até ao fim do dia. Só quantidades, sem dinheiro.</p>';
+        }
+
+        function pedRota() {
+            const d = pedLer(), ids = PED_PAES.filter(x => (d.r[x.id] || 0) > 0);
+            let filas = ids.map(x => {
+                const r = d.r[x.id], p = d.p[x.id] || 0, resta = r - p;
+                const pill = p > 0 ? `<span class="ped-pill ok">Passaste ${p} ao branco</span>` : '<span class="ped-pill">Ainda no cesto cinzento</span>';
+                const btn = resta > 0 ? `<button type="button" class="ped-btn2" onclick="pedPassarTodos('${x.id}')">${p === 0 ? 'Passar os ' + r + ' ao branco' : 'Passar os ' + resta + ' que faltam'}</button>` : '';
+                return `<div class="ped-row"><div class="ped-l1"><div class="ped-chipn ${resta === 0 ? 'ok' : ''}" title="No cesto cinzento">${resta}</div><div class="ped-nome">${esc(x.nome)}</div>${pedCtl('p', x.id, p, x.nome)}</div><div class="ped-l2"><span>Recebi ${r}${p > 0 && resta > 0 ? ' · faltam ' + resta : ''}</span>${pill}</div>${btn}</div>`;
+            }).join('');
+            if (!ids.length) filas = pedVazio();
+            return pedCab('Pão a mais · cesto cinzento', 'Na rota', ids.length ? pedPorPassar(d) + ' por passar' : '', true)
+                + pedAbas('rota')
+                + '<p class="ped-ayuda">Quando se acaba um pão do teu pedido, toca em «Passar ao branco» e regista quantos passaste.</p>'
+                + (ids.length ? '<div class="ped-cols"><span>No cesto</span><span>Passei</span></div>' : '') + filas
+                + '<button type="button" class="ped-guardar" onclick="pedIr(\'hub\')">Guardar</button>'
+                + '<p class="ped-nota">Fica guardado ao tocar. Podes corrigir os números até ao fim do dia.</p>';
+        }
+        function pedPorPassar(d) { return Object.keys(d.r).reduce((a, id) => a + Math.max(0, (d.r[id] || 0) - (d.p[id] || 0)), 0); }
+
+        function pedFim() {
+            const d = pedLer(), ids = PED_PAES.filter(x => (d.r[x.id] || 0) > 0);
+            let vendidos = [];
+            let filas = ids.map(x => {
+                const r = d.r[x.id], p = d.p[x.id] || 0;
+                const f = pedFicaram(d, x.id), vendi = Math.max(0, p - f);
+                if (vendi > 0) vendidos.push(vendi + ' ' + x.nome);
+                const sem = p === 0;
+                const pill = sem ? '<span class="ped-pill">Não passaste ao branco</span>' : (vendi > 0 ? `<span class="ped-pill ok">Vendeste ${vendi} a mais</span>` : '<span class="ped-pill">Voltaram todos ao cinzento</span>');
+                const corr = sem ? '' : `<button type="button" class="ped-link" onclick="pedCorrigir('${x.id}')">${pedEditPasei[x.id] ? 'fechar' : 'corrigir'}</button>`;
+                const edit = (!sem && pedEditPasei[x.id]) ? `<div class="ped-l2" style="justify-content:space-between;"><span>Passei (corrigir)</span>${pedCtl('p', x.id, p, x.nome + ' passei')}</div>` : '';
+                return `<div class="ped-row ${sem ? 'mudo' : ''}"><div class="ped-l1"><div class="ped-chipn ${vendi > 0 ? 'ok' : ''}" title="Vendi a mais">${vendi}</div><div class="ped-nome">${esc(x.nome)}</div>${pedCtl('f', x.id, sem ? 0 : f, x.nome, sem)}</div><div class="ped-l2"><span>Recebi ${r} · Passei ${p}</span>${corr}${pill}</div>${edit}</div>`;
+            }).join('');
+            if (!ids.length) filas = pedVazio();
+            const tot = vendidos.length ? `<div class="ped-total"><b>Vendeste a mais:</b> ${esc(vendidos.join(' · '))}<br><small>Para somares à Guia de Transporte.</small></div>` : '';
+            return pedCab('Pão a mais · cesto cinzento', 'No fim da rota', vendidos.length ? pedVendidoTotal(d) + ' a mais' : '', true)
+                + pedAbas('fim')
+                + '<p class="ped-ayuda">Conta quantos dos que passaste aos cestos brancos ainda ficaram e volta a pô-los no cesto cinzento. O que falta é o que vendeste a mais.</p>'
+                + (ids.length ? '<div class="ped-cols"><span>Vendi a mais</span><span>Ficaram</span></div>' : '') + filas + tot
+                + '<button type="button" class="ped-guardar" onclick="pedFimGuardar()">Guardar</button>'
+                + '<p class="ped-nota">Só quantidades. O valor da Guia continua a ser escrito por ti.</p>';
+        }
+
+        // ===== v23.1 · Sobras de hoje (passo 4) e Pedido para amanhã (passo 5) =====
+        // estado.pedido_base[diaSemana 0-6]  = { pão: quantidade }  o que se pede normalmente nesse dia (sem encomendas)
+        // estado.pedidos[data]               = { aj: {pão: ±n}, inc: {idEncomenda: bool}, feito, tot, base, en }  (tot/base/en = fotografia quando se marca o pedido)
+        // estado.pedido_sobras[data]         = { s: {pão: sobrou}, c: {pão: comi}, nc: {pão: true}, nota: {pão: texto}, ign: {pão: true}, b0: {pão: base antes}, d: {pão: ajuste aplicado}, feito }
+        const PED_EXTRA = [{ id: 'int', nome: 'Integral', cod: 45 }, { id: 'pf', nome: 'Pão de Forma', cod: 10 }];
+        const PED_ORDEM = ['gm', 'pm', 'pmc', 'b', 'bico', 'ps', 'pf', 'bg', 'bp', 'int', 'pc', 'gc', 'cap', 'ba'];   // ordem da nota do Keep
+        const PED_CAT = { gm: 'grande', pm: 'grande', bg: 'grande', bp: 'grande', pc: 'grande', gc: 'grande', b: 'bola', ps: 'bola', ba: 'agua', cap: 'cap', bico: 'bico', pmc: 'fixo', int: 'fixo', pf: 'fixo' };
+        const PED_SALTO = { b: 5, ps: 5, ba: 5 };
+        const PED_SO_ENC = ['pf'];     // só por encomendas: sem base, sem sobras
+        const PED_BASE_IDS = PED_ORDEM.filter(id => !PED_SO_ENC.includes(id));
+        const PED_COME = ['b', 'ba'];     // pães em que aparece «Comi hoje»
+        let pedDataSel = null;            // passo 5: data do pedido (por omissão o próximo dia de trabalho)
+        let pedMostraTodos = false;       // passo 4: mostra também os pães sem pedido
+        let pedBW = null;                 // «Bases por dia»: dia da semana aberto
+
+        function pedNome(id) { const x = PED_PAES.concat(PED_EXTRA).find(q => q.id === id); return x ? x.nome : id; }
+        function pedDiaSem(iso) { return diarioDate(iso).getDay(); }
+        function pedDiaTxt(iso) { const n = DIARIO_DIAS[pedDiaSem(iso)]; return n.charAt(0).toUpperCase() + n.slice(1) + ' · ' + iso.slice(8, 10) + '/' + iso.slice(5, 7); }
+        function pedProxDia(iso) { let d = diarioSumarDias(iso, 1); if (pedDiaSem(d) === 0) d = diarioSumarDias(d, 1); return d; }   // ao domingo não se trabalha
+        function pedAntDia(iso) { let d = diarioSumarDias(iso, -1); if (pedDiaSem(d) === 0) d = diarioSumarDias(d, -1); return d; }
+        function pedN9(v) { return Math.max(0, Math.min(9999, parseInt(v, 10) || 0)); }
+        function pedObj(o) { return o && typeof o === 'object' && !Array.isArray(o) ? o : {}; }
+        function pedMapa(k) { if (!estado[k] || typeof estado[k] !== 'object' || Array.isArray(estado[k])) estado[k] = {}; return estado[k]; }
+
+        // ---- acesso aos dados (ler nunca cria nada)
+        function pedBaseLer(w) { return pedObj(pedObj(estado.pedido_base)[w]); }
+        function pedBaseEsc(w) { const m = pedMapa('pedido_base'); m[w] = pedObj(m[w]); return m[w]; }
+        function pedPedLer(iso) { const o = pedObj(estado.pedidos)[iso]; return o && typeof o === 'object' && !Array.isArray(o) ? o : null; }
+        function pedPedEsc(iso) {
+            const m = pedMapa('pedidos');
+            const o = m[iso] = pedObj(m[iso]);
+            o.aj = pedObj(o.aj); o.inc = pedObj(o.inc);
+            return o;
+        }
+        function pedSobLer(iso) {
+            const o = pedObj(pedObj(estado.pedido_sobras)[iso]);
+            return { s: pedObj(o.s), c: pedObj(o.c), nc: pedObj(o.nc), nota: pedObj(o.nota), ign: pedObj(o.ign), b0: pedObj(o.b0), d: pedObj(o.d), feito: !!o.feito };
+        }
+        function pedSobEsc(iso) {
+            const m = pedMapa('pedido_sobras');
+            const o = m[iso] = pedObj(m[iso]);
+            ['s', 'c', 'nc', 'nota', 'ign', 'b0', 'd'].forEach(k => { o[k] = pedObj(o[k]); });
+            o.feito = !!o.feito;
+            return o;
+        }
+
+        // ---- ler as encomendas: «2gm», «1gm 4b», «3pc 20b», «2 capeludas», «Não está -2pm»
+        function pedNorm(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+        const PED_ABREV = { gm: 'gm', pm: 'pm', pmc: 'pmc', b: 'b', bola: 'b', bolas: 'b', bico: 'bico', bicos: 'bico', ps: 'ps', paposeco: 'ps', paposecos: 'ps', bg: 'bg', bp: 'bp', int: 'int', integral: 'int', pf: 'pf', forma: 'pf', formas: 'pf', pc: 'pc', gc: 'gc', cap: 'cap', capeluda: 'cap', capeludas: 'cap', ba: 'ba' };
+        function pedParse(texto) {
+            let t = pedNorm(texto);
+            t = t.replace(/\bbolas?\s+de\s+agua\b/g, 'ba').replace(/\bbroas?\s+grandes?\b/g, 'bg').replace(/\bbroas?\s+pequenas?\b/g, 'bp')
+                 .replace(/\bgrandes?\s+de\s+mistura\b/g, 'gm').replace(/\bpequenos?\s+de\s+mistura\b/g, 'pm').replace(/\bcompridos?\s+de\s+mistura\b/g, 'pmc');
+            const q = {}, desc = [];
+            t = t.replace(/(-?)\s*(\d+)\s*x?\s*(?:pao|paes)[\s-]+(?:de[\s-]+)?formas?\b|\b(?:pao|paes)[\s-]+(?:de[\s-]+)?formas?\s*[:=]?\s*x?\s*(\d+)(?!\s*[a-z0-9])|\b(?:pao|paes)[\s-]+(?:de[\s-]+)?formas?\b/g, (m, sinal, n1, n2) => {
+                const n = n1 !== undefined ? parseInt(n1, 10) : (n2 !== undefined ? parseInt(n2, 10) : 1);
+                q.pf = (q.pf || 0) + (sinal ? -n : n);
+                return ' ';
+            });
+            const re = /(-?)\s*(\d+)\s*([a-z]+)/g;
+            let m;
+            while ((m = re.exec(t))) {
+                const id = PED_ABREV[m[3]];
+                const n = (m[1] ? -1 : 1) * parseInt(m[2], 10);
+                if (id) q[id] = (q[id] || 0) + n; else desc.push(m[2] + m[3]);
+            }
+            return { q, desc };
+        }
+        function pedEncs(iso) {
+            return (estado.encomiendas || []).filter(e => e.fecha === iso && !e.esAviso).map(e => {
+                const pr = pedParse(e.pedido);
+                return { id: String(e.id), nome: e.nombre || '', aldea: e.aldea || '', texto: e.pedido || '', q: pr.q, desc: pr.desc, tem: Object.keys(pr.q).length > 0, lar: /laranjeira/.test(pedNorm(e.nombre)), vesp: !!e.pedirDiaAnterior };
+            });
+        }
+        function pedIncluida(p, e) {
+            if (!e.tem) return false;
+            const v = p && p.inc ? p.inc[e.id] : undefined;
+            return v === undefined ? !e.lar : !!v;   // Laranjeira não vem marcada: só soma o que passa do que já deixaste
+        }
+        function pedQTxt(q) {
+            return PED_ORDEM.filter(id => q[id]).map(id => (q[id] < 0 ? '−' + Math.abs(q[id]) : q[id]) + ' ' + pedNome(id)).join(' · ');
+        }
+
+        // ---- o pedido de uma data = base do dia da semana + encomendas + ajustes
+        function pedCalc(iso) {
+            const w = pedDiaSem(iso), base = pedBaseLer(w), p = pedPedLer(iso), encs = pedEncs(iso);
+            const en = {};
+            encs.forEach(e => { if (pedIncluida(p, e)) Object.keys(e.q).forEach(id => { en[id] = (en[id] || 0) + e.q[id]; }); });
+            const aj = pedObj(p && p.aj);
+            const tot = {};
+            PED_ORDEM.forEach(id => { tot[id] = Math.max(0, (PED_SO_ENC.includes(id) ? 0 : (base[id] || 0)) + (en[id] || 0) + (aj[id] || 0)); });
+            return { w, base, en, aj, tot, encs, p };
+        }
+        function pedTotDe(iso) { const p = pedPedLer(iso); return (p && p.tot) ? p.tot : pedCalc(iso).tot; }
+
+        // ---- regras de sugestão
+        function pedHistEf(D, id) {
+            const r = pedSobLer(diarioSumarDias(D, -7));
+            if (r.s[id] === undefined || r.nc[id]) return null;
+            return r.s[id] + (r.c[id] || 0);
+        }
+        function pedB0(D, id) {
+            const r = pedSobLer(D);
+            if (r.b0[id] !== undefined) return r.b0[id];
+            const base = pedBaseLer(pedDiaSem(D)), p = pedPedLer(D);
+            if (Object.keys(base).length) return base[id] || 0;
+            if (p && p.base && p.base[id] !== undefined) return p.base[id];
+            return Math.max(0, (pedTotDe(D)[id] || 0) - ((p && p.en && p.en[id]) || 0));
+        }
+        function pedSugId(D, id) {
+            const r = pedSobLer(D), ped = pedTotDe(D)[id] || 0, s = r.s[id], cat = PED_CAT[id] || 'fixo';
+            if (s === undefined) return { tipo: 'por', delta: 0 };
+            if (r.nc[id]) return { tipo: 'nc', delta: 0 };
+            if (ped <= 0) return { tipo: 'sem', delta: 0 };
+            const ef = s + (r.c[id] || 0), acabou = ef === 0;
+            let delta = 0, espera = false;
+            if (cat === 'grande') { if (acabou) delta = 1; else if (ef >= 3) delta = -(ef - 2); }
+            else if (cat === 'bola') { if (acabou) delta = 5; else if (ef > 20) delta = -5 * Math.floor((ef - 15) / 5); }
+            else if (cat === 'agua') { if (acabou) delta = 5; else if (ef >= 15) delta = -5 * Math.floor((ef - 10) / 5); }
+            else if (cat === 'cap') {
+                if (acabou) delta = 1;
+                else if (ef >= 4) { const h = pedHistEf(D, id); if (h !== null && h >= 4) delta = -2; else espera = true; }
+            }
+            else if (cat === 'bico') { if (!acabou && ef >= 3) delta = -(ef - 2); }
+            const tipo = delta > 0 ? 'sobe' : delta < 0 ? 'desce' : (espera ? 'espera' : (cat === 'fixo' ? 'fixo' : 'mantem'));
+            return { tipo, delta, ef, acabou };
+        }
+        function pedSugTxt(D, id, g) {
+            const r = pedSobLer(D), b0 = pedB0(D, id);
+            if (g.tipo === 'por') return 'Por contar';
+            if (g.tipo === 'nc') return 'Não conta para a tendência';
+            if (g.tipo === 'sem') return 'Sem pedido hoje';
+            if (g.tipo === 'fixo') return g.acabou ? 'Acabou · só se muda por encomendas' : 'Só se muda por encomendas';
+            if (g.tipo === 'espera') return '1.ª semana com ' + g.ef + ' · espera';
+            if (g.delta !== 0 && r.ign[id]) return 'Ignorada · a base fica em ' + b0;
+            if (g.tipo === 'sobe') return (g.acabou ? 'Acabou · ' : 'Sugestão: ') + 'subir ' + g.delta + ' → base ' + (b0 + g.delta);
+            if (g.tipo === 'desce') return 'Sugestão: descer ' + (-g.delta) + ' → base ' + Math.max(0, b0 + g.delta);
+            return 'Sugestão: manter';
+        }
+        function pedSugN(D) { const r = pedSobLer(D); return PED_ORDEM.filter(id => { const g = pedSugId(D, id); return g.delta !== 0 && !r.ign[id]; }).length; }
+
+        // ---- passo 4: ações
+        function pedSobSet(id, v) {
+            const r = pedSobEsc(pedHoje());
+            if (v === undefined) delete r.s[id]; else r.s[id] = pedN(v);
+            r.feito = false;
+            guardarEstado();
+        }
+        function pedSobMais(id, dir) {
+            const cur = pedSobLer(pedHoje()).s[id];
+            pedSobSet(id, cur === undefined ? (dir < 0 ? 0 : 1) : Math.max(0, cur + dir));
+            renderPedido();
+        }
+        function pedSobInp(id, v) { pedSobSet(id, String(v).trim() === '' ? undefined : v); renderPedido(); }
+        function pedSobAcabou(id) { pedSobSet(id, 0); renderPedido(); }
+        function pedSobCom(id, dir) {
+            const r = pedSobEsc(pedHoje()), n = Math.max(0, Math.min(99, (r.c[id] || 0) + dir));
+            if (n > 0) r.c[id] = n; else delete r.c[id];
+            r.feito = false; guardarEstado(); renderPedido();
+        }
+        function pedSobNC(id) {
+            const r = pedSobEsc(pedHoje());
+            if (r.nc[id]) { delete r.nc[id]; } else { r.nc[id] = true; }
+            r.feito = false; guardarEstado(); renderPedido();
+        }
+        function pedSobNota(id, v) {
+            const r = pedSobEsc(pedHoje()), t = String(v || '').trim();
+            if (t) r.nota[id] = t; else delete r.nota[id];
+            guardarEstado();
+        }
+        function pedSobIgn(id) {
+            const r = pedSobEsc(pedHoje());
+            if (r.ign[id]) delete r.ign[id]; else r.ign[id] = true;
+            r.feito = false; guardarEstado(); renderPedido();
+        }
+        function pedSobPed(id, v) {
+            const D = pedHoje(), p = pedPedEsc(D);
+            if (!p.tot) p.tot = Object.assign({}, pedCalc(D).tot);
+            p.tot[id] = pedN9(v);
+            guardarEstado(); renderPedido();
+        }
+        function pedSobGuardar() {
+            const D = pedHoje(), w = pedDiaSem(D), tot = pedTotDe(D);
+            const r = pedSobEsc(D);
+            PED_BASE_IDS.forEach(id => { if (r.b0[id] === undefined) r.b0[id] = pedB0(D, id); });   // fotografia da base antes de aplicar (volta a gravar sem duplicar)
+            const base = pedBaseEsc(w);
+            let n = 0;
+            PED_ORDEM.forEach(id => {
+                if (PED_SO_ENC.includes(id)) { r.d[id] = 0; delete base[id]; return; }
+                const g = pedSugId(D, id);
+                const delta = (g.delta && !r.ign[id]) ? g.delta : 0;
+                r.d[id] = delta;
+                if (delta) n++;
+                const novo = Math.max(0, r.b0[id] + delta);
+                if (novo > 0) base[id] = novo; else delete base[id];
+            });
+            r.feito = true;
+            guardarEstado();
+            avisoRapido('✔ Sobras guardadas · ' + (n ? n + (n === 1 ? ' ajuste' : ' ajustes') + ' à base de ' + DIARIO_DIAS[w] : 'base de ' + DIARIO_DIAS[w] + ' sem alterações'));
+            pedDataSel = null;
+            pedIr('pedido');
+        }
+
+        // ---- passo 4: ecrã
+        function pedCab2(eyebrow, titulo, chip, volta, sub) {
+            return `<div class="ped-head"><div class="ped-hl">${volta ? `<button type="button" class="ped-back" aria-label="Voltar ao meu dia" onclick="pedIr('hub')">←</button>` : ''}<div><small>${esc(eyebrow)}</small><h2>${esc(titulo)}</h2><div class="ped-dt">${esc(sub)}</div></div></div>${chip ? `<span class="ped-chip">${esc(chip)}</span>` : ''}</div>`;
+        }
+        function pedSobras() {
+            const D = pedHoje(), r = pedSobLer(D), tot = pedTotDe(D), pm = pedLer();
+            const mostrar = PED_BASE_IDS.filter(id => (tot[id] || 0) > 0 || r.s[id] !== undefined);
+            const ocultos = PED_BASE_IDS.filter(id => !mostrar.includes(id));
+            const lista = pedMostraTodos ? PED_BASE_IDS : mostrar;
+            const filas = lista.map(id => {
+                const nome = pedNome(id), ped = tot[id] || 0, s = r.s[id], c = r.c[id] || 0, g = pedSugId(D, id);
+                const vend = pm.fim ? Math.max(0, (pm.p[id] || 0) - pedFicaram(pm, id)) : 0;
+                const cls = g.tipo === 'sobe' ? 'sobe' : (g.tipo === 'desce' ? 'desce' : (g.tipo === 'nc' ? 'nc' : (g.tipo === 'mantem' ? 'ok' : '')));
+                const txt = pedSugTxt(D, id, g);
+                const ign = (g.delta !== 0) ? `<button type="button" class="ped-link" onclick="pedSobIgn('${id}')">${r.ign[id] ? 'aplicar' : 'ignorar'}</button>` : '';
+                const acab = s === undefined ? `<button type="button" class="ped-link" onclick="pedSobAcabou('${id}')">Acabou (0)</button>` : '';
+                const comi = PED_COME.includes(id) ? `<div class="ped-l2" style="justify-content:space-between;"><span>Comi hoje${s !== undefined && c > 0 ? ' · sobrou ' + s + ' · podia ter sobrado ' + (s + c) : ''}</span><div class="ped-ctl peq"><button type="button" aria-label="Menos comi ${esc(nome)}" onclick="pedSobCom('${id}',-1)">−</button><span>${c}</span><button type="button" aria-label="Mais comi ${esc(nome)}" onclick="pedSobCom('${id}',1)">+</button></div></div>` : '';
+                const nc = r.nc[id] ? `<div class="ped-l2"><label class="ped-chk"><input type="checkbox" checked aria-label="Não contar ${esc(nome)}" onchange="pedSobNC('${id}')">Não contar este dia</label></div><input type="text" class="ped-nota-in" placeholder="Nota do dia (ex.: Sra Papo não estava)" aria-label="Nota ${esc(nome)}" value="${esc(r.nota[id] || '')}" onchange="pedSobNota('${id}',this.value)">` : '';
+                const ncl = r.nc[id] ? '' : `<button type="button" class="ped-link" aria-label="Não contar ${esc(nome)}" onclick="pedSobNC('${id}')">não contar</button>`;
+                return `<div class="ped-row ${s !== undefined ? 'tem' : ''}"><div class="ped-l1"><input type="number" inputmode="numeric" min="0" max="9999" class="ped-chipn ped-chipin" value="${ped}" aria-label="Pedido ${esc(nome)}" onchange="pedSobPed('${id}',this.value)" onfocus="this.select()"><div class="ped-nome">${esc(nome)}</div><div class="ped-ctl"><button type="button" aria-label="Menos ${esc(nome)}" onclick="pedSobMais('${id}',-1)">−</button><input type="number" inputmode="numeric" min="0" max="999" value="${s === undefined ? '' : s}" placeholder="–" aria-label="Sobrou ${esc(nome)}" onchange="pedSobInp('${id}',this.value)" onfocus="this.select()"><button type="button" aria-label="Mais ${esc(nome)}" onclick="pedSobMais('${id}',1)">+</button></div></div><div class="ped-l2"><span class="ped-pill ${cls}">${esc(txt)}</span>${ign}${acab}${ncl}${vend > 0 ? `<span>Vendeste ${vend} a mais</span>` : ''}</div>${comi}${nc}</div>`;
+            }).join('');
+            const nSug = pedSugN(D);
+            const semPed = !PED_BASE_IDS.some(id => (tot[id] || 0) > 0);
+            return pedCab('Pedido · passo 4 de 5', 'Sobras de hoje', nSug ? nSug + (nSug === 1 ? ' sugestão' : ' sugestões') : '', true)
+                + '<p class="ped-ayuda">Conta o pão que sobrou ao chegares à padaria, depois de contares o pão a mais. Os que acabam sugerem subir; os que sobram muito, descer. O número grande é o pedido de hoje (toca para corrigir).</p>'
+                + (semPed ? '<div class="ped-aviso">Ainda não há pedido de hoje na app. Escreve o pedido de hoje em cada pão (o da Guia) para as sugestões funcionarem. Fica como base de ' + esc(DIARIO_DIAS[pedDiaSem(D)]) + '.</div>' : '')
+                + '<div class="ped-cols"><span>Pedido</span><span>Sobrou</span></div>' + filas
+                + (ocultos.length ? `<div style="text-align:center;"><button type="button" class="ped-link" onclick="pedMostraTodos = !pedMostraTodos; renderPedido();">${pedMostraTodos ? 'Esconder os pães sem pedido' : 'Mostrar mais ' + ocultos.length + (ocultos.length === 1 ? ' pão' : ' pães') + ' sem pedido'}</button></div>` : '')
+                + '<button type="button" class="ped-guardar" onclick="pedSobGuardar()">Guardar e preparar o pedido de amanhã</button>'
+                + '<p class="ped-nota">Podes voltar e corrigir as sobras: ao guardar de novo a base recalcula-se sem duplicar.</p>';
+        }
+
+        // ---- passo 5: ações
+        function pedDataAtual() { return pedDataSel || pedProxDia(pedHoje()); }
+        function pedDataMover(dir) {
+            const min = pedProxDia(pedHoje()), cur = pedDataAtual();
+            const nova = dir > 0 ? pedProxDia(cur) : pedAntDia(cur);
+            if (nova < min || nova > diarioSumarDias(min, 21)) return;
+            pedDataSel = nova; renderPedido();
+        }
+        function pedPedTot(id, v) {
+            const D = pedDataAtual(), c = pedCalc(D), p = pedPedEsc(D);
+            const alvo = pedN9(v), aj = alvo - (c.base[id] || 0) - (c.en[id] || 0);
+            if (aj !== 0) p.aj[id] = aj; else delete p.aj[id];
+            p.feito = false; guardarEstado(); renderPedido();
+        }
+        function pedPedMais(id, dir) { pedPedTot(id, (pedCalc(pedDataAtual()).tot[id] || 0) + dir * (PED_SALTO[id] || 1)); }
+        function pedEncInc(id, marcado) {
+            const p = pedPedEsc(pedDataAtual());
+            p.inc[id] = !!marcado; p.feito = false; guardarEstado(); renderPedido();
+        }
+        function pedMarcar() {
+            const D = pedDataAtual(), c = pedCalc(D), w = c.w;
+            if (!PED_ORDEM.some(id => c.tot[id] > 0)) { avisoRapido('Escreve primeiro as quantidades do pedido'); return; }
+            const p = pedPedEsc(D);
+            let semente = false;
+            if (!Object.keys(c.base).length) {   // primeira vez neste dia da semana: o que escreveste fica como base
+                const b = pedBaseEsc(w);
+                PED_BASE_IDS.forEach(id => { const v = Math.max(0, (c.tot[id] || 0) - (c.en[id] || 0)); if (v > 0) b[id] = v; });
+                p.aj = {};
+                PED_SO_ENC.forEach(id => { if (c.aj[id]) p.aj[id] = c.aj[id]; });   // o ajuste do Pão de Forma não vira base
+                semente = PED_BASE_IDS.some(id => b[id] > 0);
+            }
+            const c2 = pedCalc(D);
+            p.tot = Object.assign({}, c2.tot); p.base = Object.assign({}, c2.base); p.en = Object.assign({}, c2.en); p.feito = true;
+            guardarEstado();
+            avisoRapido('✔ Pedido de ' + pedDiaTxt(D).replace(' · ', ', ') + ' marcado' + (semente ? ' · base de ' + DIARIO_DIAS[w] + ' guardada' : ''));
+            pedPant = 'hub'; renderPedido(); window.scrollTo(0, 0);
+        }
+
+        // ---- passo 5: ecrã
+        function pedUltSobras(D, id) {
+            for (let k = 1; k <= 4; k++) {
+                const dt = diarioSumarDias(D, -7 * k), r = pedSobLer(dt);
+                if (r.s[id] !== undefined) return { dt, s: r.s[id], c: r.c[id] || 0, d: r.d[id] || 0, nc: !!r.nc[id], ign: !!r.ign[id], feito: r.feito };
+            }
+            return null;
+        }
+        function pedPedido() {
+            const D = pedDataAtual(), c = pedCalc(D), p = c.p, amanha = D === pedProxDia(pedHoje());
+            const semBase = Object.keys(c.base).length === 0, dn = DIARIO_DIAS[c.w];
+            const nPaes = PED_ORDEM.filter(id => c.tot[id] > 0).length;
+            const min = pedProxDia(pedHoje());
+            const nav = `<div class="ped-nav"><button type="button" aria-label="Dia anterior" ${D <= min ? 'disabled' : ''} onclick="pedDataMover(-1)">◀</button><b>${esc(pedDiaTxt(D))}</b><button type="button" aria-label="Dia seguinte" ${D >= diarioSumarDias(min, 21) ? 'disabled' : ''} onclick="pedDataMover(1)">▶</button></div>`;
+            const encs = c.encs.length ? `<div class="ped-enc"><h3>${c.encs.length === 1 ? '1 encomenda' : c.encs.length + ' encomendas'} para ${esc(dn)}</h3>` + c.encs.map(e => {
+                const inc = pedIncluida(p, e);
+                const lido = e.tem ? esc(pedQTxt(e.q)) : 'sem pão do pedido';
+                const extra = (e.desc.length ? ' · <b>não percebi:</b> ' + esc(e.desc.join(', ')) : '') + (e.vesp ? ' · 📌 Pedir na véspera' : '') + (e.lar ? '<br>Laranjeira: só se soma o que passa do que já deixaste.' : '');
+                return `<label class="${e.tem ? '' : 'off'}"><input type="checkbox" ${inc ? 'checked' : ''} ${e.tem ? '' : 'disabled'} aria-label="Somar ${esc(e.nome)}" onchange="pedEncInc('${esc(e.id)}', this.checked)"><span><b>${esc(e.nome)}</b> · ${esc(e.texto)}<br>= ${lido}${extra}</span></label>`;
+            }).join('') + '</div>' : `<p class="ped-ayuda">Sem encomendas para ${esc(dn)} na pestaña Encomendas.</p>`;
+            const filas = PED_ORDEM.map(id => {
+                const nome = pedNome(id), tot = c.tot[id], b = c.base[id] || 0, en = c.en[id] || 0, aj = c.aj[id] || 0;
+                const soE = PED_SO_ENC.includes(id);
+                if (soE && !(tot > 0 || en || aj)) return '';
+                const partes = soE ? [] : ['Base ' + b];
+                if (en) partes.push(en > 0 ? '+ encomenda ' + en : '− ' + Math.abs(en) + ' (não estará)');
+                if (aj) partes.push(aj > 0 ? '+ ajuste ' + aj : '− ajuste ' + Math.abs(aj));
+                if (soE && partes.length && partes[0].indexOf('+ ') === 0) partes[0] = partes[0].charAt(2).toUpperCase() + partes[0].slice(3);
+                const sub = soE ? (partes.length ? partes.join(' ') : 'Só por encomendas') : ((b === 0 && en === 0 && aj === 0) ? 'Sem base' : partes.join(' '));
+                const u = pedUltSobras(D, id);
+                let ult = 'Sem registo da semana anterior', pill = 'sem dados', pc = '';
+                if (u) {
+                    const dd = pedDiaTxt(u.dt).replace(' · ', ' ');
+                    ult = dd + ' · ' + (u.nc ? 'não contou' : (u.s + u.c === 0 ? 'acabou' : 'sobraram ' + u.s));
+                    pill = u.d > 0 ? '+' + u.d + ' aplicado' : (u.d < 0 ? '−' + Math.abs(u.d) + ' aplicado' : 'manter');
+                    pc = u.d > 0 ? 'sobe' : (u.d < 0 ? 'desce' : '');
+                }
+                return `<div class="ped-row ${tot > 0 ? 'tem' : 'mudo'}"><div class="ped-l1"><input type="number" inputmode="numeric" min="0" max="9999" class="ped-chipn ped-chipin" value="${tot}" aria-label="Pedido ${esc(nome)}" onchange="pedPedTot('${id}',this.value)" onfocus="this.select()"><div style="flex:1 1 0; min-width:0;"><div class="ped-nome">${esc(nome)}</div><div class="ped-sub">${esc(sub)}</div></div><div class="ped-ctl"><button type="button" aria-label="Menos ${esc(nome)}" onclick="pedPedMais('${id}',-1)">−</button><button type="button" aria-label="Mais ${esc(nome)}" onclick="pedPedMais('${id}',1)">+</button></div></div>${u ? `<div class="ped-l2" style="justify-content:space-between;"><span>${esc(ult)}</span><span class="ped-pill ${pc}">${esc(pill)}</span></div>` : ''}</div>`;
+            }).join('');
+            return pedCab2('Pedido · passo 5 de 5', amanha ? 'Pedido para amanhã' : 'Pedido para ' + dn, nPaes + (nPaes === 1 ? ' pão' : ' pães'), true, p && p.feito ? '✔ Marcado como pedido' : 'Ainda por marcar')
+                + nav
+                + (semBase ? `<div class="ped-aviso">Ainda não tens a base de ${esc(dn)}. Escreve os números como na tua nota do Keep: ao marcares o pedido ficam guardados como base dos próximos dias iguais. <button type="button" class="ped-link" onclick="pedBW = ${c.w}; pedIr('bases')">Definir as bases</button></div>` : '')
+                + encs + filas
+                + '<div class="ped-duo"><button type="button" class="ped-sec" onclick="pedBW = ' + c.w + '; pedIr(\'bases\')">Base de ' + esc(dn.split('-')[0]) + '</button><button type="button" class="ped-pri" onclick="pedMarcar()">Marcar como pedido</button></div>'
+                + '<p class="ped-nota">As encomendas somam-se sozinhas à base. Mudar um número aqui vale só para este dia.</p>';
+        }
+
+        // ---- bases por dia da semana
+        function pedBaseSet(id, v) {
+            const b = pedBaseEsc(pedBW), n = pedN9(v);
+            if (n > 0) b[id] = n; else delete b[id];
+            guardarEstado();
+        }
+        function pedBaseMais(id, dir) { pedBaseSet(id, (pedBaseLer(pedBW)[id] || 0) + dir * (PED_SALTO[id] || 1)); renderPedido(); }
+        function pedBaseInp(id, v) { pedBaseSet(id, v); renderPedido(); }
+        function pedBasesDia(w) { pedBW = w; renderPedido(); }
+        function pedBases() {
+            if (pedBW === null || pedBW < 1 || pedBW > 6) pedBW = pedDiaSem(pedProxDia(pedHoje()));
+            const w = pedBW, b = pedBaseLer(w);
+            const abas = '<div class="ped-dias">' + [[1, 'Seg'], [2, 'Ter'], [3, 'Qua'], [4, 'Qui'], [5, 'Sex'], [6, 'Sáb']].map(a => `<button type="button" class="${a[0] === w ? 'on' : ''}" onclick="pedBasesDia(${a[0]})">${a[1]}</button>`).join('') + '</div>';
+            const filas = PED_BASE_IDS.map(id => {
+                const nome = pedNome(id), v = b[id] || 0;
+                return `<div class="ped-row ${v > 0 ? 'tem' : ''}"><div class="ped-l1"><div class="ped-nome ${v > 0 ? '' : 'solo'}">${esc(nome)}</div><div class="ped-ctl"><button type="button" aria-label="Menos ${esc(nome)}" onclick="pedBaseMais('${id}',-1)">−</button><input type="number" inputmode="numeric" min="0" max="9999" value="${v}" aria-label="${esc(nome)}" onchange="pedBaseInp('${id}',this.value)" onfocus="this.select()"><button type="button" aria-label="Mais ${esc(nome)}" onclick="pedBaseMais('${id}',1)">+</button></div></div></div>`;
+            }).join('');
+            const n = PED_BASE_IDS.filter(id => b[id] > 0).length;
+            return pedCab2('Pedido · configuração', 'Bases por dia', n + (n === 1 ? ' pão' : ' pães'), true, 'O que pedes normalmente à ' + DIARIO_DIAS[w])
+                + abas
+                + '<p class="ped-ayuda">A base é o pedido habitual desse dia, sem encomendas. As sobras de cada dia ajustam-na sozinhas (passo 4). Nas bolas, paposecos e bolas de água os botões sobem de 5 em 5. O Pão de Forma não tem base: só aparece quando há encomenda.</p>'
+                + filas
+                + '<button type="button" class="ped-guardar" onclick="pedIr(\'hub\')">Pronto</button>';
+        }
+
+        function renderPedido() {
+            const raiz = document.getElementById('ped-raiz');
+            if (!raiz) return;
+            raiz.innerHTML = pedPant === 'manha' ? pedManha() : pedPant === 'rota' ? pedRota() : pedPant === 'fim' ? pedFim()
+                : pedPant === 'sobras' ? pedSobras() : pedPant === 'pedido' ? pedPedido() : pedPant === 'bases' ? pedBases() : pedHub();
         }
 
         function navegarMes(delta) {
