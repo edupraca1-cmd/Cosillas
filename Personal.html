@@ -153,17 +153,62 @@
         .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
         .btn-secondary { background-color: #e2e8f0; color: #475569; border: none; padding: 10px; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: bold; }
         .btn-reset { width: 100%; background-color: #fecdd3; color: #9f1239; border: none; padding: 10px; border-radius: 8px; font-size: 12px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        /* ===== GASTOS AL MOMENTO ===== */
+        #tab-finanzas { padding-bottom: 90px; }
+        .fab-gasto {
+            position: fixed; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom));
+            z-index: 900; background: var(--primary); color: #fff; border: none;
+            border-radius: 28px; padding: 15px 22px; font-size: 16px; font-weight: 800;
+            box-shadow: 0 4px 14px rgba(4, 120, 87, 0.35); cursor: pointer;
+        }
+        .fab-gasto:active { background: var(--primary-dark); }
+
+        .modal-fondo { display: none; position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 2000; background: rgba(15, 23, 42, 0.5); padding: 12px; overflow-y: auto; overscroll-behavior: contain; }
+        .modal-fondo.abierto { display: block; }
+        .modal-gasto { background: #fff; border-radius: 16px; max-width: 460px; margin: 3vh auto 0; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+        .modal-gasto h3 { margin: 0 0 8px; font-size: 17px; color: var(--text-main); }
+        .modal-gasto label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin: 10px 0 4px; }
+        .modal-gasto label small { font-weight: normal; color: #94a3b8; }
+        .modal-gasto input, .modal-gasto select { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; background: #fff; color: var(--text-main); font-family: inherit; }
+        .modal-gasto input:focus, .modal-gasto select:focus { border-color: var(--primary); outline: none; }
+        .modal-gasto input.g-importe { font-size: 26px; font-weight: 800; text-align: center; padding: 8px; }
+        .g-fila { display: flex; gap: 8px; }
+        .g-fila > div { flex: 1; min-width: 0; }
+        .g-fila > div.g-col-fecha { flex: 0 0 150px; }
+        .g-hint { font-size: 12px; color: #475569; margin-top: 6px; }
+        .g-hint:empty { display: none; }
+        .g-hint.mal { color: #b91c1c; font-weight: 600; }
+        .g-nota-gas { font-size: 11px; color: #94a3b8; margin-top: 10px; }
+        .g-botones { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; margin-top: 12px; }
+        .btn-g-cancelar { background: #e2e8f0; color: #475569; border: none; padding: 13px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .btn-g-guardar { background: var(--primary); color: #fff; border: none; padding: 13px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .btn-g-guardar:disabled { background: #94a3b8; }
+        .btn-g-eliminar { width: 100%; background: none; border: none; color: var(--danger); font-size: 13px; font-weight: bold; padding: 10px 0 0; cursor: pointer; }
+
+        details.gastos-lista { margin: 8px 0 4px; background: #fff; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        details.gastos-lista > summary { padding: 9px 10px; font-size: 13px; color: #334155; }
+        details.gastos-lista .g-total { color: #b91c1c; font-weight: 800; }
+        .gasto-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border-top: 1px dashed var(--border); font-size: 13px; cursor: pointer; }
+        .gasto-row:active { background: #f1f5f9; }
+        .gasto-row .g-izq { min-width: 0; }
+        .gasto-row .g-desc { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gasto-row .g-sub { font-size: 11px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gasto-row .g-monto { font-weight: 800; color: #b91c1c; white-space: nowrap; }
+        .gas-info .nw { white-space: nowrap; }
+
+        .toast { position: fixed; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 3000; background: #0f172a; color: #fff; padding: 10px 16px; border-radius: 20px; font-size: 13px; max-width: 88%; text-align: center; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
+        .toast.visible { opacity: 1; }
     </style>
 </head>
 <body>
 
     <nav class="navbar">
-        <button class="tab-btn active" onclick="switchTab('tab-gasolina', this)">⛽ Gasolina</button>
-        <button class="tab-btn" onclick="switchTab('tab-finanzas', this)">📊 Finanzas</button>
+        <button class="tab-btn active" onclick="switchTab('tab-finanzas', this)">📊 Finanzas</button>
+        <button class="tab-btn" onclick="switchTab('tab-gasolina', this)">⛽ Gasolina</button>
     </nav>
 
     <!-- ================= GASOLINA ================= -->
-    <div id="tab-gasolina" class="tab-content active">
+    <div id="tab-gasolina" class="tab-content">
 
         <div class="kpi-grid">
             <div class="kpi-box">
@@ -266,7 +311,7 @@
     </div>
 
     <!-- ================= FINANZAS ================= -->
-    <div id="tab-finanzas" class="tab-content">
+    <div id="tab-finanzas" class="tab-content active">
         <div class="app-title">📊 Mi Control Financiero</div>
 
         <div class="metrics">
@@ -297,7 +342,39 @@
         </div>
 
         <button class="btn-reset" onclick="restablecerFabrica()">🔄 Restablecer de fábrica</button>
+
+        <!-- Botón para apuntar un gasto en el momento -->
+        <button class="fab-gasto" onclick="abrirGasto()">＋ Gasto</button>
     </div>
+
+    <!-- ================= VENTANA: APUNTAR GASTO ================= -->
+    <div class="modal-fondo" id="modal-gasto">
+        <div class="modal-gasto">
+            <h3 id="g-titulo">Nuevo gasto</h3>
+            <label for="g-importe">Importe (€)</label>
+            <input type="number" id="g-importe" class="g-importe" inputmode="decimal" step="0.01" min="0" placeholder="0.00" enterkeyhint="next" oninput="actualizarHintGasto()">
+            <label for="g-concepto">Concepto</label>
+            <select id="g-concepto" onchange="actualizarHintGasto()"></select>
+            <div class="g-hint" id="g-hint"></div>
+            <div class="g-fila">
+                <div>
+                    <label for="g-nota">Nota <small>(opcional)</small></label>
+                    <input type="text" id="g-nota" placeholder="Ej. supermercado" enterkeyhint="done" autocomplete="off">
+                </div>
+                <div class="g-col-fecha">
+                    <label for="g-fecha">Fecha</label>
+                    <input type="date" id="g-fecha" onchange="rellenarConceptosGasto()">
+                </div>
+            </div>
+            <div class="g-botones">
+                <button class="btn-g-cancelar" onclick="cerrarGasto()">Cancelar</button>
+                <button class="btn-g-guardar" id="g-guardar" onclick="guardarGasto()">Guardar gasto</button>
+            </div>
+            <button class="btn-g-eliminar" id="g-eliminar" onclick="eliminarGastoEditado()" style="display:none;">🗑️ Eliminar este gasto</button>
+            <div class="g-nota-gas">⛽ La gasolina se apunta en la pestaña Gasolina y también descuenta del saldo.</div>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
 
     <script>
         // ===== PESTAÑAS =====
@@ -938,10 +1015,99 @@
             };
         }
 
-        let appData = JSON.parse(localStorage.getItem('controlFinanciero_v6')) || crearEstadoInicial();
-        if (appData.saldoBase === undefined) appData.saldoBase = 1598.70;
+        // ----- Saldo y proyección -----
+        // Saldo en banco = base + lo que ya ha pasado de verdad: conceptos marcados,
+        // gastos apuntados en el momento y repostajes de la pestaña Gasolina.
+        // La proyección solo resta lo que falta de cada presupuesto.
+        function esIngreso(item) {
+            const d = String(item.desc || '').toLowerCase();
+            return d.includes("ingreso") || d.includes("nómina");
+        }
 
-        let openCycles = new Set([0]);
+        function normDesc(s) { return String(s || '').trim().toLowerCase(); }
+
+        function analizarCiclo(ciclo) {
+            const clave = claveCicloFinanzas(ciclo.nombre);
+            const itGas = itemGasolinaDe(ciclo);
+            const realGas = clave !== null ? gastoRealGasolinaCiclo(clave) : 0;
+
+            // Gastos apuntados en el ciclo, sumados por concepto
+            const porConcepto = {};
+            (ciclo.gastos || []).forEach(g => {
+                const k = normDesc(g.concepto);
+                porConcepto[k] = (porConcepto[k] || 0) + (Number(g.importe) || 0);
+            });
+
+            let real = 0, pendiente = 0;
+            const items = ciclo.items.map(item => {
+                const num = parseFloat(item.valor) || 0;
+                if (esIngreso(item)) {
+                    if (item.checked) real += num; else pendiente += num;
+                    return { ingreso: true, presupuesto: num, gastado: 0, esGas: false };
+                }
+                const pres = Math.abs(num);
+                const k = normDesc(item.desc);
+                let gastado = 0;
+                if (k && porConcepto[k] !== undefined) {   // cuenta solo para el primer concepto con ese nombre
+                    gastado += porConcepto[k];
+                    delete porConcepto[k];
+                }
+                if (item === itGas) gastado += realGas;
+                // Marcado sin gastos apuntados: se pagó el importe completo (como siempre).
+                // Con gastos apuntados: cuenta lo gastado de verdad, y marcarlo lo da por cerrado.
+                real -= gastado > 0 ? gastado : (item.checked ? pres : 0);
+                pendiente -= item.checked ? 0 : Math.max(pres - gastado, 0);
+                return { ingreso: false, presupuesto: pres, gastado: gastado, esGas: item === itGas };
+            });
+
+            // "Otro gasto" (sin concepto): sale del saldo sin tocar ningún presupuesto
+            let otros = 0;
+            Object.keys(porConcepto).forEach(k => { otros += porConcepto[k]; });
+            real -= otros;
+
+            pendiente -= parseFloat(ciclo.imprevisto) || 0;
+            return { items: items, real: real, pendiente: pendiente, otros: otros };
+        }
+
+        function efectoReal(data) {
+            return data.ciclos.reduce((suma, c) => suma + analizarCiclo(c).real, 0);
+        }
+
+        // Saldo tal como lo calculaba la versión anterior (solo para actualizar sin mover el saldo)
+        function sumaMarcadosAntigua(data) {
+            let suma = 0;
+            data.ciclos.forEach(ciclo => ciclo.items.forEach(item => {
+                if (!item.checked) return;
+                const num = parseFloat(item.valor) || 0;
+                suma += esIngreso(item) ? num : -Math.abs(num);
+            }));
+            return suma;
+        }
+
+        const MODELO_SALDO = 2;
+
+        function prepararFinanzas(data) {
+            if (!data || !Array.isArray(data.ciclos)) return data;
+            data.saldoBase = data.saldoBase === undefined ? 1598.70 : (Number(data.saldoBase) || 0);
+            data.ciclos.forEach(c => {
+                if (!Array.isArray(c.items)) c.items = [];
+                if (!Array.isArray(c.gastos)) c.gastos = [];
+            });
+            if (data.modeloSaldo !== MODELO_SALDO) {
+                // Antes los repostajes no descontaban del saldo; ahora sí, igual que los gastos.
+                // Se ajusta la base para que el saldo que ya tenías no cambie al actualizar.
+                const saldoAntes = data.saldoBase + sumaMarcadosAntigua(data);
+                data.saldoBase = saldoAntes - efectoReal(data);
+                data.modeloSaldo = MODELO_SALDO;
+            }
+            return data;
+        }
+
+        let appData = prepararFinanzas(JSON.parse(localStorage.getItem('controlFinanciero_v6')) || crearEstadoInicial());
+        guardar();
+
+        let openCycles = new Set([Math.max(0, indiceCicloDeFecha(new Date()))]);   // se abre el ciclo actual
+        let openGastos = new Set();   // listas de gastos desplegadas (por id de ciclo)
 
         function renderizarGrafico(etiquetas, datos) {
             const ctx = document.getElementById('graficoProyeccion');
@@ -1007,12 +1173,14 @@
                     if (card.open) openCycles.add(idx);
                 });
             }
+            document.querySelectorAll('details.gastos-lista').forEach(d => {
+                if (d.open) openGastos.add(d.dataset.ciclo); else openGastos.delete(d.dataset.ciclo);
+            });
 
             let html = "";
 
             appData.ciclos.forEach((ciclo, cIdx) => {
                 let filas = "";
-                const itGas = itemGasolinaDe(ciclo);
 
                 ciclo.items.forEach((item, iIdx) => {
                     const isChecked = item.checked ? 'checked' : '';
@@ -1034,10 +1202,10 @@
                             </div>
                         </div>
                     `;
-                    if (item === itGas) {
-                        filas += `<div class="gas-info" id="gas-info-${cIdx}"></div>`;
-                    }
+                    filas += `<div class="gas-info" id="info-${cIdx}-${iIdx}"></div>`;
                 });
+
+                filas += htmlListaGastos(ciclo);
 
                 filas += `
                     <div class="row row-imprevisto">
@@ -1081,24 +1249,9 @@
             recalcular();
         }
 
-        function calcularSumaMarcados() {
-            let checkedSum = 0;
-            appData.ciclos.forEach(ciclo => {
-                ciclo.items.forEach(item => {
-                    if (item.checked) {
-                        let num = parseFloat(item.valor) || 0;
-                        let esIngreso = item.desc.toLowerCase().includes("ingreso") || item.desc.toLowerCase().includes("nómina");
-                        checkedSum += esIngreso ? num : -Math.abs(num);
-                    }
-                });
-            });
-            return checkedSum;
-        }
-
         function cambiarSaldoDirecto(val) {
-            let nuevoSaldoDeseado = parseFloat(val) || 0;
-            let checkedSum = calcularSumaMarcados();
-            appData.saldoBase = nuevoSaldoDeseado - checkedSum;
+            const nuevoSaldoDeseado = parseFloat(val) || 0;
+            appData.saldoBase = nuevoSaldoDeseado - efectoReal(appData);
             recalcular();
             guardar();
         }
@@ -1187,7 +1340,15 @@
         }
 
         function eliminarItem(cIdx, iIdx) {
-            appData.ciclos[cIdx].items.splice(iIdx, 1);
+            const ciclo = appData.ciclos[cIdx];
+            const item = ciclo.items[iIdx];
+            const k = normDesc(item.desc);
+            const ligados = esIngreso(item) ? [] : (ciclo.gastos || []).filter(g => normDesc(g.concepto) === k);
+            if (ligados.length && !confirm(`"${item.desc}" tiene ${ligados.length} gasto(s) apuntado(s) en este ciclo. Si lo eliminas, pasarán a "Otro gasto" (siguen descontando del saldo). ¿Continuar?`)) return;
+            ciclo.items.splice(iIdx, 1);
+            if (ligados.length && !ciclo.items.some(i => normDesc(i.desc) === k && !esIngreso(i))) {
+                ligados.forEach(g => { g.concepto = ''; });
+            }
             renderizar();
             guardar();
         }
@@ -1201,7 +1362,8 @@
                     id: Date.now(),
                     nombre: nombre.trim(),
                     items: obtenerConceptosBase(),
-                    imprevisto: "0.00"
+                    imprevisto: "0.00",
+                    gastos: []
                 });
                 openCycles.add(appData.ciclos.length - 1);
                 renderizar();
@@ -1211,8 +1373,12 @@
 
         function eliminarCiclo(event, cIdx) {
             event.stopPropagation();
-            const cicloNombre = appData.ciclos[cIdx].nombre;
-            if (confirm(`¿Estás seguro de que deseas eliminar el ciclo "${cicloNombre}"?`)) {
+            const ciclo = appData.ciclos[cIdx];
+            const n = (ciclo.gastos || []).length;
+            const extra = n ? `\n\nTambién se borrarán sus ${n} gasto(s) apuntado(s). El saldo del banco no cambia.` : '';
+            if (confirm(`¿Estás seguro de que deseas eliminar el ciclo "${ciclo.nombre}"?${extra}`)) {
+                // Lo que ya se pagó o cobró en ese ciclo sigue reflejado en el saldo del banco
+                appData.saldoBase += analizarCiclo(ciclo).real;
                 appData.ciclos.splice(cIdx, 1);
                 renderizar();
                 guardar();
@@ -1220,8 +1386,8 @@
         }
 
         function recalcular() {
-            let checkedSum = calcularSumaMarcados();
-            let saldoActualReal = appData.saldoBase + checkedSum;
+            const analisis = appData.ciclos.map(analizarCiclo);
+            const saldoActualReal = appData.saldoBase + analisis.reduce((suma, an) => suma + an.real, 0);
 
             const inputBanco = document.getElementById("input-saldo-banco");
             if (document.activeElement !== inputBanco) {
@@ -1233,26 +1399,8 @@
             const datosGrafico = [];
 
             appData.ciclos.forEach((ciclo, cIdx) => {
-                let netoPendiente = 0;
-
-                // Gasolina: si hay gasto real registrado en este ciclo, solo se proyecta lo que falta del tope
-                const claveC = claveCicloFinanzas(ciclo.nombre);
-                const itGas = itemGasolinaDe(ciclo);
-                const realGas = (claveC !== null) ? gastoRealGasolinaCiclo(claveC) : 0;
-
-                ciclo.items.forEach(item => {
-                    if (!item.checked) {
-                        let num = parseFloat(item.valor) || 0;
-                        if (item === itGas && realGas > 0) num = Math.max(num - realGas, 0);
-                        let esIngreso = item.desc.toLowerCase().includes("ingreso") || item.desc.toLowerCase().includes("nómina");
-                        netoPendiente += esIngreso ? num : -Math.abs(num);
-                    }
-                });
-
-                const imprevistoExtra = parseFloat(ciclo.imprevisto) || 0;
-                netoPendiente -= imprevistoExtra;
-
-                acumuladoProyectado += netoPendiente;
+                const an = analisis[cIdx];
+                acumuladoProyectado += an.pendiente;
 
                 etiquetasGrafico.push(ciclo.nombre.split(' - ')[0]);
                 datosGrafico.push(acumuladoProyectado);
@@ -1278,23 +1426,27 @@
                     }
                 }
 
-                // Línea informativa bajo "Gasolina": gasto real vs tope
-                const gi = document.getElementById(`gas-info-${cIdx}`);
-                if (gi) {
-                    if (itGas && realGas > 0) {
-                        const pres = parseFloat(itGas.valor) || 0;
-                        if (realGas <= pres) {
-                            gi.className = 'gas-info';
-                            gi.innerHTML = `⛽ Gastado real: <b>${realGas.toFixed(2)} €</b> de ${pres.toFixed(2)} € · quedan ${(pres - realGas).toFixed(2)} €`;
-                        } else {
-                            gi.className = 'gas-info mal';
-                            gi.innerHTML = `⛽ Gastado real: ${realGas.toFixed(2)} € · te pasaste por ${(realGas - pres).toFixed(2)} €`;
-                        }
+                // Debajo de cada concepto: lo gastado de verdad frente a lo presupuestado
+                ciclo.items.forEach((item, iIdx) => {
+                    const el = document.getElementById(`info-${cIdx}-${iIdx}`);
+                    if (!el) return;
+                    const r = an.items[iIdx];
+                    el.className = 'gas-info';
+                    if (r.ingreso || r.gastado <= 0) { el.innerHTML = ''; return; }
+                    const ico = r.esGas ? '⛽' : '🧾';
+                    const eur = n => `${n.toFixed(2)}&nbsp;€`;
+                    const pres = r.presupuesto, gas = r.gastado;
+                    if (item.checked) {
+                        el.innerHTML = `${ico} Cerrado con <b>${eur(gas)}</b> de ${eur(pres)} ` +
+                            (gas <= pres ? `<span class="nw">· sobraron ${eur(pres - gas)}</span>` : `<span class="nw">· te pasaste por ${eur(gas - pres)}</span>`);
+                        if (gas > pres) el.className = 'gas-info mal';
+                    } else if (gas <= pres) {
+                        el.innerHTML = `${ico} Gastado real: <b>${eur(gas)}</b> de ${eur(pres)} <span class="nw">· quedan ${eur(pres - gas)}</span>`;
                     } else {
-                        gi.className = 'gas-info';
-                        gi.innerHTML = '';
+                        el.className = 'gas-info mal';
+                        el.innerHTML = `${ico} Gastado real: ${eur(gas)} <span class="nw">· te pasaste por ${eur(gas - pres)}</span>`;
                     }
-                }
+                });
             });
 
             document.getElementById("disp-meta-final").innerText = acumuladoProyectado.toFixed(2) + " €";
@@ -1328,7 +1480,8 @@
                     try {
                         const content = JSON.parse(readerEvent.target.result);
                         if (content.ciclos && content.saldoBase !== undefined) {
-                            appData = content;
+                            appData = prepararFinanzas(content);
+                            openGastos = new Set();
                             guardar();
                             renderizar();
                             actualizarPantallaGasolina();
@@ -1347,11 +1500,228 @@
         function restablecerFabrica() {
             if (confirm("¿Quieres restablecer la plantilla con todos los valores predeterminados?")) {
                 localStorage.removeItem('controlFinanciero_v6');
-                openCycles = new Set([0]);
-                appData = crearEstadoInicial();
+                appData = prepararFinanzas(crearEstadoInicial());
+                guardar();
+                openCycles = new Set([Math.max(0, indiceCicloDeFecha(new Date()))]);
+                openGastos = new Set();
                 renderizar();
                 actualizarPantallaGasolina();
             }
+        }
+
+        // =====================================================
+        // ===== GASTOS AL MOMENTO =============================
+        // =====================================================
+        const ULTIMO_CONCEPTO_KEY = 'finanzas_ultimo_concepto';
+        let gastoEditando = null;   // id del gasto abierto en la ventana (null = gasto nuevo)
+        let restosGasto = {};       // lo que queda de cada presupuesto en el ciclo elegido
+        let avisoTimer = null;
+
+        function esc(s) {
+            return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function indiceCicloDeFecha(fecha) {
+            const clave = claveCiclo(cicloDeFecha(fecha));
+            return appData.ciclos.findIndex(c => claveCicloFinanzas(c.nombre) === clave);
+        }
+
+        function buscarGasto(id) {
+            for (let c = 0; c < appData.ciclos.length; c++) {
+                const lista = appData.ciclos[c].gastos || [];
+                const g = lista.findIndex(x => x.id === id);
+                if (g >= 0) return { cIdx: c, gIdx: g, gasto: lista[g] };
+            }
+            return null;
+        }
+
+        function fechaGastoElegida() {
+            const v = document.getElementById('g-fecha').value;
+            if (!v) return new Date();
+            const p = v.split('-').map(Number);
+            return new Date(p[0], p[1] - 1, p[2], 12);
+        }
+
+        // Lista desplegable con los gastos apuntados de un ciclo (toca uno para editarlo)
+        function htmlListaGastos(ciclo) {
+            const gastos = (ciclo.gastos || []).slice().sort((a, b) => b.ts - a.ts);
+            if (!gastos.length) return '';
+            const total = gastos.reduce((suma, g) => suma + (Number(g.importe) || 0), 0);
+            const idC = String(ciclo.id);
+            const filas = gastos.map(g => `
+                <div class="gasto-row" onclick="abrirGasto('${g.id}')">
+                    <div class="g-izq">
+                        <div class="g-desc">${esc(g.concepto ? String(g.concepto).trim() : 'Otro gasto')}</div>
+                        <div class="g-sub">${fmtCorta(g.ts)}${g.nota ? ' · ' + esc(g.nota) : ''}</div>
+                    </div>
+                    <div class="g-monto">−${(Number(g.importe) || 0).toFixed(2)} €</div>
+                </div>`).join('');
+            return `
+                <details class="gastos-lista" data-ciclo="${esc(idC)}" ${openGastos.has(idC) ? 'open' : ''}>
+                    <summary><span>🧾 Gastos apuntados (${gastos.length})</span><span class="g-total">−${total.toFixed(2)} € <span class="arrow">▼</span></span></summary>
+                    ${filas}
+                </details>`;
+        }
+
+        function abrirGasto(id) {
+            const enc = id ? buscarGasto(id) : null;
+            gastoEditando = enc ? id : null;
+            document.getElementById('g-titulo').innerText = enc ? 'Editar gasto' : 'Nuevo gasto';
+            document.getElementById('g-guardar').innerText = enc ? 'Guardar cambios' : 'Guardar gasto';
+            document.getElementById('g-eliminar').style.display = enc ? 'block' : 'none';
+            document.getElementById('g-importe').value = enc ? enc.gasto.importe : '';
+            document.getElementById('g-nota').value = enc ? (enc.gasto.nota || '') : '';
+            const inFecha = document.getElementById('g-fecha');
+            inFecha.max = aISO(new Date());
+            inFecha.value = aISO(enc ? new Date(enc.gasto.ts) : new Date());
+            let preferido = null;
+            if (enc) preferido = enc.gasto.concepto || '';
+            else { try { preferido = localStorage.getItem(ULTIMO_CONCEPTO_KEY); } catch (e) {} }
+            rellenarConceptosGasto(preferido);
+            document.getElementById('modal-gasto').classList.add('abierto');
+            if (!enc) document.getElementById('g-importe').focus();
+        }
+
+        function cerrarGasto() {
+            document.getElementById('modal-gasto').classList.remove('abierto');
+            if (document.activeElement) document.activeElement.blur();
+            gastoEditando = null;
+        }
+
+        // Rellena los conceptos del ciclo al que pertenece la fecha elegida.
+        // preferido: concepto a dejar seleccionado (null = el primero; sin argumento = mantener el actual)
+        function rellenarConceptosGasto(preferido) {
+            const sel = document.getElementById('g-concepto');
+            const hint = document.getElementById('g-hint');
+            const btn = document.getElementById('g-guardar');
+            if (preferido === undefined) preferido = sel.disabled ? null : sel.value;
+            restosGasto = {};
+            sel.dataset.ocultos = '0';
+
+            const cIdx = indiceCicloDeFecha(fechaGastoElegida());
+            if (cIdx < 0) {
+                sel.innerHTML = '<option value="">—</option>';
+                sel.disabled = true;
+                btn.disabled = true;
+                hint.className = 'g-hint mal';
+                hint.innerText = 'No hay ningún ciclo que incluya esa fecha. Créalo antes en Finanzas.';
+                return;
+            }
+            sel.disabled = false;
+            btn.disabled = false;
+
+            // Al editar, el propio gasto no cuenta para calcular lo que queda
+            const ciclo = appData.ciclos[cIdx];
+            const base = gastoEditando
+                ? Object.assign({}, ciclo, { gastos: (ciclo.gastos || []).filter(g => g.id !== gastoEditando) })
+                : ciclo;
+            const an = analizarCiclo(base);
+            const kPref = preferido === null ? null : normDesc(preferido);
+
+            const vistos = new Set();
+            let opciones = '', ocultos = 0;
+            ciclo.items.forEach((item, iIdx) => {
+                const r = an.items[iIdx];
+                const k = normDesc(item.desc);
+                if (r.ingreso || !k || k === 'gasolina' || vistos.has(k)) return;
+                vistos.add(k);
+                // Los conceptos ya pagados (marcados) no se ofrecen, salvo el del gasto que se edita
+                if (item.checked && !(gastoEditando && k === kPref)) { ocultos++; return; }
+                const resto = r.presupuesto - r.gastado;
+                restosGasto[k] = resto;
+                const txt = resto >= 0 ? `quedan ${resto.toFixed(2)} €` : `pasado ${(-resto).toFixed(2)} €`;
+                opciones += `<option value="${esc(item.desc.trim())}">${esc(item.desc.trim())} · ${txt}</option>`;
+            });
+            opciones += '<option value="">Otro gasto (sin presupuesto)</option>';
+            sel.innerHTML = opciones;
+            sel.dataset.ocultos = String(ocultos);
+
+            const opt = kPref === null ? null : Array.from(sel.options).find(o => normDesc(o.value) === kPref);
+            sel.value = opt ? opt.value : sel.options[0].value;
+            actualizarHintGasto();
+        }
+
+        function actualizarHintGasto() {
+            const sel = document.getElementById('g-concepto');
+            const hint = document.getElementById('g-hint');
+            if (sel.disabled) return;
+            const imp = parseFloat(document.getElementById('g-importe').value) || 0;
+            const ocultos = parseInt(sel.dataset.ocultos || '0', 10);
+            const notaOcultos = ocultos ? 'No aparecen los conceptos ya marcados como pagados.' : '';
+            hint.className = 'g-hint';
+            if (!sel.value) {
+                hint.innerText = ('Se descuenta del saldo sin tocar ningún presupuesto. ' + notaOcultos).trim();
+                return;
+            }
+            const despues = (restosGasto[normDesc(sel.value)] || 0) - imp;
+            if (imp > 0 && despues < 0) {
+                hint.className = 'g-hint mal';
+                hint.innerText = `Con este gasto te pasas del presupuesto por ${(-despues).toFixed(2)} €.`;
+            } else if (imp > 0) {
+                hint.innerText = `Después de este gasto quedarán ${despues.toFixed(2)} €.`;
+            } else {
+                hint.innerText = notaOcultos;
+            }
+        }
+
+        function guardarGasto() {
+            const inImporte = document.getElementById('g-importe');
+            const importe = Math.round(parseFloat(inImporte.value) * 100) / 100;
+            if (!(importe > 0)) {
+                alert('Introduce el importe del gasto.');
+                inImporte.focus();
+                return;
+            }
+            const hoyISO = aISO(new Date());
+            const fechaISO = document.getElementById('g-fecha').value || hoyISO;
+            if (fechaISO > hoyISO) {
+                alert('La fecha del gasto no puede ser futura.');
+                return;
+            }
+            const fecha = fechaGastoElegida();
+            const cIdx = indiceCicloDeFecha(fecha);
+            if (cIdx < 0) {
+                alert('No hay ningún ciclo que incluya esa fecha. Créalo antes en Finanzas.');
+                return;
+            }
+            const concepto = document.getElementById('g-concepto').value;
+            const nota = document.getElementById('g-nota').value.trim();
+
+            const previo = gastoEditando ? buscarGasto(gastoEditando) : null;
+            let ts;
+            if (previo && aISO(new Date(previo.gasto.ts)) === fechaISO) ts = previo.gasto.ts;   // misma fecha: se conserva la hora
+            else if (fechaISO === hoyISO) ts = Date.now();
+            else ts = fecha.getTime();
+
+            if (previo) appData.ciclos[previo.cIdx].gastos.splice(previo.gIdx, 1);
+            const destino = appData.ciclos[cIdx];
+            if (!Array.isArray(destino.gastos)) destino.gastos = [];
+            destino.gastos.push({ id: previo ? previo.gasto.id : nuevoId(), ts: ts, importe: importe, concepto: concepto, nota: nota });
+
+            if (!previo) { try { localStorage.setItem(ULTIMO_CONCEPTO_KEY, concepto); } catch (e) {} }
+            cerrarGasto();
+            guardar();
+            renderizar();
+            mostrarAviso(`${previo ? 'Gasto actualizado' : 'Gasto apuntado'}: ${importe.toFixed(2)} € · ${concepto || 'Otro gasto'}`);
+        }
+
+        function eliminarGastoEditado() {
+            const enc = gastoEditando ? buscarGasto(gastoEditando) : null;
+            if (!enc) { cerrarGasto(); return; }
+            if (!confirm(`¿Eliminar este gasto de ${Number(enc.gasto.importe).toFixed(2)} €?`)) return;
+            appData.ciclos[enc.cIdx].gastos.splice(enc.gIdx, 1);
+            cerrarGasto();
+            guardar();
+            renderizar();
+            mostrarAviso('Gasto eliminado');
+        }
+
+        function mostrarAviso(texto) {
+            const t = document.getElementById('toast');
+            t.innerText = texto;
+            t.classList.add('visible');
+            clearTimeout(avisoTimer);
+            avisoTimer = setTimeout(() => t.classList.remove('visible'), 2500);
         }
 
         // =====================================================
@@ -1362,6 +1732,8 @@
             document.getElementById('odometro').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('litros').focus(); } });
             document.getElementById('litros').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('coste').focus(); } });
             document.getElementById('coste').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); guardarRegistroGasolina(); } });
+            document.getElementById('g-importe').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('g-nota').focus(); } });
+            document.getElementById('g-nota').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); guardarGasto(); } });
 
             resetearFormulario();
             actualizarPantallaGasolina();
