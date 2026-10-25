@@ -467,6 +467,28 @@
         .cr-sim-res .nota { margin-top: 8px; font-size: 11.5px; color: #64748b; }
         .btn-cr-nuevo { width: 100%; padding: 12px; font-size: 13px; margin-bottom: 8px; }
         .cr-borrar { margin-top: 12px; color: #9f1239; border-color: #fecdd3; background: #fff1f2; }
+
+        /* ===== CONSEJERO ===== */
+        .pend.consejo { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+        .pend.consejo .pend-ir { color: #047857; }
+        .consejo-caja { border-radius: 12px; padding: 10px 12px; margin-top: 10px; font-size: 13px; line-height: 1.5; }
+        .consejo-caja.ok { background: #ecfdf5; border: 1px solid #a7f3d0; color: #064e3b; }
+        .consejo-caja.espera { background: #f8fafc; border: 1px solid var(--border); color: #334155; }
+        .consejo-caja.meta { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; }
+        .consejo-titulo { font-weight: 800; font-size: 14px; margin-bottom: 4px; }
+        .consejo-cifras { margin-top: 6px; }
+        .consejo-botones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+        .consejo-caja .btn-mini { white-space: nowrap; }
+        .tabla-consejo { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 4px; }
+        .tabla-consejo th { text-align: left; font-size: 11px; font-weight: 800; color: #64748b; padding: 4px; border-bottom: 1px solid var(--border); }
+        .tabla-consejo td { padding: 7px 4px; border-bottom: 1px dashed var(--border); font-variant-numeric: tabular-nums; color: #334155; }
+        .tabla-consejo td.ahora { color: #047857; font-weight: 800; }
+        .consejo-orden { font-size: 13px; line-height: 1.7; color: #334155; }
+        .consejo-reserva { margin-top: 14px; }
+        .panel-body .consejo-reserva input[type="number"] { width: 76px; }
+
+        .modal-gasto .dos-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+        .nc-previa { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 9px 10px; margin-top: 12px; line-height: 1.45; }
     </style>
 </head>
 <body>
@@ -588,7 +610,7 @@
         <!-- ===== INICIO: cifras, gráfico y lo pendiente ===== -->
         <div id="tab-inicio" class="tab-content active">
             <div class="app-title">📊 Mi Control Financiero</div>
-            <div class="app-version" id="app-version">Versión 0.2 · 25 oct 2026</div>
+            <div class="app-version" id="app-version">Versión 0.3 · 25 oct 2026</div>
         <div class="metrics">
             <div class="metric-card saldo">
                 <div class="metric-title">SALDO EN BANCO (€)</div>
@@ -658,6 +680,18 @@
         <!-- ===== CRÉDITOS: tarjeta y préstamos ===== -->
         <div id="tab-tarjeta" class="tab-content">
             <div class="cr-total" id="cr-total"></div>
+            <section class="panel" id="panel-consejo">
+                <div class="panel-cab"><span>💡 Consejero</span><span class="summary-right"><span class="panel-resumen" id="consejo-resumen"></span></span></div>
+                <div class="panel-body">
+                    <div id="consejo-cuerpo"></div>
+                    <div class="fp-dias-fila consejo-reserva">
+                        <span>Reserva que no quiero tocar</span>
+                        <input type="number" id="consejo-reserva" aria-label="Reserva (€)" inputmode="decimal" min="0" step="10" oninput="cambiarReservaAmortizar(this.value)">
+                        <span>€</span>
+                    </div>
+                    <div class="panel-nota">El consejero mira tus ciclos en el peor caso (con los topes) y solo te propone amortizar si ningún mes baja de esa reserva. Empieza por la deuda más cara. En un crédito hay que avisar al banco con 30 días y puede cobrar hasta un 0,5 % (ya está descontado en lo que te ahorras). Si piensas hacer una compra grande, ponla antes en tus ciclos para que la tenga en cuenta.</div>
+                </div>
+            </section>
         <!-- ===== Tarjeta de crédito ===== -->
         <section class="panel" id="panel-tarjeta">
             <div class="panel-cab">
@@ -688,6 +722,10 @@
 
                 <div class="panel-h">Plan de pagos</div>
                 <div id="tj-plan"></div>
+
+                <div class="panel-h">💶 Amortizar</div>
+                <div class="cr-sim"><input type="number" id="tj-amort" inputmode="decimal" step="0.01" min="0" placeholder="¿Cuánto quieres amortizar? (€)" oninput="simularAmortTarjeta()"></div>
+                <div class="cr-sim-res" id="tj-amort-res"></div>
 
                 <details class="tj-ajustes">
                     <summary>⚙️ Intereses y pago mínimo <span class="arrow">▼</span></summary>
@@ -987,6 +1025,42 @@
                 <button class="btn-g-guardar" id="c-guardar" onclick="guardarConcepto()">Añadir</button>
             </div>
             <div class="g-nota-gas">¿Se repite cada año o cada varios años? Guárdalo mejor en Planes → «📅 Periódicos»: la app lo pondrá sola en su ciclo.</div>
+        </div>
+    </div>
+
+    <!-- ================= VENTANA: NUEVO CRÉDITO ================= -->
+    <div class="modal-fondo" id="modal-credito" onclick="if (event.target === this) cerrarNuevoCredito()">
+        <div class="modal-gasto hoja">
+            <div class="m-cab">
+                <h3>Nuevo crédito</h3>
+                <button type="button" class="m-cerrar" onclick="cerrarNuevoCredito()" aria-label="Cerrar">✕</button>
+            </div>
+            <label for="nc-nombre">Nombre</label>
+            <input type="text" id="nc-nombre" placeholder="Ej. Crédito personal" autocomplete="off" enterkeyhint="next" oninput="previaNuevoCredito()">
+            <div class="dos-col">
+                <div>
+                    <label for="nc-deuda">Lo que debes (€)</label>
+                    <input type="number" id="nc-deuda" inputmode="decimal" step="0.01" min="0" placeholder="0.00" oninput="previaNuevoCredito()">
+                </div>
+                <div>
+                    <label for="nc-cuota">Cuota al mes (€)</label>
+                    <input type="number" id="nc-cuota" inputmode="decimal" step="0.01" min="0" placeholder="0.00" oninput="previaNuevoCredito()">
+                </div>
+                <div>
+                    <label for="nc-proxima">Próxima cuota</label>
+                    <input type="date" id="nc-proxima" oninput="previaNuevoCredito()">
+                </div>
+                <div>
+                    <label for="nc-tan">TAN (%) <small>si lo sabes</small></label>
+                    <input type="number" id="nc-tan" inputmode="decimal" step="0.001" min="0" placeholder="0" oninput="previaNuevoCredito()">
+                </div>
+            </div>
+            <div class="g-hint nc-previa" id="nc-previa"></div>
+            <div class="g-botones">
+                <button class="btn-g-cancelar" onclick="cerrarNuevoCredito()">Cancelar</button>
+                <button class="btn-g-guardar" id="nc-guardar" onclick="guardarNuevoCredito()">Añadir crédito</button>
+            </div>
+            <div class="g-nota-gas">El día de la próxima cuota es su día de pago: la app te avisará antes. Lo demás (capital inicial, fin del contrato, seguro) lo puedes poner luego en «⚙️ Datos del crédito».</div>
         </div>
     </div>
 
@@ -1758,12 +1832,16 @@
                 { id: 'cr-banco', nombre: 'Crédito banco', icono: '🏦', concepto: 'Crédito banco', deuda: 148.20, cuota: 30.16, dia: 1, tan: 0, capitalInicial: 0, fin: 0 }
             ];
             data.creditos = data.creditos.filter(c => c && typeof c === 'object');
+            // Consejero: reserva que no se toca para adelantar dinero, y si dijiste «ahora no» este ciclo
+            data.reservaAmortizar = Math.max(0, Math.round(nDef(data.reservaAmortizar, 300)));
+            if (data.consejoPospuesto === undefined) data.consejoPospuesto = null;
             data.creditos.forEach(c => {
                 if (!c.id) c.id = 'cr-' + Math.random().toString(36).slice(2, 8);
                 c.nombre = String(c.nombre || 'Crédito');
                 c.concepto = String(c.concepto || '');
                 ['deuda', 'cuota', 'tan', 'capitalInicial', 'fin'].forEach(f => { c[f] = Math.max(0, nDef(c[f], 0)); });
                 c.dia = Math.min(31, Math.max(1, Math.round(nDef(c.dia, 1))));
+                if (!Array.isArray(c.adelantos)) c.adelantos = [];
             });
             // Bombonas de gas (cocina y calentador) y el dinero que guardas en casa para ellas
             if (!data.bombonas || typeof data.bombonas !== 'object') data.bombonas = {};
@@ -2250,6 +2328,7 @@
             pintarFechasEnCiclos();
             pintarFechas();
             pintarCreditos();
+            pintarConsejo();
             pedirPendientes();
         }
 
@@ -2439,7 +2518,7 @@
         // entra en el primer extracto posterior a su fecha y hasta entonces no pide mínimo ni intereses.
         // Mínimo = % del capital (nunca menos del mínimo en €) + intereses + comisión.
         // Si el pago previsto no llega al mínimo, el banco cobra el mínimo; lo que pagues de más adelanta deuda.
-        function simularTarjeta() {
+        function simularTarjeta(opcSim) {
             const t = appData.tarjeta;
             const ciclos = appData.ciclos;
             const res = { filas: [], avisos: [], intereses: 0, finIdx: -1, resto: 0, sinCiclos: false };
@@ -2494,6 +2573,14 @@
                 const corto = plan + 0.005 < minimo;
                 D = redondear(Math.max(0, total - pago));
                 if (pago > total) reducirPend(redondear(pago - total));   // pagar de más adelanta compras aún sin extracto
+                if (opcSim && opcSim.extra && !opcSim.extra.hecho && i >= opcSim.extra.i) {   // adelanto: baja la deuda después del pago de ese ciclo
+                    opcSim.extra.hecho = true;
+                    let x = redondear(opcSim.extra.importe);
+                    const q = Math.min(x, D);
+                    D = redondear(D - q);
+                    x = redondear(x - q);
+                    if (x > 0) reducirPend(x);
+                }
                 const deudaDespues = redondear(D + sumaPend());
                 res.intereses += interes;
                 res.filas.push({ i: i, plan: plan, minimo: minimo, pago: pago, deuda: deudaDespues, corto: corto });
@@ -4170,8 +4257,22 @@
                 }
             }
 
+            // Consejero: adelantar dinero a la deuda más cara (o cuánto reunir y cuándo)
+            const kc = consejoAmortizar();
+            if (kc.top) {
+                const nomC = x => esc(x.nombre);
+                const mesC = i => i >= 0 && appData.ciclos[i] ? etiquetaMes(appData.ciclos[i]) : '';
+                if (kc.recomendacion && !kc.pospuesto) {
+                    const r = kc.recomendacion;
+                    add('consejo', '💡', `Puedes amortizar ${fmtEur(r.importe)} en ${nomC(r.deuda)} sin bajar de tu reserva: te ahorras ≈ ${fmtEur(r.ahorro)}${r.menos > 0 ? ' y ' + textoMenos(r.menos, r.unidad) : ''}.`, 'Ver', 'verConsejo()');
+                } else if (kc.objetivo && kc.objetivo.ci >= 0) {
+                    const o = kc.objetivo;
+                    add('info', '🎯', `Si reúnes ${fmtEur(o.importe)} (hacia ${mesC(o.ci)}) y los amortizas en ${nomC(o.deuda)}, te ahorrarías ≈ ${fmtEur(o.ahorro)}${o.menos > 0 ? ' y ' + textoMenos(o.menos, o.unidad) : ''}.`, 'Ver', 'verConsejo()');
+                }
+            }
+
             if (!lista.length) add('ok', '✓', 'Todo en orden: no tienes nada pendiente.');
-            const orden = { mal: 0, aviso: 1, pregunta: 2, info: 3, ok: 4 };
+            const orden = { mal: 0, aviso: 1, pregunta: 2, consejo: 3, info: 4, ok: 5 };
             lista.sort((a, b) => orden[a.tipo] - orden[b.tipo]);
             cont.innerHTML = '<div class="sec-h">Pendiente</div>' + lista.map(x => x.botones
                 ? `<div class="pend ${x.tipo}"><span class="pend-ico">${x.ico}</span><span class="pend-txt">${x.txt}</span><span class="pend-botones">${x.botones}</span></div>`
@@ -4492,18 +4593,24 @@
         function primeraCuotaPendiente(cr) {
             const dia = diaCredito(cr), k = normDesc(cr.concepto || '');
             const idxHoy = indiceCicloDeFecha(new Date());
+            let f = null;
             if (idxHoy >= 0) {
                 const c = appData.ciclos[idxHoy];
                 const cl = claveCicloFinanzas(String(c.nombre || ''));
                 if (cl !== null) {
-                    const f = fechaEnCiclo(cl, dia);
+                    f = fechaEnCiclo(cl, dia);
                     const it = k ? c.items.find(x => !esIngreso(x) && normDesc(x.desc) === k) : null;
-                    return it && it.checked ? mesSiguiente(f, dia) : f;
+                    if (it && it.checked) f = mesSiguiente(f, dia);
                 }
             }
-            const h = new Date(); h.setHours(12, 0, 0, 0);
-            let f = new Date(h.getFullYear(), h.getMonth(), Math.min(dia, new Date(h.getFullYear(), h.getMonth() + 1, 0).getDate()), 12);
-            if (f < h) f = mesSiguiente(f, dia);
+            if (!f) {
+                const h = new Date(); h.setHours(12, 0, 0, 0);
+                f = new Date(h.getFullYear(), h.getMonth(), Math.min(dia, new Date(h.getFullYear(), h.getMonth() + 1, 0).getDate()), 12);
+                if (f < h) f = mesSiguiente(f, dia);
+            }
+            // Un crédito nuevo cuya primera cuota aún no ha llegado empieza ese día
+            const ini = Number(cr.inicio) || 0;
+            if (ini) { const fi = new Date(ini); fi.setHours(12, 0, 0, 0); if (fi.getTime() > f.getTime()) return fi; }
             return f;
         }
 
@@ -4535,6 +4642,8 @@
             const seg = r > 0 ? Math.max(0, numO(cr.seguroMes, 0)) : 0;
             const cuota = Math.max(0, opc.cuota !== undefined ? opc.cuota : numO(cr.cuota, 0));
             const dia = diaCredito(cr), k = normDesc(cr.concepto || '');
+            let extra = opc.extra ? Math.max(0, numO(opc.extra.importe, 0)) : 0;
+            const claveExtra = opc.extra ? numO(opc.extra.clave, 0) : 0;
             let fecha = primeraCuotaPendiente(cr);
             for (let i = 0; i < 720 && D > 0.005; i++) {
                 const cl = claveDeTs(fecha.getTime());
@@ -4554,6 +4663,11 @@
                     res.intereses += interes;
                     res.seguro += seg;
                     res.filas.push({ fecha: fecha.getTime(), clave: cl, ci: ci, pago: pago, interes: interes, capital: capital, deuda: D });
+                }
+                if (extra > 0 && cl >= claveExtra) {   // adelanto: baja la deuda después de la cuota de ese ciclo
+                    D = redondear(Math.max(0, D - extra));
+                    extra = 0;
+                    if (res.filas.length) res.filas[res.filas.length - 1].deuda = D;
                 }
                 fecha = mesSiguiente(fecha, dia);
             }
@@ -4620,9 +4734,9 @@
                 const v = String(valor).trim();
                 if (v && (appData.creditos || []).some(c => c !== cr && normDesc(c.concepto || '') === normDesc(v))) { alert('Ese concepto ya es la cuota de otro crédito.'); pintarCreditos(true); return; }
                 cr.concepto = v;
-            } else if (campo === 'fin') {
-                if (!valor) cr.fin = 0;
-                else { const p = String(valor).split('-').map(Number); cr.fin = new Date(p[0], p[1] - 1, p[2], 12).getTime(); }
+            } else if (campo === 'fin' || campo === 'inicio') {
+                if (!valor) cr[campo] = 0;
+                else { const p = String(valor).split('-').map(Number); cr[campo] = new Date(p[0], p[1] - 1, p[2], 12).getTime(); }
             } else if (campo === 'dia') {
                 const d = parseInt(valor, 10);
                 if (!(d >= 1 && d <= 31)) { alert('Pon un día del 1 al 31.'); pintarCreditos(true); return; }
@@ -4634,33 +4748,92 @@
                 const n = parseFloat(String(valor).replace(',', '.'));
                 cr[campo] = isFinite(n) && n > 0 ? redondear(n) : 0;
             }
-            if (['deuda', 'cuota', 'tan', 'fin', 'dia', 'concepto'].includes(campo)) cr.seguroMes = calcularSeguroMes(cr);
+            if (['cuota', 'tan', 'fin'].includes(campo)) cr.seguroMes = calcularSeguroMes(cr);
             guardar();
             renderizar();
         }
 
-        function nuevoCredito() {
-            const nombre = prompt('¿Cómo se llama el crédito? (ej. Crédito personal)', 'Crédito');
-            if (nombre === null) return;
-            const cr = { id: nuevoId(), nombre: nombre.trim() || 'Crédito', icono: '🏦', concepto: '', deuda: 0, cuota: 0, dia: 1, tan: 0, capitalInicial: 0, fin: 0, seguroMes: 0 };
+        function nuevoCredito() { abrirNuevoCredito(); }
+
+        // Ventana «Nuevo crédito»: al guardarlo, su cuota se pone sola en tus ciclos (una por ciclo hasta terminar)
+        function abrirNuevoCredito() {
+            ['nc-nombre', 'nc-deuda', 'nc-cuota', 'nc-tan'].forEach(id => { document.getElementById(id).value = ''; });
+            const h = new Date();
+            const d = new Date(h.getFullYear(), h.getMonth() + 1, Math.min(h.getDate(), new Date(h.getFullYear(), h.getMonth() + 2, 0).getDate()), 12);
+            document.getElementById('nc-proxima').value = aISO(d);
+            previaNuevoCredito();
+            document.getElementById('modal-credito').classList.add('abierto');
+            setTimeout(() => document.getElementById('nc-nombre').focus(), 60);
+        }
+
+        function cerrarNuevoCredito() {
+            document.getElementById('modal-credito').classList.remove('abierto');
+            if (document.activeElement) document.activeElement.blur();
+        }
+
+        function datosNuevoCredito() {
+            const v = id => String(document.getElementById(id).value || '');
+            const num = id => redondear(parseFloat(v(id).replace(',', '.')) || 0);
+            const nombre = v('nc-nombre').trim();
+            const tan = parseFloat(v('nc-tan').replace(',', '.'));
+            let inicio = 0, dia = 1;
+            if (v('nc-proxima')) {
+                const p = v('nc-proxima').split('-').map(Number);
+                const f = new Date(p[0], p[1] - 1, p[2], 12);
+                inicio = f.getTime();
+                dia = f.getDate();
+            }
+            return { id: 'nuevo', nombre: nombre, icono: '🏦', concepto: nombre, deuda: Math.max(0, num('nc-deuda')), cuota: Math.max(0, num('nc-cuota')), dia: dia,
+                tan: isFinite(tan) && tan > 0 ? Math.round(tan * 1000) / 1000 : 0, capitalInicial: Math.max(0, num('nc-deuda')), fin: 0, inicio: inicio, seguroMes: 0, adelantos: [] };
+        }
+
+        function previaNuevoCredito() {
+            const el = document.getElementById('nc-previa');
+            if (!el) return;
+            const cr = datosNuevoCredito();
+            if (!(cr.deuda > 0) || !(cr.cuota > 0)) { el.innerHTML = 'Pon lo que debes y la cuota: la app pondrá la cuota en tus ciclos, una por ciclo hasta terminar.'; return; }
+            const pl = planCredito(cr);
+            if (pl.sinFin) { el.innerHTML = '⚠️ Con esa cuota no se termina de pagar nunca: no llega a cubrir los intereses.'; return; }
+            const u = pl.filas[pl.filas.length - 1];
+            const enCiclos = pl.filas.filter(f => f.ci >= 0).length;
+            el.innerHTML = `<b>${pl.filas.length} cuota${pl.filas.length > 1 ? 's' : ''}</b>${Math.abs(u.pago - cr.cuota) >= 0.01 ? `; la última, ${fmtEur(u.pago)}` : ''} · terminas el <b>${fechaLarga(u.fecha)}</b>.` +
+                ` Se pondrá «${esc(cr.nombre || 'el crédito')}» en ${enCiclos} de tus ciclos${enCiclos < pl.filas.length ? ' (y en los que crees después)' : ''}.`;
+        }
+
+        function guardarNuevoCredito() {
+            const cr = datosNuevoCredito();
+            if (!cr.nombre) { alert('Pon el nombre del crédito.'); document.getElementById('nc-nombre').focus(); return; }
+            if (!(cr.deuda > 0) || !(cr.cuota > 0)) { alert('Pon lo que debes y la cuota al mes.'); return; }
+            if ((appData.creditos || []).some(c => normDesc(c.concepto || '') === normDesc(cr.nombre) || normDesc(c.nombre) === normDesc(cr.nombre))) { alert('Ya tienes un crédito con ese nombre.'); return; }
+            cr.id = nuevoId();
             appData.creditos.push(cr);
+            cerrarNuevoCredito();
             guardar();
             renderizar();
-            const d = document.querySelector(`#cr-${cr.id} details.cr-ajustes`);
-            if (d) d.open = true;
+            const pl = planCredito(cr);
+            const k = normDesc(cr.concepto);
+            const n = appData.ciclos.filter(c => c.items.some(it => !esIngreso(it) && !it.checked && normDesc(it.desc) === k)).length;
+            setTimeout(() => mostrarAviso(`«${cr.nombre}» añadido: su cuota está en ${n} ciclo${n === 1 ? '' : 's'}${pl.filas.length ? ` · terminas en ${mesAnio(pl.filas[pl.filas.length - 1].fecha)}` : ''}`), 120);
             verCredito(cr.id);
         }
 
         function borrarCredito(id) {
             const cr = creditoPorId(id);
             if (!cr) return;
-            if (!confirm(`¿Borrar «${cr.nombre}»? Las cuotas que ya están en tus ciclos se quedan (puedes quitarlas tú).`)) return;
+            const k = normDesc(cr.concepto || '');
+            const idxHoy = indiceCicloDeFecha(new Date());
+            const ini = idxHoy >= 0 ? idxHoy : Math.max(0, indiceInicioFuturo());
+            const sinPagar = it => !esIngreso(it) && !it.checked && normDesc(it.desc) === k;
+            let n = 0;
+            if (k) appData.ciclos.forEach((c, i) => { if (i >= ini) n += c.items.filter(sinPagar).length; });
+            if (!confirm(`¿Borrar «${cr.nombre}»?` + (n ? ` Se quitan de tus ciclos sus ${n} cuota${n > 1 ? 's' : ''} sin pagar (las ya pagadas se quedan).` : ''))) return;
+            if (k) appData.ciclos.forEach((c, i) => { if (i >= ini) c.items = c.items.filter(it => !sinPagar(it)); });
             appData.creditos = appData.creditos.filter(c => c !== cr);
             guardar();
             renderizar();
         }
 
-        // ¿Y si adelanto dinero? Misma cuota (terminas antes) o mismo plazo (cuota más baja)
+        // Amortizar: misma cuota (terminas antes) o mismo plazo (cuota más baja)
         function simularAdelanto(id) {
             const cr = creditoPorId(id);
             const el = document.getElementById('cr-sim-res-' + id), inp = document.getElementById('cr-sim-' + id);
@@ -4671,9 +4844,10 @@
             const base = planCredito(cr);
             const r = tasaMesCredito(cr), n = base.filas.length;
             const comPct = n > 12 ? 0.5 : 0.25;
-            const nota = r > 0 ? `<div class="nota">El banco puede cobrar una comisión de hasta ${comPct.toString().replace('.', ',')} % de lo que adelantas (${fmtEur(Math.min(E, D) * comPct / 100)}) si el crédito es a taxa fixa (${n > 12 ? 'falta más de un año' : 'falta un año o menos'}); a taxa variável no cobra nada. Hay que avisarle con 30 días.</div>` : '';
+            const nota = r > 0 ? `<div class="nota">El banco puede cobrar una comisión de hasta ${comPct.toString().replace('.', ',')} % de lo que amortizas (${fmtEur(Math.min(E, D) * comPct / 100)}) si el crédito es a taxa fixa (${n > 12 ? 'falta más de un año' : 'falta un año o menos'}); a taxa variável no cobra nada. Hay que avisarle con 30 días.</div>` : '';
             if (E >= D) {
-                el.innerHTML = `<div class="ok-linea">Con ${fmtEur(D)} lo pagas entero${r > 0 ? ` y te ahorras ≈ <b>${fmtEur(base.intereses)}</b> de intereses` : ''}${base.seguro > 0 ? ` (y ≈ ${fmtEur(base.seguro)} de seguro)` : ''}.</div>` + nota;
+                el.innerHTML = `<div class="ok-linea">Con ${fmtEur(D)} lo pagas entero${r > 0 ? ` y te ahorras ≈ <b>${fmtEur(base.intereses)}</b> de intereses` : ''}${base.seguro > 0 ? ` (y ≈ ${fmtEur(base.seguro)} de seguro)` : ''}.</div>` + nota +
+                    `<div class="consejo-botones"><button type="button" class="btn-panel" onclick="registrarAdelanto('credito', '${esc(cr.id)}', ${D})">✓ Ya lo pagué entero</button></div>`;
                 return;
             }
             const otro = planCredito(cr, { deuda: D - E, soloCuota: true });
@@ -4681,13 +4855,13 @@
             const menos = ref.filas.length - otro.filas.length;
             const ahorro = redondear(ref.intereses - otro.intereses + ref.seguro - otro.seguro);
             const finOtro = otro.filas.length ? otro.filas[otro.filas.length - 1].fecha : null;
-            let html = `<div class="linea">Con la misma cuota terminarías en <b>${finOtro ? mesAnio(finOtro) : '—'}</b> (${menos} cuota${menos === 1 ? '' : 's'} antes)` +
+            let html = `<div class="linea">Si amortizas <b>${fmtEur(E)}</b> y sigues con la misma cuota, terminas en <b>${finOtro ? mesAnio(finOtro) : '—'}</b> (${menos} cuota${menos === 1 ? '' : 's'} antes)` +
                 (ahorro > 0 ? ` y te ahorras ≈ <b>${fmtEur(ahorro)}</b>${r > 0 ? ' de intereses' : ''}${ref.seguro - otro.seguro > 0.005 ? ' y seguro' : ''}.` : '.') + '</div>';
             if (r > 0 && n > 0) {
                 const cuotaPlazo = redondear((D - E) * r / (1 - Math.pow(1 + r, -n)) + Math.max(0, numO(cr.seguroMes, 0)));
-                html += `<div class="linea">O mantienes el plazo y la cuota baja a ≈ <b>${fmtEur(cuotaPlazo)}</b> al mes.</div>`;
+                html += `<div class="linea">Si prefieres mantener el plazo, la cuota baja a ≈ <b>${fmtEur(cuotaPlazo)}</b> al mes.</div>`;
             }
-            el.innerHTML = html + nota;
+            el.innerHTML = html + nota + `<div class="consejo-botones"><button type="button" class="btn-panel" onclick="registrarAdelanto('credito', '${esc(cr.id)}', ${E})">✓ Ya lo amorticé</button></div>`;
         }
 
         // Conceptos de gasto de tus ciclos (para elegir cuál es la cuota de cada crédito)
@@ -4725,6 +4899,8 @@
             const pct = cap0 > 0 ? Math.max(0, Math.min(100, (cap0 - D) / cap0 * 100)) : null;
             const fin = Number(cr.fin) ? new Date(Number(cr.fin)) : null;
             const finISO = fin ? `${fin.getFullYear()}-${pad2(fin.getMonth() + 1)}-${pad2(fin.getDate())}` : '';
+            const ini = Number(cr.inicio) ? new Date(Number(cr.inicio)) : null;
+            const iniISO = ini ? `${ini.getFullYear()}-${pad2(ini.getMonth() + 1)}-${pad2(ini.getDate())}` : '';
             const lista = conceptos.slice();
             if (cr.concepto && !lista.some(c => normDesc(c) === normDesc(cr.concepto))) lista.unshift(cr.concepto);
             const opciones = '<option value="">(ninguno)</option>' + lista.map(c => `<option value="${esc(c)}" ${normDesc(c) === normDesc(cr.concepto || '') ? 'selected' : ''}>${esc(c)}</option>`).join('');
@@ -4753,10 +4929,11 @@
                         </div>
                     </div>
                     ${pct !== null ? `<div class="cr-barra"><div style="width:${pct.toFixed(1)}%"></div></div><div class="cr-linea">Llevas pagado ${fmtEur(cap0 - D)} de ${fmtEur(cap0)} (${Math.round(pct)} %)</div>` : ''}
+                    ${(cr.adelantos || []).length ? `<div class="cr-linea">Amortizado: ${cr.adelantos.slice(-3).map(a => `${fmtEur(a.importe)} (${fechaLarga(a.ts)})`).join(' · ')}</div>` : ''}
                     ${avisos}
                     ${datos}
-                    ${pagado ? '' : `<div class="panel-h">¿Y si adelanto dinero?</div>
-                    <div class="cr-sim"><input type="number" id="cr-sim-${id}" data-id="${id}" inputmode="decimal" step="0.01" min="0" placeholder="Cuánto adelantarías (€)" oninput="simularAdelanto(${q})"></div>
+                    ${pagado ? '' : `<div class="panel-h">💶 Amortizar</div>
+                    <div class="cr-sim"><input type="number" id="cr-sim-${id}" data-id="${id}" inputmode="decimal" step="0.01" min="0" placeholder="¿Cuánto quieres amortizar? (€)" oninput="simularAdelanto(${q})"></div>
                     <div class="cr-sim-res" id="cr-sim-res-${id}"></div>`}
                     <details class="tj-ajustes cr-ajustes" data-id="${id}" ${abierto ? 'open' : ''}>
                         <summary>⚙️ Datos del crédito <span class="arrow">▼</span></summary>
@@ -4767,6 +4944,8 @@
                             <div><label for="cr-tan-${id}">TAN (%)</label><input type="number" id="cr-tan-${id}" inputmode="decimal" step="0.001" min="0" value="${tan || ''}" placeholder="0" onchange="cambiarCredito(${q}, 'tan', this.value)"></div>
                             <div><label for="cr-cap-${id}">Capital inicial (€)</label><input type="number" id="cr-cap-${id}" inputmode="decimal" step="0.01" min="0" value="${cap0 ? cap0.toFixed(2) : ''}" placeholder="0.00" onchange="cambiarCredito(${q}, 'capitalInicial', this.value)"></div>
                             <div><label for="cr-fin-${id}">Fin del contrato</label><input type="date" id="cr-fin-${id}" value="${finISO}" onchange="cambiarCredito(${q}, 'fin', this.value)"></div>
+                            <div><label for="cr-ini-${id}">Primera cuota</label><input type="date" id="cr-ini-${id}" value="${iniISO}" onchange="cambiarCredito(${q}, 'inicio', this.value)"></div>
+                            <div><label for="cr-seg-${id}">Seguro en la cuota (€/mes)</label><input type="number" id="cr-seg-${id}" inputmode="decimal" step="0.01" min="0" value="${seg ? seg.toFixed(2) : ''}" placeholder="0.00" onchange="cambiarCredito(${q}, 'seguroMes', this.value)"></div>
                         </div>
                         <div class="panel-nota">Todo está en la app del banco («Informação do contrato»). Con el TAN y el fin del contrato, la app separa en cada cuota los intereses, el seguro y lo que baja la deuda. Al marcar la cuota como pagada en tu ciclo, la deuda baja sola; si el banco te da otra cifra, ponla en «Deuda actual».</div>
                         <button type="button" class="btn-mini cr-borrar" onclick="borrarCredito(${q})">🗑️ Borrar este crédito</button>
@@ -4787,6 +4966,231 @@
             const conceptos = conceptosDeGasto();
             lista.innerHTML = (appData.creditos || []).map(cr => htmlCredito(cr, abiertos.has(String(cr.id)), conceptos)).join('');
             Object.keys(sims).forEach(id => { const i = document.getElementById('cr-sim-' + id); if (i) { i.value = sims[id]; simularAdelanto(id); } });
+        }
+
+        // =====================================================
+        // ===== CONSEJERO: ¿ADELANTO DINERO A UNA DEUDA? ======
+        // =====================================================
+        const TRAMOS_ADELANTO = [250, 500, 1000, 1500, 2000, 3000, 5000, 8000];
+
+        function fmtPct(n) { return String(Math.round(n * 1000) / 1000).replace('.', ',') + ' %'; }
+        function textoMenos(n, unidad) { return unidad === 'mes' ? `${n} ${n === 1 ? 'mes' : 'meses'} antes` : `${n} ${n === 1 ? 'cuota' : 'cuotas'} menos`; }
+
+        // Saldo al cierre de cada ciclo en el peor caso (con los topes)
+        function saldosPeorCaso() {
+            const U = ultimaProyeccion;
+            if (!U) return [];
+            return U.modo === 'topes' ? U.cierres : (U.cierresAlt || U.cierres);
+        }
+
+        // Deudas con saldo, de la más cara (TAN más alto) a la más barata
+        function deudasAmortizables() {
+            const out = [];
+            const t = appData.tarjeta;
+            if (t && numO(t.deuda, 0) > 0.005) out.push({ tipo: 'tarjeta', id: 'tarjeta', nombre: 'Tarjeta de crédito', icono: '💳', tan: Math.max(0, numO(t.tan, 0)), deuda: redondear(numO(t.deuda, 0)) });
+            (appData.creditos || []).forEach(cr => {
+                if (numO(cr.deuda, 0) > 0.005) out.push({ tipo: 'credito', id: cr.id, nombre: cr.nombre, icono: cr.icono || '🏦', tan: Math.max(0, numO(cr.tan, 0)), deuda: redondear(numO(cr.deuda, 0)), cr: cr });
+            });
+            return out.sort((a, b) => b.tan - a.tan);
+        }
+
+        // Qué te ahorras si adelantas «importe» a una deuda en el ciclo ci (comisión del banco ya descontada)
+        function ahorroDeAdelanto(d, importe, ci) {
+            const c = appData.ciclos[ci];
+            const clave = c ? claveCicloFinanzas(String(c.nombre || '')) : null;
+            if (d.tipo === 'credito') {
+                const base = planCredito(d.cr), con = planCredito(d.cr, { extra: { clave: clave, importe: importe } });
+                if (base.sinFin || con.sinFin) return null;
+                const bruto = redondear(base.intereses + base.seguro - con.intereses - con.seguro);
+                const quedan = base.filas.filter(f => clave === null || f.clave > clave).length;
+                const comision = d.tan > 0 ? redondear(Math.min(importe, d.deuda) * (quedan > 12 ? 0.005 : 0.0025)) : 0;
+                const fin0 = base.filas.length ? base.filas[base.filas.length - 1].fecha : null;
+                const fin1 = con.filas.length ? con.filas[con.filas.length - 1].fecha : fin0;
+                return { ahorro: Math.max(0, redondear(bruto - comision)), comision: comision, menos: base.filas.length - con.filas.length, unidad: 'cuota',
+                    finAntes: fin0 ? mesAnio(fin0) : '—', finDespues: fin1 ? mesAnio(fin1) : '—' };
+            }
+            const base = simularTarjeta(), con = simularTarjeta({ extra: { i: ci, importe: importe } });
+            const lbl = i => i >= 0 && appData.ciclos[i] ? etiquetaMes(appData.ciclos[i]) : 'más adelante';
+            return { ahorro: Math.max(0, redondear(base.intereses - con.intereses)), comision: 0,
+                menos: base.finIdx >= 0 && con.finIdx >= 0 ? base.finIdx - con.finIdx : 0, unidad: 'mes', finAntes: lbl(base.finIdx), finDespues: lbl(con.finIdx) };
+        }
+
+        // Cuánto puedes adelantar y a qué deuda; si ahora no llega, cuánto reunir y cuándo
+        function consejoAmortizar() {
+            const W = saldosPeorCaso();
+            const n = appData.ciclos.length;
+            const idxHoy = indiceCicloDeFecha(new Date());
+            const deudas = deudasAmortizables();
+            const R = Math.max(0, numO(appData.reservaAmortizar, 300));
+            const res = { R: R, deudas: deudas, top: deudas.find(d => d.tan > 0) || null };
+            if (!res.top || idxHoy < 0 || W.length !== n) return res;
+            // Lo que se puede sacar en el ciclo i sin que ese ni ningún mes siguiente baje de la reserva (en tramos de 10 €)
+            const disp = i => Math.floor((Math.min(...W.slice(i)) - R) / 10) * 10;
+            const ultimoUtil = Math.max(idxHoy, n - 3);   // hacen falta al menos 3 ciclos por delante para fiarse
+            const conInteres = deudas.filter(d => d.tan > 0);
+            const libre = disp(idxHoy);
+            res.ahora = Math.min(libre, Math.floor(res.top.deuda));
+            let jMin = idxHoy;
+            for (let j = idxHoy + 1; j < n; j++) if (W[j] < W[jMin]) jMin = j;
+            res.limite = { i: jMin, valor: W[jMin] };
+            res.pospuesto = appData.consejoPospuesto !== null && appData.consejoPospuesto === claveCicloFinanzas(String(appData.ciclos[idxHoy].nombre || ''));
+            // Ahora: la deuda más cara en la que adelantar ahorra algo
+            if (libre >= 50) {
+                for (const d of conInteres) {
+                    const imp = Math.min(libre, Math.floor(d.deuda));
+                    if (imp < 50) continue;
+                    const a = ahorroDeAdelanto(d, imp, idxHoy);
+                    if (a && a.ahorro >= 1) { res.recomendacion = Object.assign({ importe: imp, ci: idxHoy, deuda: d }, a); res.ahora = imp; break; }
+                }
+            }
+            const cuando = T => { for (let i = idxHoy; i <= ultimoUtil; i++) if (disp(i) >= T) return i; return -1; };
+            // Una cantidad T: cuándo la tendrías y en qué deuda (la más cara que aún exista entonces y en la que ahorre)
+            const conAhorro = (T, ci, soloDeuda) => {
+                for (const d of (soloDeuda ? [soloDeuda] : conInteres)) {
+                    if (T > d.deuda) continue;
+                    const a = ahorroDeAdelanto(d, T, ci >= 0 ? ci : n - 1);
+                    if (a && a.ahorro >= 1) return Object.assign({ importe: T, ci: ci, deuda: d }, a);
+                }
+                return null;
+            };
+            if (!res.recomendacion || res.pospuesto) {
+                for (const T of TRAMOS_ADELANTO.filter(t => t > Math.max(res.ahora, 0))) {
+                    const o = conAhorro(T, cuando(T));
+                    if (o) { res.objetivo = o; break; }
+                }
+            }
+            const dTabla = (res.recomendacion && !res.pospuesto ? res.recomendacion.deuda : res.objetivo ? res.objetivo.deuda : null) || res.top;
+            res.tablaDeuda = dTabla;
+            res.tabla = TRAMOS_ADELANTO.filter(T => T <= dTabla.deuda).slice(0, 3).map(T => conAhorro(T, cuando(T), dTabla) || { importe: T, ci: cuando(T), ahorro: 0, menos: 0 });
+            return res;
+        }
+
+        function pintarConsejo() {
+            const cuerpo = document.getElementById('consejo-cuerpo');
+            if (!cuerpo) return;
+            const inR = document.getElementById('consejo-reserva');
+            if (inR && document.activeElement !== inR) inR.value = Math.max(0, numO(appData.reservaAmortizar, 300));
+            const resEl = document.getElementById('consejo-resumen');
+            const k = consejoAmortizar();
+            if (!k.top) {
+                cuerpo.innerHTML = `<div class="panel-nota" style="margin-top:6px">${k.deudas.length ? 'Tus deudas no tienen intereses (o no has puesto su TAN): amortizar no te ahorraría nada.' : 'No tienes deudas. 🎉'}</div>`;
+                if (resEl) resEl.innerText = '';
+                return;
+            }
+            const idxHoy = indiceCicloDeFecha(new Date());
+            const mes = i => i >= 0 && appData.ciclos[i] ? etiquetaMes(appData.ciclos[i]) : '';
+            const nomDe = x => `${x.icono} ${esc(x.nombre)}`;
+            const porDe = x => x.tan > 0 ? ` (TAN ${fmtPct(x.tan)}${x === k.top && k.deudas.filter(y => y.tan > 0).length > 1 ? ', tu deuda más cara' : ''})` : '';
+            const d = (k.recomendacion && k.recomendacion.deuda) || k.top, nom = nomDe(d), por = porDe(d);
+            let html = '';
+            if (k.recomendacion && !k.pospuesto) {
+                const r = k.recomendacion;
+                html += `<div class="consejo-caja ok"><div class="consejo-titulo">✓ Puedes amortizar ${fmtEur(r.importe)}</div>
+                    <div>Ningún mes de tus ciclos bajaría de tu reserva de ${fmtEur(k.R)} (en el peor caso). Donde más te ahorra: <b>${nom}</b>${por}.</div>
+                    <div class="consejo-cifras">Te ahorras ≈ <b>${fmtEur(r.ahorro)}</b>${r.menos > 0 ? ` y <b>${textoMenos(r.menos, r.unidad)}</b>` : ''}: terminarías en <b>${r.finDespues}</b> en vez de ${r.finAntes}.</div>
+                    <div class="consejo-botones"><button type="button" class="btn-mini" onclick="posponerConsejo()">Ahora no</button><button type="button" class="btn-panel" onclick="registrarAdelanto('${esc(d.tipo)}', '${esc(d.id)}', ${r.importe})">✓ Ya lo amorticé</button></div></div>`;
+            } else if (k.recomendacion && k.pospuesto) {
+                html += `<div class="consejo-caja espera"><div class="consejo-titulo">⏸ Lo dejas para más adelante</div>
+                    <div>Si cambias de idea, puedes amortizar hasta ${fmtEur(k.recomendacion.importe)} en ${nom}.</div>
+                    <div class="consejo-botones"><button type="button" class="btn-mini" onclick="mostrarConsejo()">Ver otra vez</button></div></div>`;
+            } else {
+                html += `<div class="consejo-caja espera"><div class="consejo-titulo">⏳ Ahora no te llega</div>
+                    <div>${k.limite.i === idxHoy ? 'Este ciclo cierras' : `En ${mes(k.limite.i)} cerrarías`} con ${fmtEur(k.limite.valor)} en el peor caso, y tu reserva es de ${fmtEur(k.R)}.</div></div>`;
+            }
+            if (k.objetivo) {
+                const o = k.objetivo;
+                html += `<div class="consejo-caja meta">🎯 <b>Si reúnes ${fmtEur(o.importe)}</b>${o.ci >= 0 ? ` (según tus ciclos, hacia <b>${mes(o.ci)}</b>)` : ` (más allá de tus ciclos, que llegan a ${mes(appData.ciclos.length - 1)})`} y los amortizas en <b>${nomDe(o.deuda)}</b>${porDe(o.deuda)}, te ahorrarías ≈ <b>${fmtEur(o.ahorro)}</b>${o.menos > 0 ? ` y ${textoMenos(o.menos, o.unidad)}` : ''}: terminarías en <b>${o.finDespues}</b> en vez de ${o.finAntes}.</div>`;
+            }
+            if (k.tabla && k.tabla.length) {
+                const dt = k.tablaDeuda;
+                html += `<div class="panel-h">¿Cuánto y cuándo? · ${nomDe(dt)}</div><table class="tabla-consejo"><tr><th>Amortizas</th><th>Te ahorras</th><th>${dt.tipo === 'tarjeta' ? 'Acabas' : 'Cuotas menos'}</th><th>Desde</th></tr>` +
+                    k.tabla.map(t => `<tr><td>${fmtEur(t.importe)}</td><td>≈ ${fmtEur(t.ahorro || 0)}</td><td>${dt.tipo === 'tarjeta' ? (t.menos > 0 ? textoMenos(t.menos, 'mes') : '—') : (t.menos || 0)}</td>` +
+                        `<td class="${t.ci === idxHoy ? 'ahora' : ''}">${t.ci === idxHoy ? 'ahora' : t.ci >= 0 ? mes(t.ci) : 'más adelante'}</td></tr>`).join('') + '</table>';
+            }
+            html += '<div class="panel-h">Orden para amortizar</div><div class="consejo-orden">' + k.deudas.map((x, i) =>
+                `<div>${x.tan > 0 ? (i + 1) + '.' : '·'} ${x.icono} ${esc(x.nombre)}: ${x.tan > 0 ? 'TAN ' + fmtPct(x.tan) : 'sin intereses (amortizarla no te ahorra nada)'}</div>`).join('') + '</div>';
+            cuerpo.innerHTML = html;
+            if (resEl) resEl.innerText = k.recomendacion && !k.pospuesto ? `✓ puedes amortizar ${fmtEur(k.recomendacion.importe)}`
+                : k.objetivo && k.objetivo.ci >= 0 ? `🎯 ${fmtEur(k.objetivo.importe)} hacia ${mes(k.objetivo.ci)}` : '';
+        }
+
+        function verConsejo() {
+            switchTab('tab-tarjeta');
+            const el = document.getElementById('panel-consejo');
+            if (el) el.scrollIntoView({ block: 'start' });
+        }
+
+        function posponerConsejo() {
+            const idxHoy = indiceCicloDeFecha(new Date());
+            appData.consejoPospuesto = idxHoy >= 0 ? claveCicloFinanzas(String(appData.ciclos[idxHoy].nombre || '')) : null;
+            guardar();
+            pintarConsejo();
+            pedirPendientes();
+        }
+
+        function mostrarConsejo() {
+            appData.consejoPospuesto = null;
+            guardar();
+            pintarConsejo();
+            pedirPendientes();
+        }
+
+        function cambiarReservaAmortizar(v) {
+            const n = parseFloat(v);
+            appData.reservaAmortizar = isFinite(n) && n > 0 ? Math.round(n) : 0;
+            guardar('reserva-amortizar');
+            pintarConsejo();
+            pedirPendientes();
+        }
+
+        // Has amortizado una deuda: baja lo que debes y el dinero sale de tu cuenta este ciclo
+        function registrarAdelanto(tipo, id, sugerido) {
+            const esTj = tipo === 'tarjeta';
+            const cr = esTj ? null : creditoPorId(id);
+            if (!esTj && !cr) return;
+            const nombre = esTj ? 'Tarjeta' : cr.nombre;
+            const deuda = redondear(numO(esTj ? appData.tarjeta.deuda : cr.deuda, 0));
+            const r = prompt(`¿Cuánto has amortizado de «${nombre}»? (€)`, sugerido ? String(sugerido) : '');
+            if (r === null) return;
+            const imp = redondear(parseFloat(String(r).replace(',', '.')));
+            if (!(imp > 0)) { alert('Pon el importe que amortizaste.'); return; }
+            const q = Math.min(imp, deuda);
+            if (esTj) appData.tarjeta.deuda = redondear(deuda - q);
+            else {
+                cr.deuda = redondear(deuda - q);
+                if (!Array.isArray(cr.adelantos)) cr.adelantos = [];
+                cr.adelantos.push({ ts: Date.now(), importe: q });
+            }
+            const idxHoy = indiceCicloDeFecha(new Date());
+            if (idxHoy >= 0) {
+                const c = appData.ciclos[idxHoy];
+                if (!Array.isArray(c.gastos)) c.gastos = [];
+                c.gastos.push({ id: nuevoId(), ts: Date.now(), importe: q, concepto: `Amortización ${esTj ? 'tarjeta' : cr.nombre}`, nota: 'Amortización anticipada' });
+            }
+            appData.consejoPospuesto = null;
+            // Se vacían los simuladores (ya está hecho)
+            ['tj-amort', 'cr-sim-' + id].forEach(x => { const i = document.getElementById(x); if (i) i.value = ''; });
+            const rt = document.getElementById('tj-amort-res'); if (rt) rt.innerHTML = '';
+            guardar();
+            renderizar();
+            mostrarAviso(`${nombre}: amortizados ${fmtEur(q)} · ahora debes ${fmtEur(deuda - q)}. Si el banco te cobra comisión, apúntala con ＋ Gasto.`);
+        }
+
+        // Amortizar la tarjeta: cuánto te ahorras y cuándo acabas
+        function simularAmortTarjeta() {
+            const el = document.getElementById('tj-amort-res'), inp = document.getElementById('tj-amort');
+            if (!el || !inp) return;
+            const E = redondear(parseFloat(String(inp.value).replace(',', '.')));
+            const D = redondear(numO(appData.tarjeta && appData.tarjeta.deuda, 0));
+            if (!(E > 0) || !(D > 0.005)) { el.innerHTML = ''; return; }
+            const idxHoy = indiceCicloDeFecha(new Date());
+            const base = simularTarjeta(), con = simularTarjeta({ extra: { i: Math.max(0, idxHoy), importe: E } });
+            const lbl = i => i >= 0 && appData.ciclos[i] ? etiquetaMes(appData.ciclos[i]) : 'más adelante';
+            const ahorro = Math.max(0, redondear(base.intereses - con.intereses));
+            const q = Math.min(E, D);
+            el.innerHTML = `<div class="linea">Si amortizas <b>${fmtEur(q)}</b>${E > D ? ' (todo lo que debes)' : ''}, te ahorras ≈ <b>${fmtEur(ahorro)}</b> de intereses y acabas de pagarla en <b>${lbl(con.finIdx)}</b> en vez de ${lbl(base.finIdx)}.</div>` +
+                `<div class="nota">Los pagos de la tarjeta que tienes puestos en tus ciclos siguen igual: si quieres, bájalos después.</div>` +
+                `<div class="consejo-botones"><button type="button" class="btn-panel" onclick="registrarAdelanto('tarjeta', 'tarjeta', ${q})">✓ Ya lo amorticé</button></div>`;
         }
 
         // =====================================================
