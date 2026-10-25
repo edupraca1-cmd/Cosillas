@@ -219,7 +219,7 @@
         .panel-resumen { font-size: 12.5px; font-weight: 700; color: #475569; text-align: right; }
         .panel-body { border-top: 1px solid var(--border); padding: 4px 14px 14px; font-size: 13px; }
         .panel-body label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin: 10px 0 4px; }
-        .panel-body input[type="number"], .panel-body input[type="text"], .panel-body select { width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; background: #fff; color: var(--text-main); font-family: inherit; }
+        .panel-body input[type="number"], .panel-body input[type="text"], .panel-body input[type="date"], .panel-body select { width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; background: #fff; color: var(--text-main); font-family: inherit; }
         .panel-body input:focus, .panel-body select:focus { border-color: var(--primary); outline: none; }
         .dos-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
         .panel-h { font-size: 11px; font-weight: 800; color: #475569; letter-spacing: .5px; text-transform: uppercase; margin: 16px 0 6px; }
@@ -228,7 +228,8 @@
         .tj-disponible:empty { display: none; }
         .presu-bar.tj-bar > div { background: #3b82f6; }
         .presu-bar.tj-bar.mal > div { background: #ef4444; }
-        .tj-compra { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; }
+        .tj-compra { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .tj-compra .btn-panel { width: 100%; }
         details.cycle-card .summary-val { white-space: nowrap; }
         .btn-panel { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 9px 12px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; font-family: inherit; }
         .btn-panel:active { background: var(--primary-dark); }
@@ -425,8 +426,9 @@
 
                 <div class="panel-h">Compra con la tarjeta</div>
                 <div class="tj-compra">
-                    <input type="number" id="tj-compra-importe" inputmode="decimal" step="0.01" min="0" placeholder="Importe" enterkeyhint="next">
-                    <input type="text" id="tj-compra-nota" placeholder="Qué es" autocomplete="off" enterkeyhint="done">
+                    <input type="number" id="tj-compra-importe" inputmode="decimal" step="0.01" min="0" placeholder="Importe" enterkeyhint="next" aria-label="Importe de la compra">
+                    <input type="date" id="tj-compra-fecha" aria-label="Fecha de la compra">
+                    <input type="text" id="tj-compra-nota" placeholder="Qué es" autocomplete="off" enterkeyhint="done" aria-label="Qué es">
                     <button class="btn-panel" onclick="anadirCompraTarjeta()">＋ Añadir</button>
                 </div>
                 <div id="tj-compras"></div>
@@ -453,10 +455,18 @@
                             <label for="tj-mineur">Pago mínimo (€)</label>
                             <input type="number" id="tj-mineur" inputmode="decimal" step="0.01" min="0" oninput="cambiarTarjeta('minEur', this.value)">
                         </div>
+                        <div>
+                            <label for="tj-dia-extracto">Día del extracto</label>
+                            <input type="number" id="tj-dia-extracto" inputmode="numeric" step="1" min="1" max="28" oninput="cambiarTarjeta('diaExtracto', this.value)">
+                        </div>
+                        <div>
+                            <label for="tj-dia-cobro">Día de cobro</label>
+                            <input type="number" id="tj-dia-cobro" inputmode="numeric" step="1" min="1" max="28" oninput="cambiarTarjeta('diaCobro', this.value)">
+                        </div>
                     </div>
-                    <div class="panel-nota">El TAN viene en tu extracto. Con 18 % los intereses salen por lo alto (el peor escenario).</div>
+                    <div class="panel-nota">Todo sale de tu extracto: el TAN es la «Taxa Anual Nominal» y la comisión es «Disp. de um cart créd - mensal» más su imposto do selo (1,12 + 0,04 = 1,16 €).</div>
                 </details>
-                <div class="panel-nota">Los pagos salen de los conceptos «Tarjeta…» de tus ciclos. Cuando el banco te cobre, marca ese concepto y la deuda baja sola. Si el extracto dice otra cifra (por los intereses), escríbela en «Deuda actual».</div>
+                <div class="panel-nota" id="tj-nota"></div>
             </div>
         </details>
 
@@ -1252,12 +1262,17 @@
             const nDef = (v, d) => { const x = parseFloat(v); return isFinite(x) ? x : d; };
             if (!data.tarjeta || typeof data.tarjeta !== 'object') data.tarjeta = {};
             const tj = data.tarjeta;
+            const tjSinDias = (tj.diaExtracto === undefined);
             tj.deuda = nDef(tj.deuda, 0);
             tj.limite = nDef(tj.limite, 1000);
-            tj.tan = nDef(tj.tan, 18);
-            tj.comision = nDef(tj.comision, 0);
+            tj.tan = nDef(tj.tan, 7.69);          // CA Twist, extracto del 15/10/2026
+            tj.comision = nDef(tj.comision, 1.16); // 1,12 € + 0,04 € de imposto do selo
+            // Quien probó la versión anterior tenía los valores provisionales (18 % y 0 €): se pasan a los del extracto
+            if (tjSinDias && tj.tan === 18 && tj.comision === 0) { tj.tan = 7.69; tj.comision = 1.16; }
             tj.minPct = nDef(tj.minPct, 5);
             tj.minEur = nDef(tj.minEur, 12.5);
+            tj.diaExtracto = Math.min(28, Math.max(1, Math.round(nDef(tj.diaExtracto, 15))));
+            tj.diaCobro = Math.min(28, Math.max(1, Math.round(nDef(tj.diaCobro, 5))));
             if (!Array.isArray(tj.compras)) tj.compras = [];
             data.colchon = nDef(data.colchon, 50);
             if (data.modeloSaldo !== MODELO_SALDO) {
@@ -1819,49 +1834,99 @@
         // Un concepto es un pago de tarjeta si su nombre lleva "tarjeta" (p. ej. "Tarjeta de crédito último pago")
         function esTarjeta(item) { return !esIngreso(item) && normDesc(item.desc).includes('tarjeta'); }
 
+        // Fecha del extracto que el banco cobra dentro de un ciclo (el cobro cae entre el 22 y el 21)
+        function extractoQueSeCobraEn(ciclo) {
+            const k = claveCicloFinanzas(String((ciclo && ciclo.nombre) || ''));
+            if (k === null) return null;
+            const a = Math.floor(k / 100), m = k % 100;
+            const t = appData.tarjeta;
+            const P = Math.min(28, Math.max(1, Math.round(numO(t.diaCobro, 5))));
+            const E = Math.min(28, Math.max(1, Math.round(numO(t.diaExtracto, 15))));
+            const cobro = P >= DIA_INICIO_CICLO ? new Date(a, m, P, 12) : new Date(a, m + 1, P, 12);
+            let extracto = new Date(cobro.getFullYear(), cobro.getMonth(), E, 23, 59, 59);
+            if (extracto >= cobro) extracto = new Date(cobro.getFullYear(), cobro.getMonth() - 1, E, 23, 59, 59);
+            return { cobro: cobro, extracto: extracto };
+        }
+
         // Simula la deuda ciclo a ciclo con los pagos «Tarjeta…» aún sin marcar.
-        // Mínimo = % de la deuda (nunca menos del mínimo en €) + intereses + comisión.
-        // Si el pago previsto no llega al mínimo, el banco cobra el mínimo.
+        // En cada ciclo el banco cobra el extracto anterior (p. ej. el día 5 lo del día 15): una compra
+        // entra en el primer extracto posterior a su fecha y hasta entonces no pide mínimo ni intereses.
+        // Mínimo = % del capital (nunca menos del mínimo en €) + intereses + comisión.
+        // Si el pago previsto no llega al mínimo, el banco cobra el mínimo; lo que pagues de más adelanta deuda.
         function simularTarjeta() {
             const t = appData.tarjeta;
             const ciclos = appData.ciclos;
             const res = { filas: [], avisos: [], intereses: 0, finIdx: -1, resto: 0, sinCiclos: false };
-            let D = redondear(Math.max(0, numO(t.deuda, 0)));
-            if (D <= 0.005) return res;
+            const deuda = redondear(Math.max(0, numO(t.deuda, 0)));
+            if (deuda <= 0.005) return res;
             let s = indiceInicioFuturo();
             const idxHoy = indiceCicloDeFecha(new Date());
             // Si el pago de este ciclo ya está marcado, la deuda puesta ya lo tiene descontado
             if (s >= 0 && s === idxHoy && ciclos[s].items.some(it => esTarjeta(it) && it.checked)) s++;
-            if (s < 0 || s >= ciclos.length) { res.sinCiclos = true; res.resto = D; return res; }
+            if (s < 0 || s >= ciclos.length) { res.sinCiclos = true; res.resto = deuda; return res; }
             const r = Math.max(0, numO(t.tan, 0)) / 100 / 12;
             const pct = Math.max(0, numO(t.minPct, 5)) / 100;
             const minEur = Math.max(0, numO(t.minEur, 0));
             const fee = Math.max(0, numO(t.comision, 0));
+
+            // Compras que aún no están en el extracto que se cobra en el primer ciclo simulado
+            const f0 = extractoQueSeCobraEn(ciclos[s]);
+            const corte0 = f0 ? f0.extracto.getTime() : -Infinity;
+            let pend = (t.compras || [])
+                .map(c => ({ ts: Number(c.ts) || 0, imp: Math.max(0, Number(c.importe) || 0) }))
+                .filter(c => c.ts > corte0)
+                .sort((a, b) => a.ts - b.ts);
+            const sumaPend = () => redondear(pend.reduce((a, p) => a + p.imp, 0));
+            const reducirPend = (cant) => {   // descuenta un pago de las compras más antiguas sin extracto
+                for (const p of pend) {
+                    if (cant <= 0.005) break;
+                    const q = Math.min(p.imp, cant);
+                    p.imp = redondear(p.imp - q);
+                    cant = redondear(cant - q);
+                }
+                pend = pend.filter(p => p.imp > 0.005);
+            };
+            // Si la deuda puesta es menor que esas compras, lo que falta ya está pagado
+            reducirPend(redondear(sumaPend() - deuda));
+            let D = redondear(Math.max(0, deuda - sumaPend()));   // deuda que ya está en extractos
+
             for (let i = s; i < ciclos.length; i++) {
-                const esHoy = (i === idxHoy);   // la deuda de hoy ya incluye los intereses hasta ahora
+                const esHoy = (i === idxHoy);   // el extracto de este ciclo ya salió: la deuda puesta lo incluye
+                const f = extractoQueSeCobraEn(ciclos[i]);
+                const corte = f ? f.extracto.getTime() : Infinity;
                 const interes = esHoy ? 0 : redondear(D * r * 1.04);   // + 4 % de imposto do selo
                 const comision = esHoy ? 0 : fee;
-                const total = redondear(D + interes + comision);
-                const minimo = redondear(Math.min(total, Math.max(minEur, D * pct) + interes + comision));
+                let nuevas = 0;
+                pend = pend.filter(p => { if (p.ts <= corte) { nuevas += p.imp; return false; } return true; });
+                const capital = redondear(D + nuevas);
+                const total = redondear(capital + interes + comision);
+                const minimo = redondear(Math.min(total, (capital > 0.005 ? Math.max(minEur, capital * pct) : 0) + interes + comision));
                 const plan = redondear(ciclos[i].items
                     .filter(it => esTarjeta(it) && !it.checked)
                     .reduce((a, it) => a + Math.abs(parseFloat(it.valor) || 0), 0));
-                const pago = redondear(Math.min(total, Math.max(plan, minimo)));
+                const pago = redondear(Math.min(total + sumaPend(), Math.max(plan, minimo)));
                 const corto = plan + 0.005 < minimo;
-                D = redondear(total - pago);
+                D = redondear(Math.max(0, total - pago));
+                if (pago > total) reducirPend(redondear(pago - total));   // pagar de más adelanta compras aún sin extracto
+                const deudaDespues = redondear(D + sumaPend());
                 res.intereses += interes;
-                res.filas.push({ i: i, plan: plan, minimo: minimo, pago: pago, deuda: D, corto: corto });
+                res.filas.push({ i: i, plan: plan, minimo: minimo, pago: pago, deuda: deudaDespues, corto: corto });
                 if (corto) res.avisos.push({ i: i, plan: plan, minimo: minimo });
-                if (D <= 0.005) { res.finIdx = i; D = 0; break; }
+                if (deudaDespues <= 0.005) { res.finIdx = i; break; }
             }
-            res.resto = D;
+            res.resto = redondear(D + sumaPend());
             res.intereses = redondear(res.intereses);
             return res;
         }
 
         function cambiarTarjeta(campo, valor) {
             const v = parseFloat(valor);
-            appData.tarjeta[campo] = isFinite(v) ? Math.max(0, v) : 0;
+            if (campo === 'diaExtracto' || campo === 'diaCobro') {
+                if (!isFinite(v)) return;
+                appData.tarjeta[campo] = Math.min(28, Math.max(1, Math.round(v)));
+            } else {
+                appData.tarjeta[campo] = isFinite(v) ? Math.max(0, v) : 0;
+            }
             guardar();
             pintarTarjeta();
         }
@@ -1873,10 +1938,17 @@
             if (!(imp > 0)) { alert('Pon el importe de la compra.'); inImp.focus(); return; }
             const t = appData.tarjeta;
             const antes = redondear(numO(t.deuda, 0));
-            t.compras.push({ id: nuevoId(), ts: Date.now(), importe: imp, nota: inNota.value.trim() });
+            const inFecha = document.getElementById('tj-compra-fecha');
+            let ts = Date.now();
+            if (inFecha.value && inFecha.value !== aISO(new Date())) {
+                const p = inFecha.value.split('-').map(Number);
+                ts = new Date(p[0], p[1] - 1, p[2], 12).getTime();
+            }
+            t.compras.push({ id: nuevoId(), ts: ts, importe: imp, nota: inNota.value.trim() });
             t.deuda = redondear(antes + imp);
             inImp.value = '';
             inNota.value = '';
+            inFecha.value = aISO(new Date());
             if (document.activeElement) document.activeElement.blur();
             guardar();
             pintarTarjeta();
@@ -1929,6 +2001,13 @@
             poner('tj-comision', numO(t.comision, 0));
             poner('tj-minpct', numO(t.minPct, 0));
             poner('tj-mineur', numO(t.minEur, 0));
+            poner('tj-dia-extracto', t.diaExtracto);
+            poner('tj-dia-cobro', t.diaCobro);
+            const inFecha = document.getElementById('tj-compra-fecha');
+            if (inFecha && !inFecha.value && document.activeElement !== inFecha) inFecha.value = aISO(new Date());
+            const elNota = document.getElementById('tj-nota');
+            if (elNota) elNota.innerText = `Tu banco cobra el día ${t.diaCobro} lo del extracto del día ${t.diaExtracto}: cada compra entra en el siguiente extracto y no se paga hasta ese cobro, así que apúntala con su fecha. ` +
+                'Los pagos salen de los conceptos «Tarjeta…» de tus ciclos: cuando el banco te cobre, marca ese concepto y la deuda baja sola. Si el extracto dice otra cifra, escríbela en «Deuda actual».';
 
             // Disponible
             const elDisp = document.getElementById('tj-disponible');
@@ -1954,7 +2033,7 @@
                         <summary><span>🧾 Compras apuntadas (${compras.length})</span><span class="g-total">+${total.toFixed(2)} € <span class="arrow">▼</span></span></summary>
                         ${compras.map(c => `
                         <div class="compra-row">
-                            <div class="c-izq"><div class="c-desc">${esc(c.nota || 'Compra')}</div><div class="c-sub">${fmtFecha(c.ts)}</div></div>
+                            <div class="c-izq"><div class="c-desc">${esc(c.nota || 'Compra')}</div><div class="c-sub">${fmtFecha(c.ts)}${c.ts > Date.now() ? ' · programada' : ''}</div></div>
                             <div class="c-der"><b>+${(Number(c.importe) || 0).toFixed(2)} €</b><button class="btn-delete" title="Quitar compra" onclick="borrarCompraTarjeta('${esc(c.id)}')">✕</button></div>
                         </div>`).join('')}
                     </details>`;
@@ -1971,7 +2050,7 @@
             } else {
                 html += `<table class="tabla-plan"><thead><tr><th>Ciclo</th><th>Pagas</th><th>Mínimo</th><th>Debes después</th></tr></thead><tbody>`;
                 res.filas.forEach(f => {
-                    html += `<tr class="${f.corto ? 'corto' : ''}"><td>${mes(f.i, true)}</td><td>${f.corto ? '⚠️ ' : ''}${f.plan.toFixed(2)}</td><td>${f.minimo.toFixed(2)}</td><td>${f.deuda.toFixed(2)}</td></tr>`;
+                    html += `<tr class="${f.corto ? 'corto' : ''}"><td>${mes(f.i, true)}</td><td>${f.corto ? '⚠️ ' : ''}${f.plan.toFixed(2)}</td><td>${f.minimo > 0 ? f.minimo.toFixed(2) : '—'}</td><td>${f.deuda.toFixed(2)}</td></tr>`;
                 });
                 html += `</tbody></table>`;
                 res.avisos.slice(0, 4).forEach(a => {
