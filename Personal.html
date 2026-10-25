@@ -447,6 +447,26 @@
         /* ===== VERSIÓN ===== */
         .app-title { margin-bottom: 2px; }
         .app-version { text-align: center; font-size: 11.5px; font-weight: 600; color: #94a3b8; margin: 0 0 14px; }
+
+        /* ===== CRÉDITOS ===== */
+        .cr-total { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .cr-total:empty { display: none; }
+        .cr-total-h { font-size: 11px; font-weight: 800; color: #475569; letter-spacing: .5px; text-transform: uppercase; }
+        .cr-total-v { font-size: 24px; font-weight: 800; color: var(--text-main); margin: 2px 0 8px; font-variant-numeric: tabular-nums; }
+        .cr-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .cr-chip { border: 1px solid var(--border); border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; color: #334155; background: #f8fafc; cursor: pointer; font-family: inherit; }
+        .cr-barra { height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin: 12px 0 4px; }
+        .cr-barra > div { height: 100%; background: var(--primary); border-radius: 999px; }
+        .cr-linea { font-size: 12px; color: #475569; }
+        .cr-datos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .cr-datos > div { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .cr-datos span { font-size: 11px; font-weight: 700; color: #64748b; }
+        .cr-datos b { font-size: 14px; color: var(--text-main); font-variant-numeric: tabular-nums; }
+        .cr-sim-res { font-size: 13px; color: #334155; line-height: 1.5; }
+        .cr-sim-res .linea { margin-top: 8px; }
+        .cr-sim-res .nota { margin-top: 8px; font-size: 11.5px; color: #64748b; }
+        .btn-cr-nuevo { width: 100%; padding: 12px; font-size: 13px; margin-bottom: 8px; }
+        .cr-borrar { margin-top: 12px; color: #9f1239; border-color: #fecdd3; background: #fff1f2; }
     </style>
 </head>
 <body>
@@ -454,7 +474,7 @@
     <nav class="barra-inferior" aria-label="Secciones">
         <button type="button" class="barra-btn activo" data-tab="tab-inicio" onclick="switchTab('tab-inicio')"><span class="bi">🏠</span><span>Inicio</span></button>
         <button type="button" class="barra-btn" data-tab="tab-ciclos" onclick="switchTab('tab-ciclos')"><span class="bi">📅</span><span>Ciclos</span></button>
-        <button type="button" class="barra-btn" data-tab="tab-tarjeta" onclick="switchTab('tab-tarjeta')"><span class="bi">💳</span><span>Tarjeta</span></button>
+        <button type="button" class="barra-btn" data-tab="tab-tarjeta" onclick="switchTab('tab-tarjeta')"><span class="bi">💳</span><span>Créditos</span></button>
         <button type="button" class="barra-btn" data-tab="tab-planes" onclick="switchTab('tab-planes')"><span class="bi">🧮</span><span>Planes</span></button>
         <button type="button" class="barra-btn" data-tab="tab-gasolina" onclick="switchTab('tab-gasolina')"><span class="bi">⛽</span><span>Gasolina</span></button>
     </nav>
@@ -568,7 +588,7 @@
         <!-- ===== INICIO: cifras, gráfico y lo pendiente ===== -->
         <div id="tab-inicio" class="tab-content active">
             <div class="app-title">📊 Mi Control Financiero</div>
-            <div class="app-version" id="app-version">Versión 0.1 · 25 oct 2026</div>
+            <div class="app-version" id="app-version">Versión 0.2 · 25 oct 2026</div>
         <div class="metrics">
             <div class="metric-card saldo">
                 <div class="metric-title">SALDO EN BANCO (€)</div>
@@ -635,8 +655,9 @@
             <button class="btn-add-cycle" onclick="crearNuevoCiclo()">➕ Crear Nuevo Ciclo</button>
         </div>
 
-        <!-- ===== TARJETA ===== -->
+        <!-- ===== CRÉDITOS: tarjeta y préstamos ===== -->
         <div id="tab-tarjeta" class="tab-content">
+            <div class="cr-total" id="cr-total"></div>
         <!-- ===== Tarjeta de crédito ===== -->
         <section class="panel" id="panel-tarjeta">
             <div class="panel-cab">
@@ -701,6 +722,8 @@
                 <div class="panel-nota" id="tj-nota"></div>
             </div>
         </section>
+            <div id="cr-lista"></div>
+            <button type="button" class="btn-secondary btn-cr-nuevo" onclick="nuevoCredito()">＋ Añadir un crédito</button>
         </div>
 
         <!-- ===== PLANES: un apartado cada vez ===== -->
@@ -1729,6 +1752,19 @@
             // Fechas de pago (aprendidas o puestas a mano) y con cuántos días de antelación avisar
             if (!data.fechasPago || typeof data.fechasPago !== 'object' || Array.isArray(data.fechasPago)) data.fechasPago = {};
             data.avisoDias = Math.min(10, Math.max(0, Math.round(nDef(data.avisoDias, 3))));
+            // Créditos con cuota al mes (los que tenías el 25/10/2026; luego los cambias tú en «Créditos»)
+            if (!Array.isArray(data.creditos)) data.creditos = [
+                { id: 'cr-auto', nombre: 'Crédito Auto', icono: '🚗', concepto: 'Cuota carro', deuda: 8350.15, cuota: 140.98, dia: 10, tan: 9.881, capitalInicial: 10545.27, fin: new Date(2033, 8, 10, 12).getTime() },
+                { id: 'cr-banco', nombre: 'Crédito banco', icono: '🏦', concepto: 'Crédito banco', deuda: 148.20, cuota: 30.16, dia: 1, tan: 0, capitalInicial: 0, fin: 0 }
+            ];
+            data.creditos = data.creditos.filter(c => c && typeof c === 'object');
+            data.creditos.forEach(c => {
+                if (!c.id) c.id = 'cr-' + Math.random().toString(36).slice(2, 8);
+                c.nombre = String(c.nombre || 'Crédito');
+                c.concepto = String(c.concepto || '');
+                ['deuda', 'cuota', 'tan', 'capitalInicial', 'fin'].forEach(f => { c[f] = Math.max(0, nDef(c[f], 0)); });
+                c.dia = Math.min(31, Math.max(1, Math.round(nDef(c.dia, 1))));
+            });
             // Bombonas de gas (cocina y calentador) y el dinero que guardas en casa para ellas
             if (!data.bombonas || typeof data.bombonas !== 'object') data.bombonas = {};
             const bb = data.bombonas;
@@ -1849,11 +1885,13 @@
             // Topes automáticos y gastos periódicos colocados en su ciclo
             const cambiosTope = revisarTopes();
             const per = sincronizarPeriodicos();
-            if (cambiosTope.length || per.cambiado) {
+            const cre = sincronizarCreditos();
+            if (cambiosTope.length || per.cambiado || cre.cambiado) {
                 guardar();
                 const t = [];
                 if (cambiosTope.length) t.push('Nuevo tope · ' + cambiosTope.join(' · '));
                 if (per.avisos.length) t.push('Añadido · ' + per.avisos.join(' · '));
+                if (cre.avisos.length) t.push(cre.avisos.join(' · '));
                 if (t.length) setTimeout(() => mostrarAviso(t.join(' | ')), 60);
             }
             const cards = document.querySelectorAll('details.cycle-card');
@@ -1973,6 +2011,23 @@
                     t.deuda = redondear(antes + item.tjDescontado);
                     delete item.tjDescontado;
                     mostrarAviso(`Deuda de la tarjeta: ${antes.toFixed(2)} → ${t.deuda.toFixed(2)} €`);
+                }
+            }
+            // Cuota de un crédito: al marcarla baja lo que debes (solo la parte de capital); al desmarcarla vuelve a subir
+            const credito = creditoDeItem(item);
+            if (credito) {
+                const antes = redondear(numO(credito.deuda, 0));
+                if (checked) {
+                    const baja = Math.min(capitalDeCuota(credito, Math.abs(parseFloat(item.valor) || 0)), antes);
+                    if (baja > 0) {
+                        credito.deuda = redondear(antes - baja);
+                        item.crDescontado = redondear(baja);
+                        mostrarAviso(`${credito.nombre}: debes ${antes.toFixed(2)} → ${credito.deuda.toFixed(2)} €`);
+                    }
+                } else if (item.crDescontado) {
+                    credito.deuda = redondear(antes + item.crDescontado);
+                    delete item.crDescontado;
+                    mostrarAviso(`${credito.nombre}: debes ${antes.toFixed(2)} → ${credito.deuda.toFixed(2)} €`);
                 }
             }
             renderizar();
@@ -2194,6 +2249,7 @@
             pintarNavCiclos();
             pintarFechasEnCiclos();
             pintarFechas();
+            pintarCreditos();
             pedirPendientes();
         }
 
@@ -4003,15 +4059,16 @@
             recordatoriosPago().forEach(r => {
                 const fc = fechaCorta(r.fecha);
                 let txt;
-                if (r.tarjeta) {
-                    txt = r.d < 0 ? `Tarjeta: el cobro del ${fc} (${fmtEur(r.imp)}) aún no lo has marcado como pagado.`
-                        : `Tarjeta: ${r.d === 0 ? 'hoy' : r.d === 1 ? `mañana (${fc})` : `el ${fc} (dentro de ${r.d} días)`} se cobran ${fmtEur(r.imp)}.`;
+                if (r.tarjeta || r.credito) {
+                    const quien = r.tarjeta ? 'Tarjeta' : esc(r.nombre);
+                    txt = r.d < 0 ? `${quien}: el cobro del ${fc} (${fmtEur(r.imp)}) aún no lo has marcado como pagado.`
+                        : `${quien}: ${r.d === 0 ? 'hoy' : r.d === 1 ? `mañana (${fc})` : `el ${fc} (dentro de ${r.d} días)`} se cobran ${fmtEur(r.imp)}.`;
                 } else {
                     const cuanto = r.imp > 0 ? ` (${r.estimado ? 'unos ' : ''}${fmtEur(r.imp)})` : '';
                     txt = r.d < 0 ? `${esc(r.nombre)}: suele llegar hacia el ${fc} y aún no lo has marcado como pagado.`
                         : `${esc(r.nombre)}: suele llegar ${r.d === 0 ? 'hoy' : r.d === 1 ? `mañana, ${fc}` : `el ${fc}, dentro de ${r.d} días`}${cuanto}.`;
                 }
-                add('aviso', r.tarjeta ? '💳' : '🔔', txt, 'Ver', verC(r.ci));
+                add('aviso', r.tarjeta ? '💳' : r.credito ? (r.icono || '🏦') : '🔔', txt, 'Ver', verC(r.ci));
             });
 
             // Lo que llega siempre el mismo día: ¿fijarlo? (o ¿cambiarlo?, si ha dejado de cuadrar)
@@ -4078,6 +4135,16 @@
             }
 
             if (tjInfo) add('info', '💳', tjInfo, 'Ver', "irA('tab-tarjeta')");
+            (appData.creditos || []).forEach(cr => {
+                if (numO(cr.deuda, 0) <= 0.005) return;
+                const pl = planCredito(cr);
+                const ver = `verCredito('${esc(cr.id)}')`;
+                if (pl.sinFin) add('aviso', '🏦', `${esc(cr.nombre)}: con esa cuota no se termina de pagar nunca (no llega a cubrir los intereses).`, 'Ver', ver);
+                else if (pl.filas.length && pl.filas.length <= 2) {
+                    const u = pl.filas[pl.filas.length - 1];
+                    add('info', cr.icono || '🏦', `${esc(cr.nombre)}: ${pl.filas.length === 1 ? 'te queda la última cuota' : 'te quedan 2 cuotas'}, ${fmtEur(u.pago)} el ${fechaCorta(u.fecha)}.`, 'Ver', ver);
+                }
+            });
 
             if (cicloHoy) {
                 // Lo que queda por pagar este ciclo
@@ -4203,7 +4270,7 @@
                 const vistos = new Set();
                 c.items.forEach(it => {
                     const k = normDesc(it.desc);
-                    if (!k || esIngreso(it) || esTarjeta(it) || vistos.has(k)) return;
+                    if (!k || esIngreso(it) || esTarjeta(it) || creditoDeItem(it) || vistos.has(k)) return;
                     vistos.add(k);
                     cuenta.set(k, (cuenta.get(k) || 0) + 1);
                 });
@@ -4236,6 +4303,8 @@
                 const d = appData.tarjeta && Number(appData.tarjeta.diaCobro);
                 return d ? { dia: d, tarjeta: true } : null;
             }
+            const cr = creditoDeItem(item);
+            if (cr) return Number(cr.dia) ? { dia: Number(cr.dia), tarjeta: false, credito: true, icono: cr.icono || '🏦' } : null;
             const f = (appData.fechasPago || {})[normDesc(item.desc)];
             return f && f.estado === 'si' && Number(f.dia) ? { dia: Number(f.dia), tarjeta: false } : null;
         }
@@ -4273,7 +4342,7 @@
                         const est = st.n ? estimacionConcepto(st, cl) : null;
                         if (est !== null) { imp = est; estimado = true; }
                     }
-                    out.push({ k: k, nombre: String(it.desc).trim(), tarjeta: f.tarjeta, fecha: fecha, d: d, imp: imp, estimado: estimado, ci: ci });
+                    out.push({ k: k, nombre: String(it.desc).trim(), tarjeta: f.tarjeta, credito: !!f.credito, icono: f.icono, fecha: fecha, d: d, imp: imp, estimado: estimado, ci: ci });
                 });
             });
             return out.sort((a, b) => a.d - b.d);
@@ -4366,6 +4435,11 @@
             const t = appData.tarjeta;
             if (t && Number(t.diaCobro)) conAviso.push(`<div class="fp-item"><div class="fp-txt"><b>Tarjeta de crédito</b><span>🔔 El día ${t.diaCobro}, su día de cobro</span></div>` +
                 `<div class="fp-acc"><button type="button" class="btn-mini" onclick="verAjustesTarjeta()">Cambiar</button></div></div>`);
+            (appData.creditos || []).forEach(cr => {
+                if (!Number(cr.dia) || !normDesc(cr.concepto || '') || numO(cr.deuda, 0) <= 0.005) return;
+                conAviso.push(`<div class="fp-item"><div class="fp-txt"><b>${esc(cr.nombre)}</b><span>🔔 El día ${cr.dia}, su día de pago</span></div>` +
+                    `<div class="fp-acc"><button type="button" class="btn-mini" onclick="verCredito('${esc(cr.id)}')">Cambiar</button></div></div>`);
+            });
             let html = '';
             if (preguntas.length) html += '<div class="panel-h">Por confirmar</div>' + preguntas.join('');
             html += '<div class="panel-h">Con aviso</div>' + (conAviso.join('') || '<div class="panel-nota" style="margin-top:0">Aún ninguno.</div>');
@@ -4390,9 +4464,329 @@
                 if (!f || !el || eventosPago(c, normDesc(it.desc)).length) return;
                 const fecha = fechaEnCiclo(cl, f.dia);
                 const pasado = diasHasta(fecha) < 0;
-                const txt = f.tarjeta ? `🔔 ${pasado ? 'se cobró' : 'se cobra'} el ${fechaCorta(fecha)}` : `🔔 suele llegar hacia el ${fechaCorta(fecha)}`;
+                const txt = (f.tarjeta || f.credito) ? `🔔 ${pasado ? 'se cobró' : 'se cobra'} el ${fechaCorta(fecha)}` : `🔔 suele llegar hacia el ${fechaCorta(fecha)}`;
                 el.insertAdjacentHTML('beforeend', `<span class="fp-en-ciclo">${txt}</span>`);
             });
+        }
+
+        // =====================================================
+        // ===== CRÉDITOS (préstamos con cuota al mes) =========
+        // =====================================================
+        function creditoDeItem(item) {
+            if (!item || esIngreso(item)) return null;
+            const k = normDesc(item.desc);
+            if (!k) return null;
+            return (appData.creditos || []).find(cr => normDesc(cr.concepto || '') === k) || null;
+        }
+        function creditoPorId(id) { return (appData.creditos || []).find(c => c.id === id) || null; }
+        function tasaMesCredito(cr) { return Math.max(0, numO(cr.tan, 0)) / 100 / 12; }
+        function diaCredito(cr) { return Math.min(31, Math.max(1, Math.round(numO(cr.dia, 1)))); }
+        function mesSiguiente(f, dia) {
+            const y = f.getFullYear(), m = f.getMonth() + 1;
+            return new Date(y, m, Math.min(dia, new Date(y, m + 1, 0).getDate()), 12);
+        }
+        function fechaLarga(f) { const d = new Date(f); return `${d.getDate()} ${MESES_CORTOS[d.getMonth()].toLowerCase()} ${d.getFullYear()}`; }
+        function mesAnio(f) { const d = new Date(f); return `${MESES_CORTOS[d.getMonth()]} ${d.getFullYear()}`; }
+
+        // La próxima cuota sin pagar: la del ciclo de hoy (si aún no la marcaste) o la del mes siguiente
+        function primeraCuotaPendiente(cr) {
+            const dia = diaCredito(cr), k = normDesc(cr.concepto || '');
+            const idxHoy = indiceCicloDeFecha(new Date());
+            if (idxHoy >= 0) {
+                const c = appData.ciclos[idxHoy];
+                const cl = claveCicloFinanzas(String(c.nombre || ''));
+                if (cl !== null) {
+                    const f = fechaEnCiclo(cl, dia);
+                    const it = k ? c.items.find(x => !esIngreso(x) && normDesc(x.desc) === k) : null;
+                    return it && it.checked ? mesSiguiente(f, dia) : f;
+                }
+            }
+            const h = new Date(); h.setHours(12, 0, 0, 0);
+            let f = new Date(h.getFullYear(), h.getMonth(), Math.min(dia, new Date(h.getFullYear(), h.getMonth() + 1, 0).getDate()), 12);
+            if (f < h) f = mesSiguiente(f, dia);
+            return f;
+        }
+
+        // Parte de la cuota que es seguro (o comisiones): lo que sobra de la cuota frente a la que saldría solo con el TAN
+        function calcularSeguroMes(cr) {
+            const r = tasaMesCredito(cr), D = numO(cr.deuda, 0), cuota = numO(cr.cuota, 0), fin = Number(cr.fin) || 0;
+            if (!(r > 0) || !fin || !(D > 0.005) || !(cuota > 0)) return 0;
+            const f0 = primeraCuotaPendiente(cr), f1 = new Date(fin);
+            const n = (f1.getFullYear() * 12 + f1.getMonth()) - (f0.getFullYear() * 12 + f0.getMonth()) + 1;
+            if (n < 1) return 0;
+            const pura = D * r / (1 - Math.pow(1 + r, -n));
+            return Math.max(0, redondear(cuota - pura));
+        }
+
+        // Cuánto de un pago va a capital (lo que baja la deuda)
+        function capitalDeCuota(cr, pago) {
+            const D = numO(cr.deuda, 0), r = tasaMesCredito(cr);
+            const seg = r > 0 ? Math.max(0, numO(cr.seguroMes, 0)) : 0;
+            return redondear(Math.max(0, Math.min(D, pago - redondear(D * r) - seg)));
+        }
+
+        // Plan de pagos desde hoy: una fila por cuota pendiente. Si en un ciclo pusiste otro importe, cuenta el tuyo.
+        function planCredito(cr, opc) {
+            opc = opc || {};
+            const res = { filas: [], intereses: 0, seguro: 0, sinFin: false };
+            let D = redondear(Math.max(0, opc.deuda !== undefined ? opc.deuda : numO(cr.deuda, 0)));
+            if (D <= 0.005) return res;
+            const r = tasaMesCredito(cr);
+            const seg = r > 0 ? Math.max(0, numO(cr.seguroMes, 0)) : 0;
+            const cuota = Math.max(0, opc.cuota !== undefined ? opc.cuota : numO(cr.cuota, 0));
+            const dia = diaCredito(cr), k = normDesc(cr.concepto || '');
+            let fecha = primeraCuotaPendiente(cr);
+            for (let i = 0; i < 720 && D > 0.005; i++) {
+                const cl = claveDeTs(fecha.getTime());
+                const ci = k ? appData.ciclos.findIndex(c => claveCicloFinanzas(String(c.nombre || '')) === cl) : -1;
+                let pagoPlan = cuota, pagado = false;
+                if (ci >= 0 && !opc.soloCuota) {
+                    const it = appData.ciclos[ci].items.find(x => !esIngreso(x) && normDesc(x.desc) === k);
+                    if (it && it.checked) pagado = true;
+                    else if (it) { const v = Math.abs(parseFloat(it.valor) || 0); if (v > 0) pagoPlan = v; }
+                }
+                if (!pagado) {
+                    const interes = redondear(D * r);
+                    const pago = redondear(Math.min(pagoPlan, D + interes + seg));
+                    const capital = redondear(pago - interes - seg);
+                    if (capital <= 0.005) { res.sinFin = true; break; }   // la cuota no cubre los intereses
+                    D = redondear(Math.max(0, D - capital));
+                    res.intereses += interes;
+                    res.seguro += seg;
+                    res.filas.push({ fecha: fecha.getTime(), clave: cl, ci: ci, pago: pago, interes: interes, capital: capital, deuda: D });
+                }
+                fecha = mesSiguiente(fecha, dia);
+            }
+            if (D > 0.005) res.sinFin = true;
+            res.intereses = redondear(res.intereses);
+            res.seguro = redondear(res.seguro);
+            return res;
+        }
+
+        // Las cuotas en tus ciclos: añade las que faltan, ajusta la última y quita las de después del final
+        function sincronizarCreditos() {
+            const out = { cambiado: false, avisos: [] };
+            const idxHoy = indiceCicloDeFecha(new Date());
+            const ini = idxHoy >= 0 ? idxHoy : indiceInicioFuturo();
+            (appData.creditos || []).forEach(cr => {
+                if (cr.seguroMes === undefined) { cr.seguroMes = calcularSeguroMes(cr); out.cambiado = true; }
+                const k = normDesc(cr.concepto || '');
+                if (!k || ini < 0) return;
+                const plan = planCredito(cr);
+                if (plan.sinFin) return;   // con esa cuota no se termina: no se toca nada
+                const porClave = {};
+                plan.filas.forEach(f => { porClave[f.clave] = f; });
+                const ultima = plan.filas[plan.filas.length - 1] || null;
+                let quitados = 0;
+                for (let i = ini; i < appData.ciclos.length; i++) {
+                    const c = appData.ciclos[i];
+                    const cl = claveCicloFinanzas(String(c.nombre || ''));
+                    if (cl === null) continue;
+                    const idx = c.items.findIndex(x => !esIngreso(x) && normDesc(x.desc) === k);
+                    const it = idx >= 0 ? c.items[idx] : null;
+                    if (it && it.checked) continue;
+                    const f = porClave[cl];
+                    if (f) {
+                        if (!it) {
+                            c.items.push({ desc: String(cr.concepto).trim(), valor: f.pago.toFixed(2), checked: false });
+                            out.cambiado = true;
+                        } else if (f === ultima && Math.abs((parseFloat(it.valor) || 0) - f.pago) >= 0.005) {
+                            it.valor = f.pago.toFixed(2);
+                            out.cambiado = true;
+                            out.avisos.push(`${cr.nombre}: la última cuota es de ${f.pago.toFixed(2)} € (${fechaCorta(f.fecha)})`);
+                        }
+                    } else if (it && (!ultima || cl > ultima.clave)) {
+                        c.items.splice(idx, 1);
+                        quitados++;
+                        out.cambiado = true;
+                    }
+                }
+                if (quitados) out.avisos.push(`${cr.nombre} terminado: quitado de ${quitados} ciclo${quitados > 1 ? 's' : ''}`);
+            });
+            return out;
+        }
+
+        function verCredito(id) {
+            switchTab('tab-tarjeta');
+            const el = document.getElementById('cr-' + id);
+            if (el) el.scrollIntoView({ block: 'start' });
+        }
+
+        function cambiarCredito(id, campo, valor) {
+            const cr = creditoPorId(id);
+            if (!cr) return;
+            if (campo === 'nombre') cr.nombre = String(valor).trim() || 'Crédito';
+            else if (campo === 'concepto') {
+                const v = String(valor).trim();
+                if (v && (appData.creditos || []).some(c => c !== cr && normDesc(c.concepto || '') === normDesc(v))) { alert('Ese concepto ya es la cuota de otro crédito.'); pintarCreditos(true); return; }
+                cr.concepto = v;
+            } else if (campo === 'fin') {
+                if (!valor) cr.fin = 0;
+                else { const p = String(valor).split('-').map(Number); cr.fin = new Date(p[0], p[1] - 1, p[2], 12).getTime(); }
+            } else if (campo === 'dia') {
+                const d = parseInt(valor, 10);
+                if (!(d >= 1 && d <= 31)) { alert('Pon un día del 1 al 31.'); pintarCreditos(true); return; }
+                cr.dia = d;
+            } else if (campo === 'tan') {
+                const n = parseFloat(String(valor).replace(',', '.'));
+                cr.tan = isFinite(n) && n > 0 ? Math.round(n * 1000) / 1000 : 0;
+            } else {
+                const n = parseFloat(String(valor).replace(',', '.'));
+                cr[campo] = isFinite(n) && n > 0 ? redondear(n) : 0;
+            }
+            if (['deuda', 'cuota', 'tan', 'fin', 'dia', 'concepto'].includes(campo)) cr.seguroMes = calcularSeguroMes(cr);
+            guardar();
+            renderizar();
+        }
+
+        function nuevoCredito() {
+            const nombre = prompt('¿Cómo se llama el crédito? (ej. Crédito personal)', 'Crédito');
+            if (nombre === null) return;
+            const cr = { id: nuevoId(), nombre: nombre.trim() || 'Crédito', icono: '🏦', concepto: '', deuda: 0, cuota: 0, dia: 1, tan: 0, capitalInicial: 0, fin: 0, seguroMes: 0 };
+            appData.creditos.push(cr);
+            guardar();
+            renderizar();
+            const d = document.querySelector(`#cr-${cr.id} details.cr-ajustes`);
+            if (d) d.open = true;
+            verCredito(cr.id);
+        }
+
+        function borrarCredito(id) {
+            const cr = creditoPorId(id);
+            if (!cr) return;
+            if (!confirm(`¿Borrar «${cr.nombre}»? Las cuotas que ya están en tus ciclos se quedan (puedes quitarlas tú).`)) return;
+            appData.creditos = appData.creditos.filter(c => c !== cr);
+            guardar();
+            renderizar();
+        }
+
+        // ¿Y si adelanto dinero? Misma cuota (terminas antes) o mismo plazo (cuota más baja)
+        function simularAdelanto(id) {
+            const cr = creditoPorId(id);
+            const el = document.getElementById('cr-sim-res-' + id), inp = document.getElementById('cr-sim-' + id);
+            if (!cr || !el || !inp) return;
+            const E = redondear(parseFloat(String(inp.value).replace(',', '.')));
+            const D = redondear(numO(cr.deuda, 0));
+            if (!(E > 0) || !(D > 0.005)) { el.innerHTML = ''; return; }
+            const base = planCredito(cr);
+            const r = tasaMesCredito(cr), n = base.filas.length;
+            const comPct = n > 12 ? 0.5 : 0.25;
+            const nota = r > 0 ? `<div class="nota">El banco puede cobrar una comisión de hasta ${comPct.toString().replace('.', ',')} % de lo que adelantas (${fmtEur(Math.min(E, D) * comPct / 100)}) si el crédito es a taxa fixa (${n > 12 ? 'falta más de un año' : 'falta un año o menos'}); a taxa variável no cobra nada. Hay que avisarle con 30 días.</div>` : '';
+            if (E >= D) {
+                el.innerHTML = `<div class="ok-linea">Con ${fmtEur(D)} lo pagas entero${r > 0 ? ` y te ahorras ≈ <b>${fmtEur(base.intereses)}</b> de intereses` : ''}${base.seguro > 0 ? ` (y ≈ ${fmtEur(base.seguro)} de seguro)` : ''}.</div>` + nota;
+                return;
+            }
+            const otro = planCredito(cr, { deuda: D - E, soloCuota: true });
+            const ref = planCredito(cr, { soloCuota: true });
+            const menos = ref.filas.length - otro.filas.length;
+            const ahorro = redondear(ref.intereses - otro.intereses + ref.seguro - otro.seguro);
+            const finOtro = otro.filas.length ? otro.filas[otro.filas.length - 1].fecha : null;
+            let html = `<div class="linea">Con la misma cuota terminarías en <b>${finOtro ? mesAnio(finOtro) : '—'}</b> (${menos} cuota${menos === 1 ? '' : 's'} antes)` +
+                (ahorro > 0 ? ` y te ahorras ≈ <b>${fmtEur(ahorro)}</b>${r > 0 ? ' de intereses' : ''}${ref.seguro - otro.seguro > 0.005 ? ' y seguro' : ''}.` : '.') + '</div>';
+            if (r > 0 && n > 0) {
+                const cuotaPlazo = redondear((D - E) * r / (1 - Math.pow(1 + r, -n)) + Math.max(0, numO(cr.seguroMes, 0)));
+                html += `<div class="linea">O mantienes el plazo y la cuota baja a ≈ <b>${fmtEur(cuotaPlazo)}</b> al mes.</div>`;
+            }
+            el.innerHTML = html + nota;
+        }
+
+        // Conceptos de gasto de tus ciclos (para elegir cuál es la cuota de cada crédito)
+        function conceptosDeGasto() {
+            const ini = Math.max(0, indiceInicioFuturo());
+            const vistos = new Map();
+            appData.ciclos.slice(ini).forEach(c => c.items.forEach(it => {
+                const k = normDesc(it.desc);
+                if (k && !esIngreso(it) && !esTarjeta(it) && !vistos.has(k)) vistos.set(k, String(it.desc).trim());
+            }));
+            return [...vistos.values()];
+        }
+
+        function pintarTotalCreditos() {
+            const el = document.getElementById('cr-total');
+            if (!el) return;
+            const tj = redondear(Math.max(0, numO(appData.tarjeta && appData.tarjeta.deuda, 0)));
+            const crs = (appData.creditos || []).filter(c => numO(c.deuda, 0) > 0.005);
+            const total = redondear(tj + crs.reduce((a, c) => a + numO(c.deuda, 0), 0));
+            const chips = [];
+            if (tj > 0.005) chips.push(`<button type="button" class="cr-chip" onclick="document.getElementById('panel-tarjeta').scrollIntoView({ block: 'start' })">💳 Tarjeta ${fmtEur(tj)}</button>`);
+            crs.forEach(c => chips.push(`<button type="button" class="cr-chip" onclick="verCredito('${esc(c.id)}')">${c.icono || '🏦'} ${esc(c.nombre)} ${fmtEur(numO(c.deuda, 0))}</button>`));
+            el.innerHTML = total > 0.005 ? `<div class="cr-total-h">Debes en total</div><div class="cr-total-v">${fmtEur(total)}</div><div class="cr-chips">${chips.join('')}</div>`
+                : `<div class="cr-total-h">Debes en total</div><div class="cr-total-v">0.00 €</div>`;
+        }
+
+        function htmlCredito(cr, abierto, conceptos) {
+            const id = esc(cr.id), q = `'${id}'`;
+            const D = redondear(numO(cr.deuda, 0)), cuota = numO(cr.cuota, 0), cap0 = numO(cr.capitalInicial, 0), tan = numO(cr.tan, 0);
+            const seg = tan > 0 ? Math.max(0, numO(cr.seguroMes, 0)) : 0;
+            const plan = planCredito(cr);
+            const ultima = plan.filas[plan.filas.length - 1] || null;
+            const pagado = D <= 0.005;
+            const resumen = pagado ? '✓ pagado' : `${fmtEur(D)}${ultima && !plan.sinFin ? ' · acabas ' + mesAnio(ultima.fecha) : ''}`;
+            const pct = cap0 > 0 ? Math.max(0, Math.min(100, (cap0 - D) / cap0 * 100)) : null;
+            const fin = Number(cr.fin) ? new Date(Number(cr.fin)) : null;
+            const finISO = fin ? `${fin.getFullYear()}-${pad2(fin.getMonth() + 1)}-${pad2(fin.getDate())}` : '';
+            const lista = conceptos.slice();
+            if (cr.concepto && !lista.some(c => normDesc(c) === normDesc(cr.concepto))) lista.unshift(cr.concepto);
+            const opciones = '<option value="">(ninguno)</option>' + lista.map(c => `<option value="${esc(c)}" ${normDesc(c) === normDesc(cr.concepto || '') ? 'selected' : ''}>${esc(c)}</option>`).join('');
+            let avisos = '';
+            if (!normDesc(cr.concepto || '')) avisos += `<div class="aviso-linea" style="display:block">Elige en «⚙️ Datos del crédito» qué concepto de tus ciclos es su cuota: así la deuda baja sola al marcarla como pagada.</div>`;
+            if (plan.sinFin && !pagado) avisos += `<div class="aviso-linea" style="display:block">⚠️ Con esta cuota no se termina de pagar nunca: no llega a cubrir los intereses.</div>`;
+            const datos = pagado ? '' : `<div class="cr-datos">
+                    <div><span>Cuotas que faltan</span><b>${plan.sinFin ? '—' : plan.filas.length}</b></div>
+                    <div><span>Termina</span><b>${ultima && !plan.sinFin ? fechaLarga(ultima.fecha) : '—'}</b></div>
+                    <div><span>Día de pago</span><b>El ${diaCredito(cr)} de cada mes</b></div>
+                    <div><span>Intereses que quedan</span><b>${tan > 0 ? '≈ ' + fmtEur(plan.intereses) : 'Sin intereses'}</b></div>
+                    ${seg > 0 ? `<div><span>Seguro en la cuota</span><b>≈ ${fmtEur(seg)} al mes</b></div>` : ''}
+                    ${ultima && !plan.sinFin && Math.abs(ultima.pago - cuota) >= Math.max(1, cuota * 0.02) ? `<div><span>Última cuota</span><b>${fmtEur(ultima.pago)}</b></div>` : ''}
+                </div>`;
+            return `<section class="panel credito" id="cr-${id}">
+                <div class="panel-cab"><span>${cr.icono || '🏦'} ${esc(cr.nombre)}</span><span class="summary-right"><span class="panel-resumen">${resumen}</span></span></div>
+                <div class="panel-body">
+                    <div class="dos-col">
+                        <div>
+                            <label for="cr-deuda-${id}">Deuda actual (€)</label>
+                            <input type="number" id="cr-deuda-${id}" inputmode="decimal" step="0.01" min="0" value="${D ? D.toFixed(2) : ''}" placeholder="0.00" onchange="cambiarCredito(${q}, 'deuda', this.value)">
+                        </div>
+                        <div>
+                            <label for="cr-cuota-${id}">Cuota al mes (€)</label>
+                            <input type="number" id="cr-cuota-${id}" inputmode="decimal" step="0.01" min="0" value="${cuota ? cuota.toFixed(2) : ''}" placeholder="0.00" onchange="cambiarCredito(${q}, 'cuota', this.value)">
+                        </div>
+                    </div>
+                    ${pct !== null ? `<div class="cr-barra"><div style="width:${pct.toFixed(1)}%"></div></div><div class="cr-linea">Llevas pagado ${fmtEur(cap0 - D)} de ${fmtEur(cap0)} (${Math.round(pct)} %)</div>` : ''}
+                    ${avisos}
+                    ${datos}
+                    ${pagado ? '' : `<div class="panel-h">¿Y si adelanto dinero?</div>
+                    <div class="cr-sim"><input type="number" id="cr-sim-${id}" data-id="${id}" inputmode="decimal" step="0.01" min="0" placeholder="Cuánto adelantarías (€)" oninput="simularAdelanto(${q})"></div>
+                    <div class="cr-sim-res" id="cr-sim-res-${id}"></div>`}
+                    <details class="tj-ajustes cr-ajustes" data-id="${id}" ${abierto ? 'open' : ''}>
+                        <summary>⚙️ Datos del crédito <span class="arrow">▼</span></summary>
+                        <div class="dos-col">
+                            <div><label for="cr-nombre-${id}">Nombre</label><input type="text" id="cr-nombre-${id}" value="${esc(cr.nombre)}" onchange="cambiarCredito(${q}, 'nombre', this.value)"></div>
+                            <div><label for="cr-concepto-${id}">Su cuota en tus ciclos</label><select id="cr-concepto-${id}" onchange="cambiarCredito(${q}, 'concepto', this.value)">${opciones}</select></div>
+                            <div><label for="cr-dia-${id}">Día de pago</label><input type="number" id="cr-dia-${id}" inputmode="numeric" step="1" min="1" max="31" value="${diaCredito(cr)}" onchange="cambiarCredito(${q}, 'dia', this.value)"></div>
+                            <div><label for="cr-tan-${id}">TAN (%)</label><input type="number" id="cr-tan-${id}" inputmode="decimal" step="0.001" min="0" value="${tan || ''}" placeholder="0" onchange="cambiarCredito(${q}, 'tan', this.value)"></div>
+                            <div><label for="cr-cap-${id}">Capital inicial (€)</label><input type="number" id="cr-cap-${id}" inputmode="decimal" step="0.01" min="0" value="${cap0 ? cap0.toFixed(2) : ''}" placeholder="0.00" onchange="cambiarCredito(${q}, 'capitalInicial', this.value)"></div>
+                            <div><label for="cr-fin-${id}">Fin del contrato</label><input type="date" id="cr-fin-${id}" value="${finISO}" onchange="cambiarCredito(${q}, 'fin', this.value)"></div>
+                        </div>
+                        <div class="panel-nota">Todo está en la app del banco («Informação do contrato»). Con el TAN y el fin del contrato, la app separa en cada cuota los intereses, el seguro y lo que baja la deuda. Al marcar la cuota como pagada en tu ciclo, la deuda baja sola; si el banco te da otra cifra, ponla en «Deuda actual».</div>
+                        <button type="button" class="btn-mini cr-borrar" onclick="borrarCredito(${q})">🗑️ Borrar este crédito</button>
+                    </details>
+                </div>
+            </section>`;
+        }
+
+        function pintarCreditos(forzar) {
+            const lista = document.getElementById('cr-lista');
+            if (!lista) return;
+            pintarTotalCreditos();
+            const act = document.activeElement;
+            if (!forzar && act && lista.contains(act) && (act.tagName === 'INPUT' || act.tagName === 'SELECT')) return;   // no se repinta mientras escribes
+            const abiertos = new Set([...lista.querySelectorAll('details.cr-ajustes[open]')].map(d => d.dataset.id));
+            const sims = {};
+            lista.querySelectorAll('.cr-sim input').forEach(i => { if (i.value) sims[i.dataset.id] = i.value; });
+            const conceptos = conceptosDeGasto();
+            lista.innerHTML = (appData.creditos || []).map(cr => htmlCredito(cr, abiertos.has(String(cr.id)), conceptos)).join('');
+            Object.keys(sims).forEach(id => { const i = document.getElementById('cr-sim-' + id); if (i) { i.value = sims[id]; simularAdelanto(id); } });
         }
 
         // =====================================================
