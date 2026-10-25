@@ -215,8 +215,10 @@
         details.cycle-card.alert-warn { border-left-color: #f59e0b; }
 
         details.panel { background: #fff; border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
-        details.panel > summary { padding: 14px; }
-        .panel-resumen { font-size: 12.5px; font-weight: 700; color: #475569; text-align: right; }
+        details.panel > summary { padding: 14px; gap: 10px; }
+        details.panel > summary > span:first-child { white-space: nowrap; }
+        details.panel .summary-right { min-width: 0; }
+        .panel-resumen { font-size: 12.5px; font-weight: 700; color: #475569; text-align: right; line-height: 1.25; }
         .panel-body { border-top: 1px solid var(--border); padding: 4px 14px 14px; font-size: 13px; }
         .panel-body label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin: 10px 0 4px; }
         .panel-body input[type="number"], .panel-body input[type="text"], .panel-body input[type="date"], .panel-body select { width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; background: #fff; color: var(--text-main); font-family: inherit; }
@@ -252,6 +254,101 @@
         details.tj-ajustes > summary { padding: 10px 0 0; font-size: 13px; color: #334155; justify-content: flex-start; gap: 6px; }
         .sim-res .linea { margin-top: 8px; line-height: 1.45; color: #334155; }
         .btn-sim-add { width: 100%; margin-top: 12px; padding: 12px; font-size: 14px; }
+
+        /* ===== PROYECCIÓN REALISTA Y GASTOS VARIABLES ===== */
+        .metric-alt { font-size: 10.5px; color: #64748b; margin-top: 2px; }
+        .metric-alt:empty { display: none; }
+        .chart-top { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 8px; }
+        .chart-top .chart-header { margin-bottom: 0; }
+        .modo-proy { display: inline-flex; background: #f1f5f9; border-radius: 999px; padding: 3px; gap: 2px; }
+        .modo-proy button { border: none; background: transparent; color: #475569; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 999px; cursor: pointer; font-family: inherit; }
+        .modo-proy button.activo { background: #fff; color: var(--text-main); box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+        .leyenda-proy { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: #475569; margin-top: 6px; }
+        .leyenda-proy span { display: inline-flex; align-items: center; gap: 5px; }
+        .ley-linea { display: inline-block; width: 16px; height: 0; border-top: 2px solid #10b981; }
+        .ley-linea.alt { border-top-color: #94a3b8; }
+        .row-alt { font-size: 11.5px; color: #64748b; border-bottom: none; padding: 4px 6px 0; }
+        .row-alt:empty { display: none; }
+        .modo-tag { font-weight: 600; color: #64748b; font-size: 10.5px; }
+        .aviso-media { color: #b45309; font-weight: 700; }
+        details.var-item { border: 1px solid var(--border); border-radius: 10px; margin-top: 8px; overflow: hidden; }
+        details.var-item > summary { padding: 10px 12px; font-size: 13.5px; gap: 8px; }
+        .var-nombre { font-weight: 800; }
+        .var-datos { font-size: 11.5px; color: #64748b; font-weight: 500; margin-top: 2px; }
+        .var-der { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .spark { display: block; }
+        .tend { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
+        .tend.sube { background: #fffbeb; color: #b45309; }
+        .tend.baja { background: #ecfdf5; color: #047857; }
+        .tend.igual { background: #f1f5f9; color: #475569; }
+        .var-body { border-top: 1px dashed var(--border); padding: 8px 12px 10px; font-size: 12.5px; }
+        .var-hoy { margin-bottom: 6px; line-height: 1.45; color: #334155; }
+        .var-hist { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+        .var-hist td { padding: 5px 2px; border-bottom: 1px dashed var(--border); }
+        .var-hist td.num { text-align: right; }
+        .var-hist td.org { color: #94a3b8; font-size: 11px; padding-left: 8px; }
+        .var-form { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .var-form .btn-panel { width: 100%; }
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .chip { border: 1px solid #cbd5e1; background: #fff; color: #475569; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .chip.on { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+
+        /* ===== GASTOS PERIÓDICOS Y ARCHIVO ===== */
+        .per-form { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .per-pista { font-size: 11.5px; color: #64748b; margin-top: 6px; }
+        .per-pista:empty { display: none; }
+        .per-item { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-top: 8px; }
+        .per-cab { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; }
+        .per-sub { font-size: 12px; color: #475569; margin-top: 4px; line-height: 1.45; }
+        .per-acc { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .btn-mini { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 9px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .sug-item .btn-mini { white-space: nowrap; flex-shrink: 0; }
+        .sug-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px dashed var(--border); font-size: 12.5px; line-height: 1.4; }
+        .aviso-terminados { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; font-size: 13px; }
+        details.arch-item { border: 1px solid var(--border); border-radius: 10px; margin-top: 8px; overflow: hidden; }
+        details.arch-item > summary { padding: 10px 12px; font-size: 13.5px; gap: 8px; }
+        .arch-body { border-top: 1px dashed var(--border); padding: 8px 12px 10px; font-size: 12.5px; }
+        .arch-tabla { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+        .arch-tabla th { text-align: right; font-size: 10px; color: #64748b; text-transform: uppercase; padding: 4px 2px; border-bottom: 1px solid var(--border); }
+        .arch-tabla td { text-align: right; padding: 5px 2px; border-bottom: 1px dashed var(--border); }
+        .arch-tabla th:first-child, .arch-tabla td:first-child { text-align: left; }
+
+        /* ===== VENTANAS NUEVAS, INGRESOS Y DESHACER ===== */
+        .modal-fondo.abierto { display: flex; flex-direction: column; justify-content: flex-end; padding: 0; }
+        .modal-gasto.hoja { width: 100%; max-width: 520px; box-sizing: border-box; margin: 0 auto; border-radius: 20px 20px 0 0; max-height: 92vh; overflow-y: auto; padding: 10px 16px calc(16px + env(safe-area-inset-bottom)); animation: subirHoja .22s ease-out; }
+        .modal-gasto.hoja::before { content: ''; display: block; width: 40px; height: 4px; border-radius: 2px; background: #cbd5e1; margin: 0 auto 10px; }
+        @keyframes subirHoja { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+        @media (min-width: 640px) {
+            .modal-fondo.abierto { justify-content: center; padding: 16px; }
+            .modal-gasto.hoja { border-radius: 18px; }
+        }
+        .m-cab { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .m-cab h3 { margin: 0; }
+        .m-cerrar { border: none; background: #f1f5f9; color: #475569; width: 34px; height: 34px; border-radius: 50%; font-size: 15px; cursor: pointer; flex-shrink: 0; }
+        .seg { display: flex; background: #f1f5f9; border-radius: 12px; padding: 3px; gap: 3px; margin-top: 4px; }
+        .seg button { flex: 1; border: none; background: transparent; padding: 9px 6px; border-radius: 9px; font-size: 13.5px; font-weight: 700; color: #475569; cursor: pointer; font-family: inherit; }
+        .seg button.activo { background: #fff; color: var(--text-main); box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+        .seg-col { flex-direction: column; }
+        .seg-col button { text-align: left; padding: 10px 12px; }
+        .g-importe-caja { position: relative; margin-top: 10px; }
+        .g-importe-caja .g-euro { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 22px; font-weight: 800; color: #94a3b8; pointer-events: none; }
+        .modal-gasto input.g-importe { font-size: 30px; font-weight: 800; padding: 10px 40px; border-radius: 12px; text-align: center; }
+        .modal-gasto.es-ingreso input#g-importe { color: #047857; border-color: #6ee7b7; }
+        #g-concepto { display: none; }
+        .g-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .g-chip { display: inline-flex; flex-direction: column; align-items: flex-start; line-height: 1.2; padding: 6px 10px; text-align: left; }
+        .g-chip small { font-size: 10.5px; font-weight: 600; color: #64748b; }
+        .g-chip.on small { color: #065f46; }
+        .g-chip.pasado small { color: #b91c1c; }
+        .g-fecha-fila { display: flex; gap: 6px; align-items: center; }
+        .g-fecha-fila .chip { flex-shrink: 0; padding: 9px 12px; }
+        .modal-gasto .g-fecha-fila input[type="date"] { flex: 1; min-width: 0; }
+        .row.ingreso .desc-text { color: #047857; font-weight: 700; }
+        .row.ingreso input.monto-input { color: #047857; }
+        .fab-deshacer { position: fixed; left: 16px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 900; background: #fff; color: #334155; border: 1px solid #cbd5e1; border-radius: 26px; padding: 13px 16px; font-size: 14px; font-weight: 800; box-shadow: 0 4px 12px rgba(15, 23, 42, .15); cursor: pointer; font-family: inherit; }
+        .fab-deshacer[hidden] { display: none; }
+        .g-importe::-webkit-outer-spin-button, .g-importe::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .g-importe { -moz-appearance: textfield; appearance: textfield; }
     </style>
 </head>
 <body>
@@ -377,26 +474,36 @@
                 <div class="metric-title">LIBRE ESTE CICLO</div>
                 <div class="metric-value" id="disp-libre">—</div>
                 <div class="metric-sub" id="disp-libre-sub"></div>
+                <div class="metric-alt" id="disp-libre-alt"></div>
                 <div class="metric-estado" id="disp-libre-estado"></div>
             </div>
             <div class="metric-card justo">
                 <div class="metric-title">MES MÁS JUSTO</div>
                 <div class="metric-value" id="disp-justo">—</div>
                 <div class="metric-sub" id="disp-justo-sub"></div>
+                <div class="metric-alt" id="disp-justo-alt"></div>
                 <div class="metric-estado" id="disp-justo-estado"></div>
             </div>
             <div class="metric-card proyeccion">
                 <div class="metric-title">PROYECCIÓN FINAL</div>
                 <div class="metric-value" id="disp-meta-final">0.00 €</div>
                 <div class="metric-sub" id="disp-final-sub"></div>
+                <div class="metric-alt" id="disp-final-alt"></div>
             </div>
         </div>
 
         <div class="chart-container">
-            <div class="chart-header">PROYECCIÓN DE SALDO MES A MES</div>
+            <div class="chart-top">
+                <div class="chart-header">PROYECCIÓN DE SALDO MES A MES</div>
+                <div class="modo-proy" role="group" aria-label="Tipo de proyección">
+                    <button type="button" id="modo-real" onclick="cambiarModo('real')">Realista</button>
+                    <button type="button" id="modo-topes" onclick="cambiarModo('topes')">Peor caso</button>
+                </div>
+            </div>
             <div style="height: 150px; position: relative;">
                 <canvas id="graficoProyeccion"></canvas>
             </div>
+            <div class="leyenda-proy" id="leyenda-proy"></div>
             <div class="colchon-fila">
                 <span class="muestra-colchon" aria-hidden="true"></span>
                 <label for="input-colchon">Colchón: aviso si un mes baja de</label>
@@ -496,9 +603,79 @@
             </div>
         </details>
 
+        <!-- ===== Gastos variables ===== -->
+        <details class="panel" id="panel-var">
+            <summary>
+                <span>📈 Gastos variables</span>
+                <span class="summary-right"><span class="panel-resumen" id="var-resumen"></span><span class="arrow">▼</span></span>
+            </summary>
+            <div class="panel-body">
+                <div id="var-lista"></div>
+
+                <div class="panel-h">Añadir un pago anterior</div>
+                <div class="var-form">
+                    <select id="var-concepto" aria-label="Concepto"></select>
+                    <input type="date" id="var-fecha" aria-label="Fecha del pago">
+                    <input type="number" id="var-importe" inputmode="decimal" step="0.01" min="0" placeholder="Importe" aria-label="Importe" enterkeyhint="done">
+                    <button class="btn-panel" onclick="anadirPagoAnterior()">＋ Añadir</button>
+                </div>
+                <div class="panel-nota">Para que la tendencia funcione desde ya, añade tus últimas facturas. En la luz, añade también las del invierno pasado: así tiene en cuenta que en invierno pagas más.</div>
+
+                <div class="panel-h">Qué conceptos sigo</div>
+                <div class="chips" id="var-chips"></div>
+                <div class="panel-nota">El tope de cada concepto sube solo cuando pagas más que nunca y no baja de lo más alto que has pagado. La proyección realista usa la media de tus 3 últimos pagos (y la del mismo mes del año pasado, si la tienes). Al marcar como pagada una factura (luz, agua, internet…), la app te pregunta cuánto pagaste; la comida y la gasolina entran solas al terminar el ciclo.</div>
+            </div>
+        </details>
+
+        <!-- ===== Gastos periódicos ===== -->
+        <details class="panel" id="panel-per">
+            <summary>
+                <span>📅 Gastos periódicos</span>
+                <span class="summary-right"><span class="panel-resumen" id="per-resumen"></span><span class="arrow">▼</span></span>
+            </summary>
+            <div class="panel-body">
+                <div id="per-lista"></div>
+
+                <div class="panel-h">Añadir un gasto periódico</div>
+                <div class="per-form">
+                    <input type="text" id="per-nombre" placeholder="Qué es (ej. IUC)" autocomplete="off" aria-label="Qué es">
+                    <input type="number" id="per-importe" inputmode="decimal" step="0.01" min="0" placeholder="Importe" aria-label="Importe">
+                    <select id="per-cada" aria-label="Cada cuánto">
+                        <option value="2">Cada 2 meses</option>
+                        <option value="3">Cada 3 meses</option>
+                        <option value="6">Cada 6 meses</option>
+                        <option value="12" selected>Cada año</option>
+                        <option value="24">Cada 2 años</option>
+                        <option value="36">Cada 3 años</option>
+                        <option value="48">Cada 4 años</option>
+                        <option value="60">Cada 5 años</option>
+                    </select>
+                    <input type="date" id="per-fecha" aria-label="Próxima vez" oninput="pistaFechaPeriodico()">
+                </div>
+                <div class="per-pista" id="per-pista"></div>
+                <button class="btn-panel btn-sim-add" onclick="anadirPeriodico()">＋ Añadir gasto periódico</button>
+                <div id="per-sugerencias"></div>
+                <div class="panel-nota">La app lo pone sola en el ciclo que toca y en los siguientes que ya tengas creados (si un ciclo aún no existe, lo añade al crearlo). Cuando lo marcas como pagado o pasa su ciclo, salta a la próxima fecha.</div>
+            </div>
+        </details>
+
+        <div id="aviso-terminados"></div>
+
         <div class="cycle-list" id="contenedor-ciclos"></div>
 
         <button class="btn-add-cycle" onclick="crearNuevoCiclo()">➕ Crear Nuevo Ciclo</button>
+
+        <!-- ===== Archivo de ciclos ===== -->
+        <details class="panel" id="panel-arch" style="margin-top: 15px;">
+            <summary>
+                <span>🗂️ Archivo de ciclos</span>
+                <span class="summary-right"><span class="panel-resumen" id="arch-resumen"></span><span class="arrow">▼</span></span>
+            </summary>
+            <div class="panel-body">
+                <div id="arch-lista"></div>
+                <div class="panel-nota">Los ciclos archivados ya no cuentan en la proyección ni cambian tu saldo, pero alimentan el historial de tus gastos (por ejemplo, cuánto pagas de luz en invierno).</div>
+            </div>
+        </details>
 
         <div class="action-buttons">
             <button class="btn-secondary" onclick="exportarDatos()">📥 Copia Respaldo</button>
@@ -511,35 +688,103 @@
         <button class="fab-gasto" onclick="abrirGasto()">＋ Gasto</button>
     </div>
 
-    <!-- ================= VENTANA: APUNTAR GASTO ================= -->
-    <div class="modal-fondo" id="modal-gasto">
-        <div class="modal-gasto">
-            <h3 id="g-titulo">Nuevo gasto</h3>
-            <label for="g-importe">Importe (€)</label>
-            <input type="number" id="g-importe" class="g-importe" inputmode="decimal" step="0.01" min="0" placeholder="0.00" enterkeyhint="next" oninput="actualizarHintGasto()">
-            <label for="g-concepto">Concepto</label>
-            <select id="g-concepto" onchange="actualizarHintGasto()"></select>
-            <div class="g-hint" id="g-hint"></div>
-            <div class="g-fila">
-                <div>
-                    <label for="g-nota">Nota <small>(opcional)</small></label>
-                    <input type="text" id="g-nota" placeholder="Ej. supermercado" enterkeyhint="done" autocomplete="off">
+    <!-- ================= VENTANA: APUNTAR GASTO O INGRESO ================= -->
+    <div class="modal-fondo" id="modal-gasto" onclick="if (event.target === this) cerrarGasto()">
+        <div class="modal-gasto hoja">
+            <div class="m-cab">
+                <h3 id="g-titulo">Nuevo gasto</h3>
+                <button type="button" class="m-cerrar" onclick="cerrarGasto()" aria-label="Cerrar">✕</button>
+            </div>
+            <div class="seg" id="g-tipo">
+                <button type="button" data-v="gasto" onclick="tipoGasto('gasto')">➖ Gasto</button>
+                <button type="button" data-v="ingreso" onclick="tipoGasto('ingreso')">➕ Ingreso</button>
+            </div>
+            <div class="g-importe-caja">
+                <input type="number" id="g-importe" class="g-importe" inputmode="decimal" step="0.01" min="0" placeholder="0.00" enterkeyhint="next" oninput="actualizarHintGasto()" aria-label="Importe">
+                <span class="g-euro">€</span>
+            </div>
+
+            <div id="g-bloque-gasto">
+                <div id="g-bloque-pago">
+                    <label>Pagado con</label>
+                    <div class="seg" id="g-pago">
+                        <button type="button" data-v="cuenta" onclick="pagoGasto('cuenta')">🏦 Cuenta</button>
+                        <button type="button" data-v="tarjeta" onclick="pagoGasto('tarjeta')">💳 Tarjeta de crédito</button>
+                    </div>
                 </div>
-                <div class="g-col-fecha">
-                    <label for="g-fecha">Fecha</label>
-                    <input type="date" id="g-fecha" onchange="rellenarConceptosGasto()">
+                <div id="g-bloque-concepto">
+                    <label>Concepto</label>
+                    <div class="g-chips" id="g-chips"></div>
+                    <select id="g-concepto" onchange="actualizarHintGasto(); pintarChipsGasto()" aria-label="Concepto"></select>
                 </div>
             </div>
+            <div id="g-bloque-ingreso" style="display:none">
+                <label for="g-ing-nombre">De qué es</label>
+                <input type="text" id="g-ing-nombre" placeholder="Ej. venta, regalo, horas extra" autocomplete="off" list="g-ing-nombres">
+                <datalist id="g-ing-nombres"></datalist>
+            </div>
+            <div class="g-hint" id="g-hint"></div>
+
+            <label for="g-fecha">Fecha</label>
+            <div class="g-fecha-fila">
+                <button type="button" class="chip" id="g-hoy" onclick="fechaRapida(0)">Hoy</button>
+                <button type="button" class="chip" id="g-ayer" onclick="fechaRapida(1)">Ayer</button>
+                <input type="date" id="g-fecha" onchange="rellenarConceptosGasto(); pintarFechaRapida()">
+            </div>
+
+            <label for="g-nota">Nota <small>(opcional)</small></label>
+            <input type="text" id="g-nota" placeholder="Ej. Mercadona" enterkeyhint="done" autocomplete="off" list="g-notas">
+            <datalist id="g-notas"></datalist>
+
             <div class="g-botones">
                 <button class="btn-g-cancelar" onclick="cerrarGasto()">Cancelar</button>
                 <button class="btn-g-guardar" id="g-guardar" onclick="guardarGasto()">Guardar gasto</button>
             </div>
             <button class="btn-g-eliminar" id="g-eliminar" onclick="eliminarGastoEditado()" style="display:none;">🗑️ Eliminar este gasto</button>
             <div class="g-nota-gas">⛽ La gasolina se apunta en la pestaña Gasolina y también descuenta del saldo.</div>
-            <div class="g-nota-gas">💳 Si lo pagas con la tarjeta de crédito, apúntalo en el panel «Tarjeta de crédito», no aquí.</div>
         </div>
     </div>
+
+    <!-- ================= VENTANA: AÑADIR CONCEPTO ================= -->
+    <div class="modal-fondo" id="modal-concepto" onclick="if (event.target === this) cerrarConcepto()">
+        <div class="modal-gasto hoja">
+            <div class="m-cab">
+                <h3>Añadir concepto</h3>
+                <button type="button" class="m-cerrar" onclick="cerrarConcepto()" aria-label="Cerrar">✕</button>
+            </div>
+            <div class="g-hint" style="margin-top:0">Ciclo: <b id="c-ciclo"></b></div>
+            <div class="seg" id="c-tipo">
+                <button type="button" data-v="gasto" onclick="tipoConcepto('gasto')">➖ Gasto</button>
+                <button type="button" data-v="ingreso" onclick="tipoConcepto('ingreso')">➕ Ingreso</button>
+            </div>
+            <label for="c-nombre">Nombre</label>
+            <input type="text" id="c-nombre" list="c-nombres" placeholder="Ej. Dentista" autocomplete="off" enterkeyhint="next">
+            <datalist id="c-nombres"></datalist>
+            <label for="c-importe">Importe</label>
+            <div class="g-importe-caja">
+                <input type="number" id="c-importe" class="g-importe" inputmode="decimal" step="0.01" min="0" placeholder="0.00" enterkeyhint="done">
+                <span class="g-euro">€</span>
+            </div>
+            <label>¿En qué ciclos?</label>
+            <div class="seg seg-col" id="c-donde">
+                <button type="button" data-v="1" onclick="dondeConcepto('1')">Solo en este ciclo</button>
+                <button type="button" data-v="todos" onclick="dondeConcepto('todos')">En este y todos los siguientes</button>
+                <button type="button" data-v="n" onclick="dondeConcepto('n')">En este y unos cuantos más…</button>
+            </div>
+            <div id="c-n-fila" style="display:none">
+                <label for="c-n">¿Cuántos ciclos en total (contando este)?</label>
+                <input type="number" id="c-n" inputmode="numeric" min="1" step="1" value="3">
+            </div>
+            <div class="g-botones">
+                <button class="btn-g-cancelar" onclick="cerrarConcepto()">Cancelar</button>
+                <button class="btn-g-guardar" id="c-guardar" onclick="guardarConcepto()">Añadir</button>
+            </div>
+            <div class="g-nota-gas">¿Se repite cada año o cada varios años? Guárdalo mejor en «📅 Gastos periódicos»: la app lo pondrá sola en su ciclo.</div>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
+    <button type="button" class="fab-deshacer" id="btn-deshacer" onclick="deshacer()" hidden>↶ Deshacer</button>
 
     <script>
         // ===== PESTAÑAS =====
@@ -613,7 +858,7 @@
         let gasData = cargarGasData();
         let editandoId = null;
 
-        function guardarGasData() { localStorage.setItem(GAS_KEY, JSON.stringify(gasData)); }
+        function guardarGasData() { localStorage.setItem(GAS_KEY, JSON.stringify(gasData)); if (typeof registrarCambio === 'function') registrarCambio(); }
 
         function cicloDeFecha(fecha) {
             let a = fecha.getFullYear();
@@ -701,7 +946,7 @@
         }
 
         function presupuestoGasolinaCiclo(clave) {
-            for (const ciclo of appData.ciclos) {
+            for (const ciclo of appData.ciclos.concat(appData.archivo || [])) {
                 if (claveCicloFinanzas(ciclo.nombre) === clave) {
                     const it = itemGasolinaDe(ciclo);
                     if (it) return parseFloat(it.valor) || 0;
@@ -1185,13 +1430,15 @@
         // gastos apuntados en el momento y repostajes de la pestaña Gasolina.
         // La proyección solo resta lo que falta de cada presupuesto.
         function esIngreso(item) {
+            if (item && item.tipo) return item.tipo === 'ingreso';   // tipo elegido al crear el concepto
             const d = String(item.desc || '').toLowerCase();
             return d.includes("ingreso") || d.includes("nómina");
         }
 
         function normDesc(s) { return String(s || '').trim().toLowerCase(); }
 
-        function analizarCiclo(ciclo) {
+        function analizarCiclo(ciclo, estimar) {
+            if (typeof estimar !== 'function') estimar = null;
             const clave = claveCicloFinanzas(ciclo.nombre);
             const itGas = itemGasolinaDe(ciclo);
             const realGas = clave !== null ? gastoRealGasolinaCiclo(clave) : 0;
@@ -1221,8 +1468,17 @@
                 // Marcado sin gastos apuntados: se pagó el importe completo (como siempre).
                 // Con gastos apuntados: cuenta lo gastado de verdad, y marcarlo lo da por cerrado.
                 real -= gastado > 0 ? gastado : (item.checked ? pres : 0);
-                pendiente -= item.checked ? 0 : Math.max(pres - gastado, 0);
-                return { ingreso: false, presupuesto: pres, gastado: gastado, esGas: item === itGas };
+                // Proyección realista: en vez del tope se usa lo que sueles pagar (si hay historial)
+                let base = pres, estimado = null;
+                if (estimar && !item.checked) {
+                    const e = estimar(k, clave);
+                    if (e !== null && e !== undefined) {
+                        base = gastado > e ? Math.max(e, pres) : e;   // si ya vas por encima de lo normal, se cuenta hasta tu tope
+                        estimado = base;
+                    }
+                }
+                pendiente -= item.checked ? 0 : Math.max(base - gastado, 0);
+                return { ingreso: false, presupuesto: pres, gastado: gastado, esGas: item === itGas, estimado: estimado };
             });
 
             // "Otro gasto" (sin concepto): sale del saldo sin tocar ningún presupuesto
@@ -1275,6 +1531,16 @@
             tj.diaCobro = Math.min(28, Math.max(1, Math.round(nDef(tj.diaCobro, 5))));
             if (!Array.isArray(tj.compras)) tj.compras = [];
             data.colchon = nDef(data.colchon, 50);
+            // Historial de pagos, conceptos variables, archivo de ciclos y gastos periódicos
+            if (!Array.isArray(data.historial)) data.historial = [];
+            if (!Array.isArray(data.variables)) data.variables = ['luz', 'comida', 'gasolina', 'internet', 'agua', 'teléfono móvil'];
+            if (data.modoProyeccion !== 'topes') data.modoProyeccion = 'real';
+            if (!Array.isArray(data.archivo)) data.archivo = [];
+            data.archivo.forEach(c => {
+                if (!Array.isArray(c.items)) c.items = [];
+                if (!Array.isArray(c.gastos)) c.gastos = [];
+            });
+            if (!Array.isArray(data.periodicos)) data.periodicos = [];
             if (data.modeloSaldo !== MODELO_SALDO) {
                 // Antes los repostajes no descontaban del saldo; ahora sí, igual que los gastos.
                 // Se ajusta la base para que el saldo que ya tenías no cambie al actualizar.
@@ -1288,10 +1554,10 @@
         let appData = prepararFinanzas(JSON.parse(localStorage.getItem('controlFinanciero_v6')) || crearEstadoInicial());
         guardar();
 
-        let openCycles = new Set([Math.max(0, indiceCicloDeFecha(new Date()))]);   // se abre el ciclo actual
+        let openCycles = new Set();   // al abrir la app, todos los ciclos plegados
         let openGastos = new Set();   // listas de gastos desplegadas (por id de ciclo)
 
-        function renderizarGrafico(etiquetas, datos) {
+        function renderizarGrafico(etiquetas, datos, datosAlt, modo) {
             const ctx = document.getElementById('graficoProyeccion');
             if (!ctx || typeof Chart === 'undefined') return;
 
@@ -1303,7 +1569,7 @@
             const colchon = colchonActual();
             const colorPunto = v => v < 0 ? '#ef4444' : (v < colchon ? '#f59e0b' : '#10b981');
             const datasets = [{
-                label: 'Saldo (€)',
+                label: modo === 'topes' ? 'Peor caso' : 'Realista',
                 data: datos,
                 borderColor: '#10b981',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -1315,6 +1581,19 @@
                 pointBackgroundColor: datos.map(colorPunto),
                 pointBorderColor: datos.map(colorPunto)
             }];
+            // La otra proyección (peor caso o realista), en gris
+            if (datosAlt) {
+                datasets.push({
+                    label: modo === 'topes' ? 'Realista' : 'Peor caso',
+                    data: datosAlt,
+                    borderColor: '#94a3b8',
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    pointHoverRadius: 3,
+                    fill: false,
+                    tension: 0.25
+                });
+            }
             if (colchon > 0) {
                 datasets.push({
                     label: 'Colchón',
@@ -1343,9 +1622,9 @@
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            filter: (item) => item.datasetIndex === 0,
+                            filter: (item) => item.dataset.label !== 'Colchón',
                             callbacks: {
-                                label: (context) => `Saldo: ${context.raw.toFixed(2)} €`
+                                label: (context) => `${context.dataset.label}: ${context.raw.toFixed(2)} €`
                             }
                         }
                     },
@@ -1371,6 +1650,16 @@
         }
 
         function renderizar() {
+            // Topes automáticos y gastos periódicos colocados en su ciclo
+            const cambiosTope = revisarTopes();
+            const per = sincronizarPeriodicos();
+            if (cambiosTope.length || per.cambiado) {
+                guardar();
+                const t = [];
+                if (cambiosTope.length) t.push('Nuevo tope · ' + cambiosTope.join(' · '));
+                if (per.avisos.length) t.push('Añadido · ' + per.avisos.join(' · '));
+                if (t.length) setTimeout(() => mostrarAviso(t.join(' | ')), 60);
+            }
             const cards = document.querySelectorAll('details.cycle-card');
             if (cards.length > 0) {
                 openCycles.clear();
@@ -1390,11 +1679,11 @@
                 ciclo.items.forEach((item, iIdx) => {
                     const isChecked = item.checked ? 'checked' : '';
                     filas += `
-                        <div class="row ${isChecked}">
+                        <div class="row ${isChecked} ${esIngreso(item) ? 'ingreso' : ''}">
                             <div class="item-left">
                                 <button class="btn-delete" title="Eliminar concepto" onclick="eliminarItem(${cIdx}, ${iIdx})">✕</button>
                                 <input type="checkbox" ${isChecked} onchange="toggleCheck(${cIdx}, ${iIdx}, this.checked)">
-                                <span class="desc-text">${esc(item.desc)}</span>
+                                <span class="desc-text">${esIngreso(item) ? '＋ ' : ''}${esc(item.desc)}</span>
                             </div>
                             <div class="item-right">
                                 <button class="btn-sync" title="Aplicar este importe a todos los ciclos futuros" onclick="actualizarEnCadena(${cIdx}, ${iIdx})">🔄</button>
@@ -1425,9 +1714,10 @@
                     </div>
                     <button class="btn-add-item" onclick="agregarItem(${cIdx})">+ Añadir concepto</button>
                     <div class="row row-total">
-                        <span>SALDO AL CIERRE</span>
+                        <span>SALDO AL CIERRE <small class="modo-tag" id="cierre-modo-${cIdx}"></small></span>
                         <span id="cierre-val-${cIdx}">0.00 €</span>
                     </div>
+                    <div class="row row-alt" id="cierre-alt-${cIdx}"></div>
                 `;
 
                 const isOpen = openCycles.has(cIdx) ? 'open' : '';
@@ -1435,7 +1725,7 @@
                     <details class="cycle-card" id="card-${cIdx}" ${isOpen}>
                         <summary>
                             <div class="summary-left">
-                                <button class="btn-delete-cycle" title="Eliminar ciclo completo" onclick="eliminarCiclo(event, ${cIdx})">🗑️</button>
+                                <button class="btn-delete-cycle" title="Archivar ciclo" onclick="eliminarCiclo(event, ${cIdx})">📦</button>
                                 <span>📅 ${esc(ciclo.nombre)}</span>
                             </div>
                             <div class="summary-right">
@@ -1458,11 +1748,27 @@
             const nuevoSaldoDeseado = parseFloat(val) || 0;
             appData.saldoBase = nuevoSaldoDeseado - efectoReal(appData);
             recalcular();
-            guardar();
+            guardar('saldo');
         }
 
         function toggleCheck(cIdx, iIdx, checked) {
-            const item = appData.ciclos[cIdx].items[iIdx];
+            const ciclo = appData.ciclos[cIdx];
+            const item = ciclo.items[iIdx];
+            // Factura variable (luz, agua…) sin importe apuntado: se pregunta lo que pagaste de verdad
+            const kItem = normDesc(item.desc);
+            if (checked && !esIngreso(item) && esVariable(kItem) && kItem !== 'gasolina' && realConceptoCiclo(ciclo, kItem) <= 0) {
+                const tope = parseFloat(item.valor) || 0;
+                const resp = prompt(`¿Cuánto has pagado de «${String(item.desc).trim()}»?
+(Tope: ${tope.toFixed(2)} €. Si lo dejas vacío, cuenta el tope.)`, '');
+                if (resp === null) { renderizar(); return; }   // cancelado: sigue sin marcar
+                const txt = String(resp).trim();
+                if (txt !== '') {
+                    const imp = Math.round(parseFloat(txt.replace(',', '.')) * 100) / 100;
+                    if (!(imp > 0)) { alert('Importe no válido.'); renderizar(); return; }
+                    if (!Array.isArray(ciclo.gastos)) ciclo.gastos = [];
+                    ciclo.gastos.push({ id: nuevoId(), ts: Date.now(), importe: imp, concepto: String(item.desc).trim(), nota: 'Factura' });
+                }
+            }
             item.checked = checked;
             // Pago de la tarjeta: al marcarlo baja la deuda; al desmarcarlo vuelve a subir
             if (esTarjeta(item) && appData.tarjeta) {
@@ -1487,15 +1793,16 @@
 
         function actualizarValor(cIdx, iIdx, val) {
             appData.ciclos[cIdx].items[iIdx].valor = val;
+            appData.ciclos[cIdx].items[iIdx].topeBase = val;
             recalcular();
-            guardar();
+            guardar('valor-' + cIdx + '-' + iIdx);
             if (typeof actualizarPantallaGasolina === 'function') actualizarPantallaGasolina();
         }
 
         function actualizarImprevisto(cIdx, val) {
             appData.ciclos[cIdx].imprevisto = val;
             recalcular();
-            guardar();
+            guardar('imprevisto-' + cIdx);
         }
 
         function actualizarEnCadena(cIdx, iIdx) {
@@ -1511,6 +1818,7 @@
                     );
                     if (itemEncontrado) {
                         itemEncontrado.valor = nuevoValor;
+                        itemEncontrado.topeBase = nuevoValor;
                         contador++;
                     }
                 }
@@ -1520,46 +1828,20 @@
             }
         }
 
+        // Abre la ventana para añadir un concepto (gasto o ingreso) a un ciclo
         function agregarItem(cIdx) {
-            const nombre = prompt("Nombre del nuevo concepto:");
-            if (!nombre || nombre.trim() === "") return;
-
-            const valor = prompt("Monto por defecto (€):", "0.00");
-            if (valor === null) return;
-
-            const modo = prompt(
-                "¿A cuáles ciclos deseas añadir este concepto?\n\n" +
-                "1 - Solo en este ciclo\n" +
-                "2 - En este ciclo y TODOS los posteriores\n" +
-                "3 - En un número específico de ciclos posteriores",
-                "1"
-            );
-
-            const nuevoItem = {
-                desc: nombre.trim(),
-                valor: valor.trim() || "0.00",
-                checked: false
-            };
-
-            if (modo === "1") {
-                appData.ciclos[cIdx].items.push({...nuevoItem});
-            } else if (modo === "2") {
-                for (let i = cIdx; i < appData.ciclos.length; i++) {
-                    appData.ciclos[i].items.push({...nuevoItem});
-                }
-            } else if (modo === "3") {
-                const cantidad = parseInt(prompt("¿A cuántos ciclos futuros deseas añadirlo? (ej: 3)", "3"), 10);
-                if (!isNaN(cantidad) && cantidad > 0) {
-                    const limite = Math.min(cIdx + cantidad, appData.ciclos.length);
-                    for (let i = cIdx; i < limite; i++) {
-                        appData.ciclos[i].items.push({...nuevoItem});
-                    }
-                }
-            }
-
-            openCycles.add(cIdx);
-            renderizar();
-            guardar();
+            conceptoCiclo = cIdx;
+            tipoConcepto('gasto');
+            dondeConcepto('1');
+            document.getElementById('c-nombre').value = '';
+            document.getElementById('c-importe').value = '';
+            document.getElementById('c-n').value = '3';
+            const nombres = new Set();
+            appData.ciclos.concat(appData.archivo || []).forEach(c => c.items.forEach(i => nombres.add(String(i.desc).trim())));
+            document.getElementById('c-nombres').innerHTML = Array.from(nombres).map(n => `<option value="${esc(n)}">`).join('');
+            document.getElementById('c-ciclo').innerText = appData.ciclos[cIdx].nombre;
+            document.getElementById('modal-concepto').classList.add('abierto');
+            setTimeout(() => document.getElementById('c-nombre').focus(), 60);
         }
 
         function eliminarItem(cIdx, iIdx) {
@@ -1581,38 +1863,50 @@
             const nombre = prompt("Confirmar nombre del nuevo ciclo:", nombreSugerido);
 
             if (nombre && nombre.trim() !== "") {
+                const claveNueva = claveCicloFinanzas(nombre.trim());
+                const plan = itemsParaNuevoCiclo(claveNueva);
                 appData.ciclos.push({
                     id: Date.now(),
                     nombre: nombre.trim(),
-                    items: obtenerConceptosBase(),
+                    items: plan.items,
                     imprevisto: "0.00",
                     gastos: []
                 });
                 openCycles.add(appData.ciclos.length - 1);
                 renderizar();
                 guardar();
+                const txt = plan.delAnio.length
+                    ? `Ciclo creado. Del mismo mes del año pasado: ${plan.delAnio.join(', ')}`
+                    : 'Ciclo creado con tus conceptos de cada mes';
+                setTimeout(() => mostrarAviso(txt), 2700);
             }
         }
 
         function eliminarCiclo(event, cIdx) {
             event.stopPropagation();
             const ciclo = appData.ciclos[cIdx];
-            const n = (ciclo.gastos || []).length;
-            const extra = n ? `\n\nTambién se borrarán sus ${n} gasto(s) apuntado(s). El saldo del banco no cambia.` : '';
-            if (confirm(`¿Estás seguro de que deseas eliminar el ciclo "${ciclo.nombre}"?${extra}`)) {
-                // Lo que ya se pagó o cobró en ese ciclo sigue reflejado en el saldo del banco
-                appData.saldoBase += analizarCiclo(ciclo).real;
-                appData.ciclos.splice(cIdx, 1);
-                renderizar();
-                guardar();
-            }
+            const pend = sinMarcarDe(ciclo).map(i => String(i.desc).trim());
+            let msg = `¿Archivar el ciclo "${ciclo.nombre}"?\n\nPasará al «Archivo de ciclos»: deja de contar en la proyección y tu saldo no cambia, pero podrás consultarlo y su gasto real sigue en tu historial.`;
+            if (pend.length) msg += `\n\nOjo: tiene ${pend.length} concepto(s) sin marcar ni apuntar (${pend.slice(0, 5).join(', ')}${pend.length > 5 ? '…' : ''}). Si ya los pagaste, márcalos antes.`;
+            if (!confirm(msg)) return;
+            moverAlArchivo(cIdx);
+            renderizar();
+            guardar();
+            mostrarAviso(`Ciclo archivado: ${ciclo.nombre}`);
         }
 
         // Última proyección calculada (la usan el resumen y el simulador)
         let ultimaProyeccion = null;
 
         function recalcular() {
-            const analisis = appData.ciclos.map(analizarCiclo);
+            // Dos proyecciones: con los topes (peor caso) y realista (lo que sueles pagar según tu historial)
+            const statsVar = mapaStats();
+            const modo = appData.modoProyeccion === 'topes' ? 'topes' : 'real';
+            const estimador = (k, clave) => { const st = statsVar[k]; return st && st.n ? estimacionConcepto(st, clave) : null; };
+            const analisisTopes = appData.ciclos.map(c => analizarCiclo(c));
+            const analisisReal = appData.ciclos.map(c => analizarCiclo(c, estimador));
+            const analisis = modo === 'real' ? analisisReal : analisisTopes;
+            const analisisAlt = modo === 'real' ? analisisTopes : analisisReal;
             const saldoActualReal = appData.saldoBase + analisis.reduce((suma, an) => suma + an.real, 0);
 
             const inputBanco = document.getElementById("input-saldo-banco");
@@ -1624,11 +1918,15 @@
             const etiquetasGrafico = [];
             const datosGrafico = [];
             const cierres = [];
+            const cierresAlt = [];
+            let acumAlt = saldoActualReal;
 
             appData.ciclos.forEach((ciclo, cIdx) => {
                 const an = analisis[cIdx];
                 acumuladoProyectado += an.pendiente;
                 cierres.push(acumuladoProyectado);
+                acumAlt += analisisAlt[cIdx].pendiente;
+                cierresAlt.push(acumAlt);
 
                 etiquetasGrafico.push(etiquetaMes(ciclo, true));
                 datosGrafico.push(acumuladoProyectado);
@@ -1650,13 +1948,27 @@
                     cardEl.classList.toggle("alert-warn", estado === 'aviso');
                 }
 
+                // Debajo del saldo al cierre: la otra proyección
+                const elModo = document.getElementById(`cierre-modo-${cIdx}`);
+                if (elModo) elModo.innerText = modo === 'real' ? '(realista)' : '(peor caso)';
+                const elAlt = document.getElementById(`cierre-alt-${cIdx}`);
+                if (elAlt) elAlt.innerHTML = Math.abs(acumAlt - acumuladoProyectado) >= 0.01
+                    ? `<span>${modo === 'real' ? 'En el peor caso (topes)' : 'Realista'}</span><span>${acumAlt.toFixed(2)} €</span>` : '';
+
                 // Debajo de cada concepto: lo gastado de verdad frente a lo presupuestado
                 ciclo.items.forEach((item, iIdx) => {
                     const el = document.getElementById(`info-${cIdx}-${iIdx}`);
                     if (!el) return;
                     const r = an.items[iIdx];
                     el.className = 'gas-info';
-                    if (r.ingreso || r.gastado <= 0) { el.innerHTML = ''; return; }
+                    if (r.ingreso) { el.innerHTML = ''; return; }
+                    const kItem = normDesc(item.desc);
+                    const stItem = esVariable(kItem) ? statsVar[kItem] : null;
+                    if (r.gastado <= 0) {
+                        const est = (stItem && stItem.n && !item.checked) ? estimacionConcepto(stItem, claveCicloFinanzas(String(ciclo.nombre || ''))) : null;
+                        el.innerHTML = est !== null ? `📈 Se estima <b>${est.toFixed(2)}&nbsp;€</b> <span class="nw">· lo que sueles pagar</span>` : '';
+                        return;
+                    }
                     const ico = r.esGas ? '⛽' : '🧾';
                     const eur = n => `${n.toFixed(2)}&nbsp;€`;
                     const pres = r.presupuesto, gas = r.gastado;
@@ -1670,19 +1982,30 @@
                         el.className = 'gas-info mal';
                         el.innerHTML = `${ico} Gastado real: ${eur(gas)} <span class="nw">· te pasaste por ${eur(gas - pres)}</span>`;
                     }
+                    if (stItem && stItem.media !== null) {
+                        el.innerHTML += ` <span class="nw">· tu media ${eur(stItem.media)}</span>`;
+                        if (gas > stItem.media + 0.005 && gas <= pres) el.innerHTML += ` <span class="nw aviso-media">· ⚠️ más que tu media</span>`;
+                    }
                 });
             });
 
             document.getElementById("disp-meta-final").innerText = acumuladoProyectado.toFixed(2) + " €";
-            ultimaProyeccion = { saldoActual: saldoActualReal, cierres: cierres };
-            renderizarGrafico(etiquetasGrafico, datosGrafico);
-            pintarResumen(cierres);
+            const difieren = cierres.some((v, i) => Math.abs(v - cierresAlt[i]) >= 0.01);
+            ultimaProyeccion = { saldoActual: saldoActualReal, cierres: cierres, cierresAlt: cierresAlt, modo: modo };
+            renderizarGrafico(etiquetasGrafico, datosGrafico, difieren ? cierresAlt : null, modo);
+            pintarModo(modo, difieren);
+            pintarResumen(cierres, cierresAlt, modo);
             pintarTarjeta();
             pintarSimulador();
+            pintarVariables(statsVar);
+            pintarPeriodicos();
+            pintarArchivo();
+            pintarTerminados();
         }
 
-        function guardar() {
+        function guardar(agrupar) {
             localStorage.setItem('controlFinanciero_v6', JSON.stringify(appData));
+            registrarCambio(agrupar);
         }
 
         function exportarDatos() {
@@ -1730,7 +2053,7 @@
                 localStorage.removeItem('controlFinanciero_v6');
                 appData = prepararFinanzas(crearEstadoInicial());
                 guardar();
-                openCycles = new Set([Math.max(0, indiceCicloDeFecha(new Date()))]);
+                openCycles = new Set();
                 openGastos = new Set();
                 renderizar();
                 actualizarPantallaGasolina();
@@ -1782,16 +2105,29 @@
         function cambiarColchon(v) {
             const n = parseFloat(v);
             appData.colchon = isFinite(n) && n > 0 ? n : 0;
-            guardar();
+            guardar('colchon');
             recalcular();
         }
 
         // ----- Resumen de arriba -----
-        function pintarResumen(cierres) {
+        function pintarResumen(cierres, cierresAlt, modo) {
             const n = appData.ciclos.length;
             const idxHoy = indiceCicloDeFecha(new Date());
             const ini = indiceInicioFuturo();
             const poner = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
+            // La otra proyección, en pequeño (solo si es distinta)
+            const otro = modo === 'real' ? 'Peor caso' : 'Realista';
+            const ponerAlt = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt || ''; };
+            const alt = cierresAlt || cierres;
+            if (idxHoy >= 0 && Math.abs(alt[idxHoy] - cierres[idxHoy]) >= 0.01) ponerAlt('disp-libre-alt', `${otro}: ${fmtEur(alt[idxHoy])}`);
+            else ponerAlt('disp-libre-alt', '');
+            if (ini >= 0) {
+                let m = ini, m2 = ini;
+                for (let i = ini + 1; i < n; i++) { if (cierres[i] < cierres[m]) m = i; if (alt[i] < alt[m2]) m2 = i; }
+                ponerAlt('disp-justo-alt', (m2 !== m || Math.abs(alt[m2] - cierres[m]) >= 0.01)
+                    ? `${otro}: ${fmtEur(alt[m2])}${m2 !== m ? ' (' + etiquetaMes(appData.ciclos[m2], true) + ')' : ''}` : '');
+            } else ponerAlt('disp-justo-alt', '');
+            ponerAlt('disp-final-alt', n && Math.abs(alt[n - 1] - cierres[n - 1]) >= 0.01 ? `${otro}: ${fmtEur(alt[n - 1])}` : '');
             const ponerEstado = (id, v) => {
                 const el = document.getElementById(id);
                 if (!el) return;
@@ -1927,7 +2263,7 @@
             } else {
                 appData.tarjeta[campo] = isFinite(v) ? Math.max(0, v) : 0;
             }
-            guardar();
+            guardar('tarjeta-' + campo);
             pintarTarjeta();
         }
 
@@ -2153,6 +2489,10 @@
                 html += `<div class="ok-linea">✅ <b>Cabe.</b></div>`;
             }
             html += `<div class="linea">Tu mes más justo sería <b>${mes(ef.minIdx)}</b> con <b>${fmtEur(ef.min)}</b> (sin esta compra: ${fmtEur(cierres[ef.minIdx])}).</div>`;
+            if (ultimaProyeccion.cierresAlt && ultimaProyeccion.modo === 'real') {
+                const efp = efectoCompra(ultimaProyeccion.cierresAlt, desde, n, cuota);
+                if (Math.abs(efp.min - ef.min) >= 0.01) html += `<div class="linea">En el peor caso (con topes): <b>${mes(efp.minIdx)}</b> con <b>${fmtEur(efp.min)}</b>${efp.min < 0 ? ' ⛔' : ''}.</div>`;
+            }
 
             // Lo antes que cabe sin bajar del colchón (con todas las cuotas dentro de tus ciclos)
             const ini = Math.max(0, indiceInicioFuturo());
@@ -2192,6 +2532,939 @@
             guardar();
             renderizar();
             mostrarAviso(`«${nombre}» añadida en ${caben} ciclo${caben > 1 ? 's' : ''}`);
+        }
+
+        // =====================================================
+        // ===== GASTOS VARIABLES: HISTORIAL, TOPES, TENDENCIA ==
+        // =====================================================
+        let openVar = new Set();    // conceptos desplegados en el panel
+        let openArch = new Set();   // ciclos archivados desplegados
+        let sugerenciasCache = [];  // gastos que parecen periódicos
+
+        function esVariable(k) { return (appData.variables || []).includes(k); }
+
+        // Último instante del ciclo que empieza el día 22 del mes de la clave
+        function finCicloClave(clave) {
+            const a = Math.floor(clave / 100), m = clave % 100;
+            return new Date(a, m + 1, DIA_INICIO_CICLO - 1, 23, 59, 59);
+        }
+        function etiquetaCicloCorta(clave) {   // "Oct–Nov 26"
+            const a = Math.floor(clave / 100), m = clave % 100;
+            const m2 = (m + 1) % 12, a2 = m === 11 ? a + 1 : a;
+            return `${MESES_CORTOS[m]}–${MESES_CORTOS[m2]} ${String(a2).slice(2)}`;
+        }
+        function claveDeTs(ts) { return claveCiclo(cicloDeFecha(new Date(ts))); }
+        function fmtFechaLarga(ts) { const d = new Date(ts); return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`; }
+
+        // Nombre del concepto tal como lo escribes
+        function nombreConcepto(k) {
+            for (const c of appData.ciclos.concat(appData.archivo || [])) {
+                const it = c.items.find(i => normDesc(i.desc) === k);
+                if (it) return String(it.desc).trim();
+            }
+            return k.charAt(0).toUpperCase() + k.slice(1);
+        }
+
+        // Gasto real de un concepto en un ciclo: gastos apuntados (y en gasolina, los repostajes)
+        function realConceptoCiclo(ciclo, k) {
+            let total = 0;
+            (ciclo.gastos || []).forEach(g => { if (normDesc(g.concepto) === k) total += Number(g.importe) || 0; });
+            if (k === 'gasolina') {
+                const cl = claveCicloFinanzas(String(ciclo.nombre || ''));
+                if (cl !== null) total += gastoRealGasolinaCiclo(cl);
+            }
+            return redondear(total);
+        }
+
+        // Pagos completos de un concepto, del más antiguo al más reciente.
+        // Un ciclo cuenta cuando ya terminó, cuando está archivado o cuando marcaste el concepto como pagado.
+        function historialConcepto(k) {
+            const ahora = Date.now();
+            const porClave = {};
+            (appData.historial || []).forEach(h => {
+                if (h.k === k) porClave[h.clave] = { clave: h.clave, total: Number(h.total) || 0, origen: h.origen || 'manual', id: h.id };
+            });
+            if (k === 'gasolina') {
+                const tot = {};
+                gasData.registros.forEach(r => { const cl = claveDeTs(r.ts); tot[cl] = (tot[cl] || 0) + (Number(r.coste) || 0); });
+                Object.keys(tot).forEach(cl => {
+                    const c = Number(cl);
+                    if (tot[cl] > 0 && finCicloClave(c).getTime() < ahora) porClave[c] = { clave: c, total: redondear(tot[cl]), origen: 'repostajes' };
+                });
+            }
+            const meter = (c, archivado) => {
+                const cl = claveCicloFinanzas(String(c.nombre || ''));
+                if (cl === null) return;
+                const item = c.items.find(it => !esIngreso(it) && normDesc(it.desc) === k);
+                if (!item) return;
+                if (!archivado && !item.checked && !(finCicloClave(cl).getTime() < ahora)) return;
+                const total = realConceptoCiclo(c, k);
+                if (total > 0) porClave[cl] = { clave: cl, total: total, origen: archivado ? 'archivo' : 'ciclo' };
+            };
+            (appData.archivo || []).forEach(c => meter(c, true));
+            appData.ciclos.forEach(c => meter(c, false));
+            return Object.values(porClave).sort((a, b) => a.clave - b.clave);
+        }
+
+        function statsConcepto(k) {
+            const hist = historialConcepto(k);
+            const vals = hist.map(h => h.total);
+            const n = vals.length;
+            const st = { k: k, hist: hist, n: n, ultimo: n ? vals[n - 1] : null, media: null, max: n ? Math.max(...vals) : null, tendencia: null };
+            if (n) {
+                const u = vals.slice(-3);
+                st.media = redondear(u.reduce((a, b) => a + b, 0) / u.length);
+            }
+            if (n >= 4) {   // media de los 3 últimos frente a la de los anteriores
+                const prev = vals.slice(Math.max(0, n - 6), n - 3);
+                const pm = prev.reduce((a, b) => a + b, 0) / prev.length;
+                if (pm > 0) st.tendencia = (st.media - pm) / pm;
+            }
+            return st;
+        }
+
+        function mapaStats() {
+            const m = {};
+            (appData.variables || []).forEach(k => { m[k] = statsConcepto(k); });
+            return m;
+        }
+
+        // Lo que se espera pagar en un ciclo: media de los 3 últimos pagos; si hay pago del
+        // mismo mes del año pasado, se promedia con él (la luz en invierno, por ejemplo)
+        function estimacionConcepto(st, clave) {
+            if (!st || !st.n) return null;
+            let est = st.media;
+            const anterior = clave !== null ? st.hist.find(h => h.clave === clave - 100) : null;
+            if (anterior) est = (est + anterior.total) / 2;
+            return redondear(est);
+        }
+
+        // El tope de un concepto variable, de hoy en adelante, no baja de lo más alto que has pagado.
+        // topeBase guarda el tope que pusiste tú, por si un pago alto se borra del historial.
+        function revisarTopes() {
+            const ini = indiceInicioFuturo();
+            if (ini < 0) return [];
+            const cambios = [];
+            (appData.variables || []).forEach(k => {
+                const st = statsConcepto(k);
+                const maxPagado = st.n ? Math.ceil(st.max - 0.001) : 0;
+                let subido = null;
+                for (let i = ini; i < appData.ciclos.length; i++) {
+                    appData.ciclos[i].items.forEach(it => {
+                        if (esIngreso(it) || it.checked || normDesc(it.desc) !== k) return;
+                        const base = parseFloat(it.topeBase !== undefined ? it.topeBase : it.valor) || 0;
+                        const objetivo = Math.max(base, maxPagado);
+                        const actual = parseFloat(it.valor) || 0;
+                        if (Math.abs(actual - objetivo) > 0.004) {
+                            if (it.topeBase === undefined) it.topeBase = it.valor;
+                            it.valor = objetivo.toFixed(2);
+                            if (objetivo > actual) subido = objetivo;
+                        }
+                    });
+                }
+                if (subido !== null) cambios.push(`${nombreConcepto(k)} ${subido} €`);
+            });
+            return cambios;
+        }
+
+        // Al borrar para siempre un ciclo archivado, su gasto real se queda en el historial
+        function guardarTotalesEnHistorial(ciclo) {
+            const cl = claveCicloFinanzas(String(ciclo.nombre || ''));
+            if (cl === null) return;
+            const vistos = new Set();
+            ciclo.items.forEach(it => {
+                const k = normDesc(it.desc);
+                if (!k || esIngreso(it) || k === 'gasolina' || vistos.has(k)) return;
+                vistos.add(k);
+                const total = realConceptoCiclo(ciclo, k);
+                if (total <= 0) return;
+                appData.historial = appData.historial.filter(h => !(h.k === k && h.clave === cl));
+                appData.historial.push({ id: nuevoId(), k: k, clave: cl, total: total, origen: 'borrado' });
+            });
+        }
+
+        function anadirPagoAnterior() {
+            const k = document.getElementById('var-concepto').value;
+            const fecha = document.getElementById('var-fecha').value;
+            const inImp = document.getElementById('var-importe');
+            const imp = redondear(parseFloat(inImp.value));
+            if (!k) { alert('Elige el concepto.'); return; }
+            if (!fecha) { alert('Pon la fecha del pago.'); return; }
+            if (!(imp > 0)) { alert('Pon el importe.'); inImp.focus(); return; }
+            const p = fecha.split('-').map(Number);
+            const cl = claveDeTs(new Date(p[0], p[1] - 1, p[2], 12).getTime());
+            appData.historial = appData.historial.filter(h => !(h.k === k && h.clave === cl));
+            appData.historial.push({ id: nuevoId(), k: k, clave: cl, total: imp, origen: 'manual' });
+            inImp.value = '';
+            if (document.activeElement) document.activeElement.blur();
+            openVar.add(k);
+            guardar();
+            renderizar();
+            mostrarAviso(`${nombreConcepto(k)}: ${imp.toFixed(2)} € en ${etiquetaCicloCorta(cl)}`);
+        }
+
+        function borrarPagoAnterior(id) {
+            const h = appData.historial.find(x => x.id === id);
+            if (!h) return;
+            if (!confirm(`¿Borrar el pago de ${(Number(h.total) || 0).toFixed(2)} € (${etiquetaCicloCorta(h.clave)})?`)) return;
+            appData.historial = appData.historial.filter(x => x.id !== id);
+            guardar();
+            renderizar();
+        }
+
+        function alternarVariable(k) {
+            const s = new Set(appData.variables || []);
+            if (s.has(k)) s.delete(k); else s.add(k);
+            appData.variables = Array.from(s);
+            guardar();
+            renderizar();
+        }
+
+        function cambiarModo(m) {
+            appData.modoProyeccion = m === 'topes' ? 'topes' : 'real';
+            guardar();
+            recalcular();
+        }
+
+        function pintarModo(modo, difieren) {
+            const bR = document.getElementById('modo-real'), bT = document.getElementById('modo-topes');
+            if (bR) bR.classList.toggle('activo', modo === 'real');
+            if (bT) bT.classList.toggle('activo', modo === 'topes');
+            const ley = document.getElementById('leyenda-proy');
+            if (!ley) return;
+            const principal = modo === 'real' ? 'Realista' : 'Peor caso (topes)';
+            const otra = modo === 'real' ? 'Peor caso (topes)' : 'Realista';
+            ley.innerHTML = `<span><i class="ley-linea"></i>${principal}</span>` +
+                (difieren ? `<span><i class="ley-linea alt"></i>${otra}</span>` : `<span style="color:#94a3b8">igual que el peor caso (falta historial)</span>`);
+        }
+
+        // Minigráfico de los últimos pagos (el último, en verde)
+        function sparkline(vals) {
+            const v = vals.slice(-12);
+            if (v.length < 2) return '';
+            const w = 64, h = 22, mn = Math.min(...v), mx = Math.max(...v), rg = (mx - mn) || 1;
+            const pts = v.map((x, i) => [2 + i * (w - 4) / (v.length - 1), h - 3 - (x - mn) * (h - 6) / rg]);
+            const u = pts[pts.length - 1];
+            return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true">` +
+                `<polyline points="${pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')}" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>` +
+                `<circle cx="${u[0].toFixed(1)}" cy="${u[1].toFixed(1)}" r="2.5" fill="#10b981"/></svg>`;
+        }
+
+        function chipTendencia(t) {
+            if (t === null || t === undefined) return '';
+            const pct = Math.round(t * 100);
+            if (pct > 5) return `<span class="tend sube">↑ +${pct} %</span>`;
+            if (pct < -5) return `<span class="tend baja">↓ ${pct} %</span>`;
+            return `<span class="tend igual">→ estable</span>`;
+        }
+
+        function pintarVariables(stats) {
+            const lista = document.getElementById('var-lista');
+            const panel = document.getElementById('panel-var');
+            if (!lista || !panel) return;
+            // No se repinta mientras escribes dentro del panel
+            const act = document.activeElement;
+            if (act && panel.contains(act) && (act.tagName === 'INPUT' || act.tagName === 'SELECT')) return;
+            lista.querySelectorAll('details.var-item').forEach(d => { if (d.open) openVar.add(d.dataset.k); else openVar.delete(d.dataset.k); });
+
+            const idxHoy = indiceCicloDeFecha(new Date());
+            const cicloHoy = idxHoy >= 0 ? appData.ciclos[idxHoy] : null;
+            const claveHoy = cicloHoy ? claveCicloFinanzas(String(cicloHoy.nombre || '')) : null;
+            const eur = n => `${(Number(n) || 0).toFixed(2)}&nbsp;€`;
+            const vars = appData.variables || [];
+            const ini = Math.max(0, indiceInicioFuturo());
+            let avisos = 0, conHist = 0;
+            const origenTxt = { manual: 'añadido', borrado: 'ciclo borrado', repostajes: 'repostajes', archivo: 'archivo', ciclo: 'ciclo' };
+
+            lista.innerHTML = vars.length ? vars.map(k => {
+                const st = stats[k] || statsConcepto(k);
+                if (st.n) conHist++;
+                let tope = null;
+                for (let i = ini; i < appData.ciclos.length && tope === null; i++) {
+                    const it = appData.ciclos[i].items.find(x => !esIngreso(x) && !x.checked && normDesc(x.desc) === k);
+                    if (it) tope = parseFloat(it.valor) || 0;
+                }
+                // Este ciclo
+                let hoy;
+                const itHoy = cicloHoy ? cicloHoy.items.find(x => !esIngreso(x) && normDesc(x.desc) === k) : null;
+                if (!itHoy) hoy = 'Este ciclo no toca.';
+                else {
+                    const gastado = realConceptoCiclo(cicloHoy, k);
+                    const est = estimacionConcepto(st, claveHoy);
+                    const topeHoy = parseFloat(itHoy.valor) || 0;
+                    if (itHoy.checked) {
+                        hoy = gastado > 0 ? `Este ciclo: pagado <b>${eur(gastado)}</b>` : 'Este ciclo: marcado como pagado.';
+                        if (gastado > 0 && st.media !== null && gastado > st.media + 0.005) hoy += ` · <span class="aviso-media">⚠️ más que tu media</span>`;
+                    } else if (gastado > 0) {
+                        hoy = `Este ciclo: llevas <b>${eur(gastado)}</b>` + (est !== null ? ` · se estima ${eur(est)}` : '') + ` · tope ${eur(topeHoy)}`;
+                        if (st.media !== null && gastado > st.media + 0.005) { hoy += ` · <span class="aviso-media">⚠️ ya vas por encima de tu media</span>`; avisos++; }
+                    } else {
+                        hoy = 'Este ciclo: pendiente · ' + (est !== null ? `se estima <b>${eur(est)}</b> (tope ${eur(topeHoy)})` : `tope ${eur(topeHoy)}`);
+                    }
+                }
+                const datos = st.n ? `media ${eur(st.media)} · máx ${eur(st.max)} · ${st.n} pago${st.n > 1 ? 's' : ''}` : 'sin historial todavía';
+                const filas = st.hist.slice().reverse().map(h => `
+                    <tr><td>${etiquetaCicloCorta(h.clave)}</td><td class="num">${eur(h.total)}</td><td class="org">${origenTxt[h.origen] || ''}</td>
+                    <td class="num">${(h.origen === 'manual' || h.origen === 'borrado') && h.id ? `<button class="btn-delete" title="Borrar este pago" onclick="borrarPagoAnterior('${esc(h.id)}')">✕</button>` : ''}</td></tr>`).join('');
+                return `
+                    <details class="var-item" data-k="${esc(k)}" ${openVar.has(k) ? 'open' : ''}>
+                        <summary>
+                            <div style="min-width:0">
+                                <div class="var-nombre">${esc(nombreConcepto(k))}${tope !== null ? ` <span class="var-datos">· tope ${eur(tope)}</span>` : ''}</div>
+                                <div class="var-datos">${datos}</div>
+                            </div>
+                            <div class="var-der">${sparkline(st.hist.map(h => h.total))}${chipTendencia(st.tendencia)}</div>
+                        </summary>
+                        <div class="var-body">
+                            <div class="var-hoy">${hoy}</div>
+                            ${filas ? `<table class="var-hist">${filas}</table>` : '<div class="panel-nota" style="margin-top:0">Aún no hay pagos. Añade alguno anterior abajo, o márcalo como pagado cuando llegue la factura.</div>'}
+                        </div>
+                    </details>`;
+            }).join('') : '<div class="panel-nota" style="margin-top:0">No sigues ningún concepto. Elígelos abajo.</div>';
+
+            const res = document.getElementById('var-resumen');
+            if (res) res.innerText = !vars.length ? '—' : avisos ? `⚠️ ${avisos} sobre su media` : conHist ? `${conHist} de ${vars.length} con historial` : 'sin historial aún';
+
+            const sel = document.getElementById('var-concepto');
+            if (sel) {
+                const prev = sel.value;
+                sel.innerHTML = vars.map(k => `<option value="${esc(k)}">${esc(nombreConcepto(k))}</option>`).join('');
+                if (prev && vars.includes(prev)) sel.value = prev;
+            }
+            const fecha = document.getElementById('var-fecha');
+            if (fecha && !fecha.value) fecha.value = aISO(new Date());
+
+            // Conceptos que se pueden seguir
+            const todos = [], vistos = new Set();
+            appData.ciclos.concat(appData.archivo || []).forEach(c => c.items.forEach(it => {
+                const k = normDesc(it.desc);
+                if (!k || esIngreso(it) || esTarjeta(it) || vistos.has(k)) return;
+                vistos.add(k); todos.push(k);
+            }));
+            vars.forEach(k => { if (!vistos.has(k)) { vistos.add(k); todos.push(k); } });
+            const chips = document.getElementById('var-chips');
+            if (chips) chips.innerHTML = todos.map(k => `<button type="button" class="chip ${vars.includes(k) ? 'on' : ''}" data-k="${esc(k)}" onclick="alternarVariable(this.dataset.k)">${vars.includes(k) ? '✓ ' : ''}${esc(nombreConcepto(k))}</button>`).join('');
+        }
+
+        // =====================================================
+        // ===== ARCHIVO DE CICLOS =============================
+        // =====================================================
+        // Conceptos sin marcar y sin nada apuntado (al archivar dejarían de contar)
+        function sinMarcarDe(ciclo) {
+            return ciclo.items.filter(i => !esIngreso(i) && !i.checked && (parseFloat(i.valor) || 0) > 0 && realConceptoCiclo(ciclo, normDesc(i.desc)) <= 0);
+        }
+
+        function moverAlArchivo(cIdx) {
+            const ciclo = appData.ciclos[cIdx];
+            appData.saldoBase += analizarCiclo(ciclo).real;   // lo ya pagado o cobrado sigue en el saldo del banco
+            appData.ciclos.splice(cIdx, 1);
+            ciclo.archivadoEn = Date.now();
+            appData.archivo.push(ciclo);
+        }
+
+        function ciclosTerminados() {
+            const ahora = Date.now();
+            const idx = [];
+            appData.ciclos.forEach((c, i) => {
+                const cl = claveCicloFinanzas(String(c.nombre || ''));
+                if (cl !== null && finCicloClave(cl).getTime() < ahora) idx.push(i);
+            });
+            return idx;
+        }
+
+        function archivarTerminados() {
+            const idx = ciclosTerminados();
+            if (!idx.length) return;
+            const pend = [];
+            idx.forEach(i => sinMarcarDe(appData.ciclos[i]).forEach(it => pend.push(String(it.desc).trim())));
+            let msg = `¿Archivar ${idx.length} ciclo${idx.length > 1 ? 's' : ''} terminado${idx.length > 1 ? 's' : ''}? Tu saldo no cambia y podrás consultarlo${idx.length > 1 ? 's' : ''} en «Archivo de ciclos».`;
+            if (pend.length) msg += `\n\nOjo: hay ${pend.length} concepto(s) sin marcar ni apuntar (${pend.slice(0, 5).join(', ')}${pend.length > 5 ? '…' : ''}). Si ya los pagaste, márcalos antes.`;
+            if (!confirm(msg)) return;
+            idx.slice().reverse().forEach(i => moverAlArchivo(i));
+            guardar();
+            renderizar();
+            mostrarAviso(`${idx.length} ciclo${idx.length > 1 ? 's' : ''} archivado${idx.length > 1 ? 's' : ''}`);
+        }
+
+        function restaurarArchivado(id) {
+            const i = appData.archivo.findIndex(c => String(c.id) === String(id));
+            if (i < 0) return;
+            const ciclo = appData.archivo[i];
+            if (!confirm(`¿Devolver "${ciclo.nombre}" a tus ciclos? Volverá a contar en la proyección.`)) return;
+            appData.archivo.splice(i, 1);
+            delete ciclo.archivadoEn;
+            appData.saldoBase -= analizarCiclo(ciclo).real;
+            const k = claveCicloFinanzas(String(ciclo.nombre || ''));
+            let pos = appData.ciclos.findIndex(c => { const kc = claveCicloFinanzas(String(c.nombre || '')); return k !== null && kc !== null && kc > k; });
+            if (pos < 0) pos = appData.ciclos.length;
+            appData.ciclos.splice(pos, 0, ciclo);
+            guardar();
+            renderizar();
+        }
+
+        function borrarArchivado(id) {
+            const i = appData.archivo.findIndex(c => String(c.id) === String(id));
+            if (i < 0) return;
+            const ciclo = appData.archivo[i];
+            if (!confirm(`¿Borrar para siempre "${ciclo.nombre}"? Lo que gastaste se queda en el historial, pero ya no podrás ver el ciclo.`)) return;
+            guardarTotalesEnHistorial(ciclo);
+            appData.archivo.splice(i, 1);
+            guardar();
+            renderizar();
+        }
+
+        function pintarTerminados() {
+            const el = document.getElementById('aviso-terminados');
+            if (!el) return;
+            const n = ciclosTerminados().length;
+            el.innerHTML = n ? `<div class="aviso-terminados"><span>📦 Tienes ${n} ciclo${n > 1 ? 's' : ''} terminado${n > 1 ? 's' : ''}.</span><button class="btn-panel" onclick="archivarTerminados()">Archivar</button></div>` : '';
+        }
+
+        function pintarArchivo() {
+            const cont = document.getElementById('arch-lista');
+            if (!cont) return;
+            cont.querySelectorAll('details.arch-item').forEach(d => { if (d.open) openArch.add(d.dataset.id); else openArch.delete(d.dataset.id); });
+            const eur = n => `${(Number(n) || 0).toFixed(2)}&nbsp;€`;
+            const lista = (appData.archivo || []).slice().sort((a, b) =>
+                (claveCicloFinanzas(String(b.nombre || '')) || 0) - (claveCicloFinanzas(String(a.nombre || '')) || 0));
+            const res = document.getElementById('arch-resumen');
+            if (res) res.innerText = lista.length ? `${lista.length} ciclo${lista.length > 1 ? 's' : ''}` : 'vacío';
+            if (!lista.length) {
+                cont.innerHTML = '<div class="panel-nota" style="margin-top:0">Aún no hay ciclos archivados. Cuando un ciclo termine, archívalo con 📦 en vez de borrarlo.</div>';
+                return;
+            }
+            cont.innerHTML = lista.map(c => {
+                const an = analizarCiclo(c);
+                let ingresos = 0, gastado = 0;
+                const filas = c.items.map((it, i) => {
+                    const r = an.items[i];
+                    if (r.ingreso) { if (it.checked) ingresos += r.presupuesto; return ''; }
+                    const real = r.gastado > 0 ? r.gastado : (it.checked ? r.presupuesto : 0);
+                    gastado += real;
+                    const txt = r.gastado > 0 ? eur(r.gastado) : (it.checked ? eur(r.presupuesto) + '*' : '—');
+                    const pasado = r.gastado > r.presupuesto + 0.005;
+                    return `<tr><td>${esc(it.desc)}</td><td>${eur(r.presupuesto)}</td><td${pasado ? ' style="color:#b91c1c;font-weight:700"' : ''}>${txt}</td></tr>`;
+                }).join('');
+                gastado += an.otros;
+                const id = esc(String(c.id));
+                return `
+                    <details class="arch-item" data-id="${id}" ${openArch.has(String(c.id)) ? 'open' : ''}>
+                        <summary><span>📅 ${esc(c.nombre)}</span><span class="var-datos">gastado ${eur(gastado)}</span></summary>
+                        <div class="arch-body">
+                            <table class="arch-tabla"><thead><tr><th>Concepto</th><th>Tope</th><th>Real</th></tr></thead><tbody>${filas}</tbody></table>
+                            <div class="panel-nota">Ingresos ${eur(ingresos)} · gastado ${eur(gastado)}${an.otros > 0 ? ` (otros gastos ${eur(an.otros)})` : ''}. * marcado como pagado sin importe apuntado.</div>
+                            <div class="per-acc">
+                                <button class="btn-mini" onclick="restaurarArchivado('${id}')">↩️ Devolver a mis ciclos</button>
+                                <button class="btn-mini" onclick="borrarArchivado('${id}')">🗑️ Borrar</button>
+                            </div>
+                        </div>
+                    </details>`;
+            }).join('');
+        }
+
+        // =====================================================
+        // ===== GASTOS PERIÓDICOS (anuales, cada 3 años…) ======
+        // =====================================================
+        function sumarMeses(ts, meses) {
+            const d = new Date(ts);
+            return new Date(d.getFullYear(), d.getMonth() + meses, Math.min(d.getDate(), 28), 12).getTime();
+        }
+
+        function textoCada(n) {
+            const t = { 2: 'Cada 2 meses', 3: 'Cada 3 meses', 6: 'Cada 6 meses', 12: 'Cada año', 24: 'Cada 2 años', 36: 'Cada 3 años', 48: 'Cada 4 años', 60: 'Cada 5 años' };
+            return t[n] || `Cada ${n} meses`;
+        }
+
+        // Pone cada gasto periódico en los ciclos ya creados en los que toca y,
+        // cuando su ciclo termina o lo marcas como pagado, pasa a la siguiente vez
+        function sincronizarPeriodicos() {
+            const out = { avisos: [], cambiado: false };
+            const lista = appData.periodicos || [];
+            if (!lista.length) return out;
+            const ahora = Date.now();
+            const porClave = {};
+            appData.ciclos.forEach(c => { const k = claveCicloFinanzas(String(c.nombre || '')); if (k !== null) porClave[k] = c; });
+            const claves = Object.keys(porClave).map(Number);
+            const ultima = claves.length ? Math.max(...claves) : -1;
+            lista.forEach(p => {
+                const cada = Math.max(1, Math.round(Number(p.cadaMeses) || 12));
+                const kNom = normDesc(p.nombre);
+                if (!Array.isArray(p.hechos)) { p.hechos = []; out.cambiado = true; }
+                for (let g = 0; g < 240; g++) {
+                    const cl = claveDeTs(p.proxima);
+                    const c = porClave[cl];
+                    const it = c ? c.items.find(i => normDesc(i.desc) === kNom) : null;
+                    if (finCicloClave(cl).getTime() < ahora || (it && it.checked)) { p.proxima = sumarMeses(p.proxima, cada); out.cambiado = true; }
+                    else break;
+                }
+                let ts = p.proxima;
+                for (let g = 0; g < 240; g++, ts = sumarMeses(ts, cada)) {
+                    const cl = claveDeTs(ts);
+                    if (cl > ultima) break;
+                    const c = porClave[cl];
+                    if (!c || p.hechos.includes(cl)) continue;   // si lo quitaste a mano de un ciclo, no se vuelve a poner
+                    if (!c.items.some(i => normDesc(i.desc) === kNom)) {
+                        c.items.push({ desc: String(p.nombre).trim(), valor: (Number(p.importe) || 0).toFixed(2), checked: false });
+                        out.avisos.push(`${String(p.nombre).trim()} → ${etiquetaMes(c)}`);
+                    }
+                    p.hechos.push(cl);
+                    out.cambiado = true;
+                }
+            });
+            return out;
+        }
+
+        function pistaFechaPeriodico() {
+            const v = document.getElementById('per-fecha').value;
+            const el = document.getElementById('per-pista');
+            if (!v) { el.innerText = ''; return; }
+            const p = v.split('-').map(Number);
+            const cl = claveDeTs(new Date(p[0], p[1] - 1, p[2], 12).getTime());
+            el.innerText = `Irá en el ciclo ${etiquetaCiclo({ ano: Math.floor(cl / 100), mes: cl % 100 })}.`;
+        }
+
+        function anadirPeriodico() {
+            const nombre = document.getElementById('per-nombre').value.trim();
+            const imp = redondear(parseFloat(document.getElementById('per-importe').value));
+            const cada = parseInt(document.getElementById('per-cada').value, 10) || 12;
+            const f = document.getElementById('per-fecha').value;
+            if (!nombre) { alert('Pon qué es (por ejemplo, IUC).'); return; }
+            if (!(imp > 0)) { alert('Pon el importe.'); return; }
+            if (!f) { alert('Pon la fecha de la próxima vez (aunque sea aproximada).'); return; }
+            const p = f.split('-').map(Number);
+            appData.periodicos.push({ id: nuevoId(), nombre: nombre, importe: imp, cadaMeses: cada, proxima: new Date(p[0], p[1] - 1, p[2], 12).getTime(), hechos: [] });
+            ['per-nombre', 'per-importe', 'per-fecha'].forEach(id => { document.getElementById(id).value = ''; });
+            document.getElementById('per-pista').innerText = '';
+            if (document.activeElement) document.activeElement.blur();
+            guardar();
+            renderizar();
+            mostrarAviso(`Gasto periódico guardado: ${nombre}`);
+        }
+
+        function editarPeriodico(id) {
+            const p = appData.periodicos.find(x => x.id === id);
+            if (!p) return;
+            const r = prompt(`Nuevo importe de «${p.nombre}» (€):`, (Number(p.importe) || 0).toFixed(2));
+            if (r === null) return;
+            const imp = redondear(parseFloat(String(r).replace(',', '.')));
+            if (!(imp > 0)) { alert('Importe no válido.'); return; }
+            p.importe = imp;
+            const desde = claveDeTs(p.proxima);
+            appData.ciclos.forEach(c => {
+                const cl = claveCicloFinanzas(String(c.nombre || ''));
+                if (cl === null || cl < desde) return;
+                c.items.forEach(i => { if (normDesc(i.desc) === normDesc(p.nombre) && !i.checked) { i.valor = imp.toFixed(2); i.topeBase = i.valor; } });
+            });
+            guardar();
+            renderizar();
+        }
+
+        function cambiarFechaPeriodico(id) {
+            const p = appData.periodicos.find(x => x.id === id);
+            if (!p) return;
+            const r = prompt(`Próxima vez de «${p.nombre}» (dd/mm/aaaa):`, fmtFechaLarga(p.proxima));
+            if (r === null) return;
+            const m = String(r).trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);
+            if (!m) { alert('Escribe la fecha como dd/mm/aaaa.'); return; }
+            const ts = new Date(+m[3], +m[2] - 1, +m[1], 12).getTime();
+            if (isNaN(ts)) { alert('Fecha no válida.'); return; }
+            p.proxima = ts;
+            p.hechos = [];
+            guardar();
+            renderizar();
+        }
+
+        function borrarPeriodico(id) {
+            const p = appData.periodicos.find(x => x.id === id);
+            if (!p) return;
+            if (!confirm(`¿Quitar «${p.nombre}» de los gastos periódicos? Lo que ya está puesto en tus ciclos se queda.`)) return;
+            appData.periodicos = appData.periodicos.filter(x => x.id !== id);
+            guardar();
+            renderizar();
+        }
+
+        function reponerPeriodico(id) {
+            const p = appData.periodicos.find(x => x.id === id);
+            if (!p) return;
+            const cl = claveDeTs(p.proxima);
+            const c = appData.ciclos.find(x => claveCicloFinanzas(String(x.nombre || '')) === cl);
+            if (!c) return;
+            if (!c.items.some(i => normDesc(i.desc) === normDesc(p.nombre))) {
+                c.items.push({ desc: String(p.nombre).trim(), valor: (Number(p.importe) || 0).toFixed(2), checked: false });
+            }
+            guardar();
+            renderizar();
+            mostrarAviso(`${p.nombre} puesto en ${etiquetaMes(c)}`);
+        }
+
+        // Conceptos de tus ciclos que salen cada varios meses (o solo una vez: probablemente anuales)
+        function sugerenciasPeriodicos() {
+            const ini = Math.max(0, indiceInicioFuturo());
+            const ya = new Set((appData.periodicos || []).map(p => normDesc(p.nombre)));
+            const ap = {};
+            appData.ciclos.forEach((c, i) => {
+                const cl = claveCicloFinanzas(String(c.nombre || ''));
+                if (cl === null) return;
+                const vistos = new Set();
+                c.items.forEach(it => {
+                    const k = normDesc(it.desc);
+                    if (!k || vistos.has(k) || esIngreso(it) || esTarjeta(it) || esVariable(k) || ya.has(k)) return;
+                    vistos.add(k);
+                    (ap[k] = ap[k] || []).push({ cl: cl, i: i, it: it });
+                });
+            });
+            const mesesDe = cl => Math.floor(cl / 100) * 12 + (cl % 100);
+            const res = [];
+            Object.keys(ap).forEach(k => {
+                const a = ap[k];
+                if (a.length >= appData.ciclos.length - 1) return;   // sale casi todos los meses
+                let cada = null;
+                if (a.length === 1) cada = 12;
+                else {
+                    const gaps = a.slice(1).map((x, j) => mesesDe(x.cl) - mesesDe(a[j].cl));
+                    if (gaps.every(g => g === gaps[0]) && gaps[0] >= 2) cada = gaps[0];
+                }
+                if (!cada) return;
+                const prox = a.find(x => x.i >= ini && !x.it.checked);
+                if (!prox) return;
+                res.push({ nombre: String(prox.it.desc).trim(), importe: parseFloat(prox.it.valor) || 0, cada: cada, cl: prox.cl });
+            });
+            return res.sort((x, y) => x.cl - y.cl);
+        }
+
+        function anadirSugerencia(i) {
+            const s = sugerenciasCache[i];
+            if (!s) return;
+            const a = Math.floor(s.cl / 100), m = s.cl % 100;
+            appData.periodicos.push({ id: nuevoId(), nombre: s.nombre, importe: s.importe, cadaMeses: s.cada, proxima: new Date(a, m, 28, 12).getTime(), hechos: [] });
+            guardar();
+            renderizar();
+            mostrarAviso(`Gasto periódico guardado: ${s.nombre}`);
+        }
+
+        function pintarPeriodicos() {
+            const cont = document.getElementById('per-lista');
+            if (!cont) return;
+            const eur = n => `${(Number(n) || 0).toFixed(2)}&nbsp;€`;
+            const lista = (appData.periodicos || []).slice().sort((a, b) => a.proxima - b.proxima);
+            const hoy = new Date();
+            let porMes = 0;
+            cont.innerHTML = lista.length ? lista.map(p => {
+                const cada = Math.max(1, Math.round(Number(p.cadaMeses) || 12));
+                porMes += (Number(p.importe) || 0) / cada;
+                const d = new Date(p.proxima);
+                const meses = Math.max(0, (d.getFullYear() - hoy.getFullYear()) * 12 + d.getMonth() - hoy.getMonth());
+                const falta = meses === 0 ? 'este mes' : meses < 12 ? `en ${meses} mes${meses > 1 ? 'es' : ''}`
+                    : `en ${Math.floor(meses / 12)} año${meses >= 24 ? 's' : ''}${meses % 12 ? ` y ${meses % 12} mes${meses % 12 > 1 ? 'es' : ''}` : ''}`;
+                const cl = claveDeTs(p.proxima);
+                const c = appData.ciclos.find(x => claveCicloFinanzas(String(x.nombre || '')) === cl);
+                const esta = c ? c.items.some(i => normDesc(i.desc) === normDesc(p.nombre)) : false;
+                const estado = c
+                    ? (esta ? `✓ Ya está en tu ciclo ${esc(etiquetaMes(c))}.`
+                        : `⚠️ Falta en su ciclo (${esc(etiquetaMes(c))}). <button class="btn-mini" onclick="reponerPeriodico('${esc(p.id)}')">Ponerlo</button>`)
+                    : `⏳ Ese ciclo (${esc(etiquetaCicloCorta(cl))}) aún no está creado: se pondrá solo cuando lo crees.`;
+                const aparta = meses >= 2 ? `<div class="per-sub">💡 Si apartas <b>${eur((Number(p.importe) || 0) / meses)}</b> al mes, lo tendrás para entonces.</div>` : '';
+                return `
+                    <div class="per-item">
+                        <div class="per-cab"><b>${esc(p.nombre)}</b><b>${eur(p.importe)}</b></div>
+                        <div class="per-sub">${textoCada(cada)} · próxima: <b>${fmtFechaLarga(p.proxima)}</b> (${falta})</div>
+                        <div class="per-sub">${estado}</div>
+                        ${aparta}
+                        <div class="per-acc">
+                            <button class="btn-mini" onclick="editarPeriodico('${esc(p.id)}')">✏️ Importe</button>
+                            <button class="btn-mini" onclick="cambiarFechaPeriodico('${esc(p.id)}')">📅 Fecha</button>
+                            <button class="btn-mini" onclick="borrarPeriodico('${esc(p.id)}')">🗑️ Quitar</button>
+                        </div>
+                    </div>`;
+            }).join('') + `<div class="panel-nota">En total suponen unos <b>${eur(porMes)}</b> al mes.</div>`
+                : '<div class="panel-nota" style="margin-top:0">Aún no tienes gastos periódicos. Añade los anuales (IUC, seguro…) o los de cada varios años: la app los pondrá en su ciclo y te dirá cuándo tocan.</div>';
+
+            const res = document.getElementById('per-resumen');
+            if (res) {
+                if (!lista.length) res.innerText = 'ninguno';
+                else { const d = new Date(lista[0].proxima); res.innerText = `${lista[0].nombre} · ${MESES_CORTOS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`; }
+            }
+
+            sugerenciasCache = sugerenciasPeriodicos();
+            const sug = document.getElementById('per-sugerencias');
+            if (sug) sug.innerHTML = sugerenciasCache.length
+                ? `<div class="panel-h">Parecen periódicos en tus ciclos</div>` + sugerenciasCache.map((s, i) => `
+                    <div class="sug-item"><span><b>${esc(s.nombre)}</b> · ${eur(s.importe)} · ${textoCada(s.cada).toLowerCase()} · próxima ${esc(etiquetaCicloCorta(s.cl))}</span>
+                    <button class="btn-mini" onclick="anadirSugerencia(${i})">＋ Guardar</button></div>`).join('')
+                : '';
+        }
+
+        // =====================================================
+        // ===== DESHACER ======================================
+        // =====================================================
+        // Antes de cada cambio se guarda cómo estaba todo (Finanzas y Gasolina). Los cambios
+        // seguidos (por ejemplo, al escribir un importe) cuentan como uno solo.
+        function pilaDeshacer() {
+            if (!window._pilaDeshacer) {
+                try { window._pilaDeshacer = JSON.parse(localStorage.getItem('finanzas_deshacer')) || []; } catch (e) { window._pilaDeshacer = []; }
+            }
+            return window._pilaDeshacer;
+        }
+        function guardarPilaDeshacer() {
+            const pila = pilaDeshacer();
+            for (let i = 0; i < 6; i++) {
+                try { localStorage.setItem('finanzas_deshacer', JSON.stringify(pila)); return; }
+                catch (e) { if (pila.length <= 1) return; pila.splice(0, Math.ceil(pila.length / 2)); }   // sin espacio: se quitan los más antiguos
+            }
+        }
+        function estadoActual() { return JSON.stringify({ fin: appData, gas: gasData }); }
+
+        // agrupar: nombre del campo cuando el cambio viene de escribir (los cambios seguidos en el
+        // mismo campo cuentan como uno). Lo que pasa dentro de un mismo clic también cuenta como uno.
+        function registrarCambio(agrupar) {
+            const ahora = estadoActual();
+            if (window._ultimoEstado && ahora !== window._ultimoEstado) {
+                const mismaAccion = !!window._enAccion;
+                const escribiendo = !!agrupar && window._ultimoAgrupado === agrupar && (Date.now() - (window._ultimoCambioTs || 0) < 2500);
+                if (!mismaAccion && !escribiendo) {
+                    const pila = pilaDeshacer();
+                    pila.push(window._ultimoEstado);
+                    while (pila.length > 15) pila.shift();   // se guardan los 15 últimos cambios
+                    guardarPilaDeshacer();
+                }
+                marcarAccion();
+                window._ultimoCambioTs = Date.now();
+                window._ultimoAgrupado = agrupar || null;
+            }
+            window._ultimoEstado = ahora;
+            pintarDeshacer();
+        }
+
+        // Todo lo que ocurra hasta que termine este clic o tecla cuenta como un solo cambio
+        function marcarAccion() {
+            if (window._enAccion) return;
+            window._enAccion = true;
+            setTimeout(() => { window._enAccion = false; }, 0);
+        }
+
+        function pintarDeshacer() {
+            const b = document.getElementById('btn-deshacer');
+            if (b) b.hidden = !pilaDeshacer().length;
+        }
+
+        function deshacer() {
+            const pila = pilaDeshacer();
+            if (!pila.length) return;
+            const previo = pila.pop();
+            guardarPilaDeshacer();
+            let st;
+            try { st = JSON.parse(previo); } catch (e) { alert('No se pudo deshacer.'); return; }
+            appData = prepararFinanzas(st.fin);
+            if (st.gas && Array.isArray(st.gas.registros)) {
+                gasData = { registros: st.gas.registros.map(normalizarRegistro), capacidad: st.gas.capacidad || null };
+            }
+            localStorage.setItem('controlFinanciero_v6', JSON.stringify(appData));
+            localStorage.setItem(GAS_KEY, JSON.stringify(gasData));
+            window._ultimoEstado = estadoActual();
+            marcarAccion();   // lo que se recalcule ahora no cuenta como un cambio nuevo
+            openGastos = new Set();
+            renderizar();
+            actualizarPantallaGasolina();
+            pintarDeshacer();
+            mostrarAviso(pila.length ? `Cambio deshecho (puedes deshacer ${pila.length} más)` : 'Cambio deshecho');
+        }
+
+        // =====================================================
+        // ===== VENTANAS: GASTO / INGRESO Y CONCEPTO ===========
+        // =====================================================
+        let gastoTipo = 'gasto';     // gasto | ingreso
+        let gastoPago = 'cuenta';    // cuenta | tarjeta
+        let conceptoCiclo = 0, conceptoTipo = 'gasto', conceptoDonde = '1';
+
+        function prepararVentanaGasto(editando) {
+            document.getElementById('g-tipo').style.display = editando ? 'none' : '';
+            document.getElementById('g-bloque-pago').style.display = editando ? 'none' : '';
+            tipoGasto('gasto');
+            pagoGasto('cuenta');
+            const ing = new Set();
+            appData.ciclos.concat(appData.archivo || []).forEach(c => c.items.forEach(i => { if (i.tipo === 'ingreso') ing.add(String(i.desc).trim()); }));
+            document.getElementById('g-ing-nombres').innerHTML = Array.from(ing).map(n => `<option value="${esc(n)}">`).join('');
+            document.getElementById('g-ing-nombre').value = '';
+            pintarFechaRapida();
+        }
+
+        function tipoGasto(t) {
+            gastoTipo = t;
+            document.querySelectorAll('#g-tipo button').forEach(b => b.classList.toggle('activo', b.dataset.v === t));
+            document.getElementById('g-bloque-gasto').style.display = t === 'gasto' ? '' : 'none';
+            document.getElementById('g-bloque-ingreso').style.display = t === 'ingreso' ? '' : 'none';
+            document.querySelector('#modal-gasto .modal-gasto').classList.toggle('es-ingreso', t === 'ingreso');
+            textosVentanaGasto();
+            actualizarHintGasto();
+        }
+
+        function pagoGasto(p) {
+            gastoPago = p;
+            document.querySelectorAll('#g-pago button').forEach(b => b.classList.toggle('activo', b.dataset.v === p));
+            document.getElementById('g-bloque-concepto').style.display = p === 'cuenta' ? '' : 'none';
+            textosVentanaGasto();
+            actualizarHintGasto();
+        }
+
+        function textosVentanaGasto() {
+            const tit = document.getElementById('g-titulo'), btn = document.getElementById('g-guardar');
+            if (gastoEditando) { tit.innerText = 'Editar gasto'; btn.innerText = 'Guardar cambios'; return; }
+            if (gastoTipo === 'ingreso') { tit.innerText = 'Nuevo ingreso'; btn.innerText = 'Guardar ingreso'; }
+            else if (gastoPago === 'tarjeta') { tit.innerText = 'Compra con tarjeta'; btn.innerText = 'Guardar en la tarjeta'; }
+            else { tit.innerText = 'Nuevo gasto'; btn.innerText = 'Guardar gasto'; }
+        }
+
+        function fechaRapida(diasAtras) {
+            const d = new Date();
+            d.setDate(d.getDate() - diasAtras);
+            document.getElementById('g-fecha').value = aISO(d);
+            rellenarConceptosGasto();
+            pintarFechaRapida();
+        }
+
+        function pintarFechaRapida() {
+            const v = document.getElementById('g-fecha').value;
+            const ayer = new Date(); ayer.setDate(ayer.getDate() - 1);
+            document.getElementById('g-hoy').classList.toggle('on', v === aISO(new Date()));
+            document.getElementById('g-ayer').classList.toggle('on', v === aISO(ayer));
+        }
+
+        // Cuántas veces has usado cada concepto (los más usados salen primero)
+        function usoConceptos() {
+            const u = {};
+            appData.ciclos.concat(appData.archivo || []).forEach(c => (c.gastos || []).forEach(g => {
+                const k = normDesc(g.concepto);
+                u[k] = (u[k] || 0) + 1;
+            }));
+            return u;
+        }
+
+        // Los conceptos del ciclo, como botones con lo que te queda
+        function pintarChipsGasto() {
+            const sel = document.getElementById('g-concepto');
+            const cont = document.getElementById('g-chips');
+            if (!sel || !cont) return;
+            if (sel.disabled) { cont.innerHTML = ''; return; }
+            const usos = usoConceptos();
+            const ops = Array.from(sel.options).map((o, i) => ({ v: o.value, txt: o.textContent, i: i }));
+            ops.sort((a, b) => ((a.v === '') - (b.v === '')) || ((usos[normDesc(b.v)] || 0) - (usos[normDesc(a.v)] || 0)) || (a.i - b.i));
+            cont.innerHTML = ops.map(o => {
+                const nombre = o.v === '' ? 'Otro' : o.v;
+                const resto = o.v === '' ? 'sin presupuesto' : (o.txt.split(' · ')[1] || '');
+                const pasado = resto.startsWith('pasado');
+                return `<button type="button" class="chip g-chip ${sel.value === o.v ? 'on' : ''} ${pasado ? 'pasado' : ''}" data-v="${esc(o.v)}" onclick="elegirConceptoGasto(this.dataset.v)"><b>${esc(nombre)}</b>${resto ? `<small>${esc(resto)}</small>` : ''}</button>`;
+            }).join('');
+            pintarNotasGasto();
+        }
+
+        function elegirConceptoGasto(v) {
+            document.getElementById('g-concepto').value = v;
+            actualizarHintGasto();
+            pintarChipsGasto();
+        }
+
+        // Notas que ya usaste con ese concepto (Mercadona, Auchan…)
+        function pintarNotasGasto() {
+            const k = normDesc(document.getElementById('g-concepto').value);
+            const todas = [];
+            appData.ciclos.concat(appData.archivo || []).forEach(c => (c.gastos || []).forEach(g => todas.push(g)));
+            const notas = [];
+            todas.sort((a, b) => b.ts - a.ts).forEach(g => {
+                const n = String(g.nota || '').trim();
+                if (n && (!k || normDesc(g.concepto) === k) && !notas.includes(n)) notas.push(n);
+            });
+            document.getElementById('g-notas').innerHTML = notas.slice(0, 8).map(n => `<option value="${esc(n)}">`).join('');
+        }
+
+        function cerrarConcepto() {
+            document.getElementById('modal-concepto').classList.remove('abierto');
+            if (document.activeElement) document.activeElement.blur();
+        }
+
+        function tipoConcepto(t) {
+            conceptoTipo = t;
+            document.querySelectorAll('#c-tipo button').forEach(b => b.classList.toggle('activo', b.dataset.v === t));
+            document.getElementById('c-nombre').placeholder = t === 'ingreso' ? 'Ej. venta, regalo, horas extra' : 'Ej. dentista';
+            document.getElementById('c-guardar').innerText = t === 'ingreso' ? 'Añadir ingreso' : 'Añadir gasto';
+        }
+
+        function dondeConcepto(d) {
+            conceptoDonde = d;
+            document.querySelectorAll('#c-donde button').forEach(b => b.classList.toggle('activo', b.dataset.v === d));
+            document.getElementById('c-n-fila').style.display = d === 'n' ? 'block' : 'none';
+        }
+
+        function guardarConcepto() {
+            const nombre = document.getElementById('c-nombre').value.trim();
+            const imp = parseFloat(document.getElementById('c-importe').value);
+            if (!nombre) { alert('Pon el nombre del concepto.'); document.getElementById('c-nombre').focus(); return; }
+            const valor = isFinite(imp) && imp >= 0 ? imp.toFixed(2) : '0.00';
+            const cIdx = conceptoCiclo;
+            let hasta = cIdx + 1;
+            if (conceptoDonde === 'todos') hasta = appData.ciclos.length;
+            else if (conceptoDonde === 'n') {
+                const n = parseInt(document.getElementById('c-n').value, 10);
+                if (!(n >= 1)) { alert('Pon en cuántos ciclos.'); return; }
+                hasta = Math.min(cIdx + n, appData.ciclos.length);
+            }
+            for (let i = cIdx; i < hasta; i++) {
+                appData.ciclos[i].items.push({ desc: nombre, valor: valor, checked: false, tipo: conceptoTipo });
+            }
+            cerrarConcepto();
+            openCycles.add(cIdx);
+            renderizar();
+            guardar();
+            const n = hasta - cIdx;
+            mostrarAviso(`${conceptoTipo === 'ingreso' ? 'Ingreso' : 'Gasto'} «${nombre}» añadido en ${n} ciclo${n > 1 ? 's' : ''}`);
+        }
+
+        // =====================================================
+        // ===== CICLO NUEVO: QUÉ CONCEPTOS LLEVA ===============
+        // =====================================================
+        // Lo de todos los meses (lo que está en los dos últimos ciclos) y, del mismo mes del año
+        // pasado, lo que no era mensual (IUC, seguro, luz cada dos meses…).
+        function itemsParaNuevoCiclo(claveNueva) {
+            const ciclos = appData.ciclos;
+            const todos = ciclos.concat(appData.archivo || []);
+            const porClave = {};
+            todos.forEach(c => { const k = claveCicloFinanzas(String(c.nombre || '')); if (k !== null && !porClave[k]) porClave[k] = c; });
+            const copia = it => {
+                const n = { desc: String(it.desc).trim(), valor: it.valor, checked: false };
+                if (it.tipo) n.tipo = it.tipo;
+                if (it.topeBase !== undefined) n.topeBase = it.topeBase;
+                return n;
+            };
+            const items = [], vistos = new Set(), delAnio = [];
+            const ult = ciclos[ciclos.length - 1], pen = ciclos[ciclos.length - 2];
+            if (ult) {
+                const enPen = new Set(pen ? pen.items.map(i => normDesc(i.desc)) : []);
+                ult.items.forEach(it => {
+                    const k = normDesc(it.desc);
+                    if (!k || vistos.has(k)) return;
+                    if (pen && !enPen.has(k)) return;   // no está todos los meses
+                    vistos.add(k);
+                    items.push(copia(it));
+                });
+            }
+            if (claveNueva !== null) {
+                const mesesDe = cl => Math.floor(cl / 100) * 12 + (cl % 100);
+                const deMes = m => Math.floor(m / 12) * 100 + (m % 12);
+                const mPasado = mesesDe(claveNueva) - 12;
+                const pasado = porClave[deMes(mPasado)];
+                if (pasado) {
+                    const vecinos = [porClave[deMes(mPasado - 1)], porClave[deMes(mPasado + 1)]].filter(Boolean);
+                    pasado.items.forEach(it => {
+                        const k = normDesc(it.desc);
+                        if (!k || vistos.has(k) || esIngreso(it) || esTarjeta(it)) return;
+                        if (vecinos.some(v => v.items.some(i => normDesc(i.desc) === k))) return;   // era mensual (préstamo, plazos…)
+                        vistos.add(k);
+                        items.push(copia(it));
+                        delAnio.push(String(it.desc).trim());
+                    });
+                }
+            }
+            if (!items.length) return { items: obtenerConceptosBase(), delAnio: [] };
+            return { items: items, delAnio: delAnio };
         }
 
         // =====================================================
@@ -2263,6 +3536,7 @@
             if (enc) preferido = enc.gasto.concepto || '';
             else { try { preferido = localStorage.getItem(ULTIMO_CONCEPTO_KEY); } catch (e) {} }
             rellenarConceptosGasto(preferido);
+            prepararVentanaGasto(!!enc);
             document.getElementById('modal-gasto').classList.add('abierto');
             if (!enc) document.getElementById('g-importe').focus();
         }
@@ -2290,6 +3564,7 @@
                 btn.disabled = true;
                 hint.className = 'g-hint mal';
                 hint.innerText = 'No hay ningún ciclo que incluya esa fecha. Créalo antes en Finanzas.';
+                pintarChipsGasto();
                 return;
             }
             sel.disabled = false;
@@ -2324,11 +3599,22 @@
             const opt = kPref === null ? null : Array.from(sel.options).find(o => normDesc(o.value) === kPref);
             sel.value = opt ? opt.value : sel.options[0].value;
             actualizarHintGasto();
+            pintarChipsGasto();
         }
 
         function actualizarHintGasto() {
             const sel = document.getElementById('g-concepto');
             const hint = document.getElementById('g-hint');
+            if (!gastoEditando && gastoTipo === 'ingreso') {
+                hint.className = 'g-hint';
+                hint.innerText = 'Se suma a tu saldo en el ciclo de esa fecha.';
+                return;
+            }
+            if (!gastoEditando && gastoPago === 'tarjeta') {
+                hint.className = 'g-hint';
+                hint.innerText = `No sale de tu cuenta: se suma a la deuda de la tarjeta (ahora ${fmtEur(numO(appData.tarjeta.deuda, 0))}) y lo pagas con las cuotas «Tarjeta…» de tus ciclos.`;
+                return;
+            }
             if (sel.disabled) return;
             const imp = parseFloat(document.getElementById('g-importe').value) || 0;
             const ocultos = parseInt(sel.dataset.ocultos || '0', 10);
@@ -2353,7 +3639,7 @@
             const inImporte = document.getElementById('g-importe');
             const importe = Math.round(parseFloat(inImporte.value) * 100) / 100;
             if (!(importe > 0)) {
-                alert('Introduce el importe del gasto.');
+                alert('Introduce el importe.');
                 inImporte.focus();
                 return;
             }
@@ -2365,8 +3651,32 @@
             }
             const fecha = fechaGastoElegida();
             const cIdx = indiceCicloDeFecha(fecha);
+            const notaRapida = document.getElementById('g-nota').value.trim();
+            // Compra con la tarjeta de crédito: no sale de la cuenta, se suma a la deuda
+            if (!gastoEditando && gastoTipo === 'gasto' && gastoPago === 'tarjeta') {
+                const t = appData.tarjeta;
+                const ts = fechaISO === hoyISO ? Date.now() : fecha.getTime();
+                const conc = document.getElementById('g-concepto').value;
+                t.compras.push({ id: nuevoId(), ts: ts, importe: importe, nota: [conc, notaRapida].filter(Boolean).join(' · ') });
+                t.deuda = redondear(numO(t.deuda, 0) + importe);
+                cerrarGasto();
+                guardar();
+                renderizar();
+                mostrarAviso(`Compra con tarjeta: +${importe.toFixed(2)} € · deuda ${t.deuda.toFixed(2)} €`);
+                return;
+            }
             if (cIdx < 0) {
                 alert('No hay ningún ciclo que incluya esa fecha. Créalo antes en Finanzas.');
+                return;
+            }
+            // Ingreso extra: concepto de ingreso ya cobrado en el ciclo de esa fecha
+            if (!gastoEditando && gastoTipo === 'ingreso') {
+                const nombre = document.getElementById('g-ing-nombre').value.trim() || 'Ingreso extra';
+                appData.ciclos[cIdx].items.push({ desc: nombre, valor: importe.toFixed(2), checked: true, tipo: 'ingreso', nota: notaRapida, ts: fecha.getTime() });
+                cerrarGasto();
+                guardar();
+                renderizar();
+                mostrarAviso(`Ingreso apuntado: +${importe.toFixed(2)} € · ${nombre}`);
                 return;
             }
             const concepto = document.getElementById('g-concepto').value;
@@ -2422,10 +3732,13 @@
             document.getElementById('tj-compra-importe').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('tj-compra-nota').focus(); } });
             document.getElementById('tj-compra-nota').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); anadirCompraTarjeta(); } });
 
+            marcarAccion();
             resetearFormulario();
             actualizarPantallaGasolina();
             renderizar();
             finanzasListo = true;
+            pintarDeshacer();
+            document.getElementById('c-importe').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); guardarConcepto(); } });
         });
     </script>
 </body>
