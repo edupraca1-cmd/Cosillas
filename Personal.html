@@ -359,13 +359,84 @@
         .bb-hist td.num { text-align: right; }
         .bb-hist td.dim { color: #94a3b8; font-size: 11px; }
         #bb-consejo .linea { margin-top: 8px; line-height: 1.45; color: #334155; }
+
+        /* ===== NAVEGACIÓN POR SECCIONES (barra de abajo) ===== */
+        body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+        #tab-finanzas { padding-bottom: 0; }
+        #tab-finanzas .tab-content { padding-bottom: 84px; }
+        .barra-inferior { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000; display: flex; justify-content: space-around; background: #ffffff; border-top: 1px solid var(--border); box-shadow: 0 -2px 10px rgba(15, 23, 42, 0.06); padding-bottom: env(safe-area-inset-bottom); }
+        .barra-btn { position: relative; flex: 1; max-width: 120px; background: none; border: none; padding: 8px 2px 8px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+        .barra-btn .bi { font-size: 20px; line-height: 1; filter: grayscale(1); opacity: .55; }
+        .barra-btn.activo { color: var(--primary-dark); }
+        .barra-btn.activo .bi { filter: none; opacity: 1; }
+        .barra-btn.activo::before { content: ''; position: absolute; top: 0; left: 28%; right: 28%; height: 3px; border-radius: 0 0 3px 3px; background: var(--primary); }
+        .fab-gasto, .fab-deshacer { bottom: calc(76px + env(safe-area-inset-bottom)); }
+        .toast { bottom: calc(140px + env(safe-area-inset-bottom)); }
+        body[data-seccion="tab-gasolina"] .fab-gasto { display: none; }
+
+        /* Apartados que antes eran desplegables: ahora siempre abiertos */
+        section.panel { background: #fff; border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
+        section.panel > .panel-cab { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px; font-weight: bold; font-size: 15px; }
+        section.panel > .panel-cab > span:first-child { white-space: nowrap; }
+        section.panel .summary-right { min-width: 0; }
+
+        /* Inicio: las cifras llevan a su ciclo, y lo pendiente */
+        .metric-card.toca { cursor: pointer; transition: transform .1s ease; -webkit-tap-highlight-color: transparent; }
+        .metric-card.toca:active { transform: scale(0.97); }
+        .sec-h { font-size: 11px; font-weight: 800; color: #475569; letter-spacing: .5px; text-transform: uppercase; margin: 4px 2px 8px; }
+        .pend { display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box; text-align: left; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 11px 12px; margin-bottom: 8px; font-size: 13px; line-height: 1.4; color: #334155; font-family: inherit; }
+        button.pend { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        button.pend:active { filter: brightness(0.97); }
+        .pend .pend-ico { font-size: 17px; flex-shrink: 0; width: 22px; text-align: center; }
+        .pend .pend-txt { flex: 1; min-width: 0; }
+        .pend .pend-ir { flex-shrink: 0; font-size: 12px; font-weight: 800; color: var(--primary-dark); white-space: nowrap; }
+        .pend.aviso { background: #fffbeb; border-color: #fde68a; color: #78350f; }
+        .pend.aviso .pend-ir { color: #92400e; }
+        .pend.mal { background: #fef2f2; border-color: #fecaca; color: #7f1d1d; }
+        .pend.mal .pend-ir { color: #b91c1c; }
+        .pend.ok { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+
+        /* Ciclos: uno cada vez, con flechas, tira de meses y deslizando el dedo */
+        .ciclo-nav { display: flex; align-items: stretch; gap: 8px; margin-bottom: 8px; }
+        .nav-flecha { width: 46px; flex-shrink: 0; border-radius: 12px; border: 1px solid var(--border); background: #fff; font-size: 15px; color: #334155; cursor: pointer; font-family: inherit; }
+        .nav-flecha:disabled { opacity: .3; cursor: default; }
+        .ciclo-nav-centro { flex: 1; min-width: 0; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 9px 8px; text-align: center; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+        .ciclo-nav-nombre { font-size: 15px; font-weight: 800; color: var(--text-main); }
+        .ciclo-nav-sub { font-size: 12.5px; font-weight: 700; }
+        .ciclo-tira { position: relative; display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        .ciclo-tira::-webkit-scrollbar { display: none; }
+        .tira-mes { flex-shrink: 0; min-width: 56px; border: 1px solid var(--border); background: #fff; border-radius: 10px; padding: 5px 8px; display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 10.5px; color: #64748b; cursor: pointer; font-family: inherit; }
+        .tira-mes b { font-size: 12.5px; color: var(--text-main); font-variant-numeric: tabular-nums; }
+        .tira-mes.t-aviso { border-color: #fcd34d; background: #fffbeb; }
+        .tira-mes.t-aviso b { color: #b45309; }
+        .tira-mes.t-mal { border-color: #fca5a5; background: #fef2f2; }
+        .tira-mes.t-mal b { color: #b91c1c; }
+        .tira-mes.on { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(16, 185, 129, .35); }
+        .tira-mes.hoy span::after { content: ' •'; color: var(--primary); font-weight: 900; }
+        .cycle-card { display: none; background: var(--card-bg); border-radius: 12px; border-left: 6px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; }
+        .cycle-card.visible { display: block; }
+        .cycle-card.alert-danger { border: 1px solid #fca5a5; border-left: 6px solid var(--danger); }
+        .cycle-card.alert-warn { border-left-color: #f59e0b; }
+        .cycle-card .breakdown-table { border-top: none; background: #fff; padding: 6px 12px 10px; }
+        .cycle-acciones { display: flex; justify-content: flex-end; margin: 10px 0 2px; }
+
+        /* Planes: un apartado cada vez */
+        .sub-nav { display: flex; gap: 6px; overflow-x: auto; margin: -12px -12px 4px; padding: 12px 12px 10px; scrollbar-width: none; position: sticky; top: 0; z-index: 5; background: var(--bg-color); }
+        .sub-nav::-webkit-scrollbar { display: none; }
+        .sub-nav button { flex-shrink: 0; border: 1px solid #cbd5e1; background: #fff; color: #475569; border-radius: 999px; padding: 8px 12px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+        .sub-nav button.on { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+        #tab-planes .panel { display: none; }
+        #tab-planes .panel.plan-visible { display: block; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar">
-        <button class="tab-btn active" onclick="switchTab('tab-finanzas', this)">📊 Finanzas</button>
-        <button class="tab-btn" onclick="switchTab('tab-gasolina', this)">⛽ Gasolina</button>
+    <nav class="barra-inferior" aria-label="Secciones">
+        <button type="button" class="barra-btn activo" data-tab="tab-inicio" onclick="switchTab('tab-inicio')"><span class="bi">🏠</span><span>Inicio</span></button>
+        <button type="button" class="barra-btn" data-tab="tab-ciclos" onclick="switchTab('tab-ciclos')"><span class="bi">📅</span><span>Ciclos</span></button>
+        <button type="button" class="barra-btn" data-tab="tab-tarjeta" onclick="switchTab('tab-tarjeta')"><span class="bi">💳</span><span>Tarjeta</span></button>
+        <button type="button" class="barra-btn" data-tab="tab-planes" onclick="switchTab('tab-planes')"><span class="bi">🧮</span><span>Planes</span></button>
+        <button type="button" class="barra-btn" data-tab="tab-gasolina" onclick="switchTab('tab-gasolina')"><span class="bi">⛽</span><span>Gasolina</span></button>
     </nav>
 
     <!-- ================= GASOLINA ================= -->
@@ -472,30 +543,32 @@
     </div>
 
     <!-- ================= FINANZAS ================= -->
-    <div id="tab-finanzas" class="tab-content active">
-        <div class="app-title">📊 Mi Control Financiero</div>
+    <div id="tab-finanzas">
 
+        <!-- ===== INICIO: cifras, gráfico y lo pendiente ===== -->
+        <div id="tab-inicio" class="tab-content active">
+            <div class="app-title">📊 Mi Control Financiero</div>
         <div class="metrics">
             <div class="metric-card saldo">
                 <div class="metric-title">SALDO EN BANCO (€)</div>
                 <input type="number" id="input-saldo-banco" class="saldo-input-directo" step="0.01" value="1585.70" oninput="cambiarSaldoDirecto(this.value)">
             </div>
-            <div class="metric-card libre">
+            <div class="metric-card libre toca" onclick="verMesDeCifra('libre')" title="Ver este ciclo">
                 <div class="metric-title">LIBRE ESTE CICLO</div>
                 <div class="metric-value" id="disp-libre">—</div>
                 <div class="metric-sub" id="disp-libre-sub"></div>
                 <div class="metric-alt" id="disp-libre-alt"></div>
                 <div class="metric-estado" id="disp-libre-estado"></div>
             </div>
-            <div class="metric-card justo">
+            <div class="metric-card justo toca" onclick="verMesDeCifra('justo')" title="Ver ese ciclo">
                 <div class="metric-title">MES MÁS JUSTO</div>
                 <div class="metric-value" id="disp-justo">—</div>
                 <div class="metric-sub" id="disp-justo-sub"></div>
                 <div class="metric-alt" id="disp-justo-alt"></div>
                 <div class="metric-estado" id="disp-justo-estado"></div>
             </div>
-            <div class="metric-card proyeccion">
-                <div class="metric-title">PROYECCIÓN FINAL</div>
+            <div class="metric-card proyeccion toca" onclick="verMesDeCifra('final')" title="Ver el último ciclo">
+                <div class="metric-title">SALDO PREVISTO</div>
                 <div class="metric-value" id="disp-meta-final">0.00 €</div>
                 <div class="metric-sub" id="disp-final-sub"></div>
                 <div class="metric-alt" id="disp-final-alt"></div>
@@ -522,12 +595,33 @@
             </div>
         </div>
 
+            <div class="pendientes" id="pendientes"></div>
+        </div>
+
+        <!-- ===== CICLOS: de uno en uno ===== -->
+        <div id="tab-ciclos" class="tab-content">
+            <div id="aviso-terminados"></div>
+            <div class="ciclo-nav">
+                <button type="button" class="nav-flecha" id="ciclo-prev" onclick="moverCiclo(-1)" aria-label="Ciclo anterior">◀</button>
+                <button type="button" class="ciclo-nav-centro" onclick="verCicloActual()" title="Volver al ciclo de hoy">
+                    <span class="ciclo-nav-nombre" id="ciclo-nav-nombre"></span>
+                    <span class="ciclo-nav-sub" id="ciclo-nav-sub"></span>
+                </button>
+                <button type="button" class="nav-flecha" id="ciclo-next" onclick="moverCiclo(1)" aria-label="Ciclo siguiente">▶</button>
+            </div>
+            <div class="ciclo-tira" id="ciclo-tira"></div>
+            <div class="cycle-list" id="contenedor-ciclos"></div>
+            <button class="btn-add-cycle" onclick="crearNuevoCiclo()">➕ Crear Nuevo Ciclo</button>
+        </div>
+
+        <!-- ===== TARJETA ===== -->
+        <div id="tab-tarjeta" class="tab-content">
         <!-- ===== Tarjeta de crédito ===== -->
-        <details class="panel" id="panel-tarjeta">
-            <summary>
+        <section class="panel" id="panel-tarjeta">
+            <div class="panel-cab">
                 <span>💳 Tarjeta de crédito</span>
-                <span class="summary-right"><span class="panel-resumen" id="tj-resumen"></span><span class="arrow">▼</span></span>
-            </summary>
+                <span class="summary-right"><span class="panel-resumen" id="tj-resumen"></span></span>
+            </div>
             <div class="panel-body">
                 <div class="dos-col">
                     <div>
@@ -585,14 +679,25 @@
                 </details>
                 <div class="panel-nota" id="tj-nota"></div>
             </div>
-        </details>
+        </section>
+        </div>
 
+        <!-- ===== PLANES: un apartado cada vez ===== -->
+        <div id="tab-planes" class="tab-content">
+            <div class="sub-nav" id="sub-nav">
+                <button type="button" data-p="panel-sim" onclick="verPlan('panel-sim')">🧮 Simulador</button>
+                <button type="button" data-p="panel-per" onclick="verPlan('panel-per')">📅 Periódicos</button>
+                <button type="button" data-p="panel-var" onclick="verPlan('panel-var')">📈 Variables</button>
+                <button type="button" data-p="panel-gas" onclick="verPlan('panel-gas')">🔥 Bombonas</button>
+                <button type="button" data-p="panel-arch" onclick="verPlan('panel-arch')">🗂️ Archivo</button>
+                <button type="button" data-p="panel-copias" onclick="verPlan('panel-copias')">💾 Copias</button>
+            </div>
         <!-- ===== Simulador ===== -->
-        <details class="panel" id="panel-sim">
-            <summary>
+        <section class="panel" id="panel-sim">
+            <div class="panel-cab">
                 <span>🧮 ¿Me lo puedo permitir?</span>
-                <span class="arrow">▼</span>
-            </summary>
+                
+            </div>
             <div class="panel-body">
                 <label for="sim-nombre">Qué quieres comprar</label>
                 <input type="text" id="sim-nombre" placeholder="Ej. Cocina (seQura)" autocomplete="off">
@@ -611,38 +716,13 @@
                 <div class="sim-res" id="sim-res"></div>
                 <button class="btn-panel btn-sim-add" id="sim-anadir" onclick="anadirSimulacionAlPlan()" disabled>➕ Añadir a mis ciclos</button>
             </div>
-        </details>
-
-        <!-- ===== Gastos variables ===== -->
-        <details class="panel" id="panel-var">
-            <summary>
-                <span>📈 Gastos variables</span>
-                <span class="summary-right"><span class="panel-resumen" id="var-resumen"></span><span class="arrow">▼</span></span>
-            </summary>
-            <div class="panel-body">
-                <div id="var-lista"></div>
-
-                <div class="panel-h">Añadir un pago anterior</div>
-                <div class="var-form">
-                    <select id="var-concepto" aria-label="Concepto"></select>
-                    <input type="date" id="var-fecha" aria-label="Fecha del pago">
-                    <input type="number" id="var-importe" inputmode="decimal" step="0.01" min="0" placeholder="Importe" aria-label="Importe" enterkeyhint="done">
-                    <button class="btn-panel" onclick="anadirPagoAnterior()">＋ Añadir</button>
-                </div>
-                <div class="panel-nota">Para que la tendencia funcione desde ya, añade tus últimas facturas. En la luz, añade también las del invierno pasado: así tiene en cuenta que en invierno pagas más.</div>
-
-                <div class="panel-h">Qué conceptos sigo</div>
-                <div class="chips" id="var-chips"></div>
-                <div class="panel-nota">El tope de cada concepto sube solo cuando pagas más que nunca y no baja de lo más alto que has pagado. La proyección realista usa la media de tus 3 últimos pagos (y la del mismo mes del año pasado, si la tienes). Al marcar como pagada una factura (luz, agua, internet…), la app te pregunta cuánto pagaste; la comida y la gasolina entran solas al terminar el ciclo.</div>
-            </div>
-        </details>
-
+        </section>
         <!-- ===== Gastos periódicos ===== -->
-        <details class="panel" id="panel-per">
-            <summary>
+        <section class="panel" id="panel-per">
+            <div class="panel-cab">
                 <span>📅 Gastos periódicos</span>
-                <span class="summary-right"><span class="panel-resumen" id="per-resumen"></span><span class="arrow">▼</span></span>
-            </summary>
+                <span class="summary-right"><span class="panel-resumen" id="per-resumen"></span></span>
+            </div>
             <div class="panel-body">
                 <div id="per-lista"></div>
 
@@ -667,14 +747,36 @@
                 <div id="per-sugerencias"></div>
                 <div class="panel-nota">La app lo pone sola en el ciclo que toca y en los siguientes que ya tengas creados (si un ciclo aún no existe, lo añade al crearlo). Cuando lo marcas como pagado o pasa su ciclo, salta a la próxima fecha.</div>
             </div>
-        </details>
+        </section>
+        <!-- ===== Gastos variables ===== -->
+        <section class="panel" id="panel-var">
+            <div class="panel-cab">
+                <span>📈 Gastos variables</span>
+                <span class="summary-right"><span class="panel-resumen" id="var-resumen"></span></span>
+            </div>
+            <div class="panel-body">
+                <div id="var-lista"></div>
 
+                <div class="panel-h">Añadir un pago anterior</div>
+                <div class="var-form">
+                    <select id="var-concepto" aria-label="Concepto"></select>
+                    <input type="date" id="var-fecha" aria-label="Fecha del pago">
+                    <input type="number" id="var-importe" inputmode="decimal" step="0.01" min="0" placeholder="Importe" aria-label="Importe" enterkeyhint="done">
+                    <button class="btn-panel" onclick="anadirPagoAnterior()">＋ Añadir</button>
+                </div>
+                <div class="panel-nota">Para que la tendencia funcione desde ya, añade tus últimas facturas. En la luz, añade también las del invierno pasado: así tiene en cuenta que en invierno pagas más.</div>
+
+                <div class="panel-h">Qué conceptos sigo</div>
+                <div class="chips" id="var-chips"></div>
+                <div class="panel-nota">El tope de cada concepto sube solo cuando pagas más que nunca y no baja de lo más alto que has pagado. La proyección realista usa la media de tus 3 últimos pagos (y la del mismo mes del año pasado, si la tienes). Al marcar como pagada una factura (luz, agua, internet…), la app te pregunta cuánto pagaste; la comida y la gasolina entran solas al terminar el ciclo.</div>
+            </div>
+        </section>
         <!-- ===== Bombonas de gas ===== -->
-        <details class="panel" id="panel-gas">
-            <summary>
+        <section class="panel" id="panel-gas">
+            <div class="panel-cab">
                 <span>🔥 Bombonas de gas</span>
-                <span class="summary-right"><span class="panel-resumen" id="bb-resumen"></span><span class="arrow">▼</span></span>
-            </summary>
+                <span class="summary-right"><span class="panel-resumen" id="bb-resumen"></span></span>
+            </div>
             <div class="panel-body">
                 <div class="dos-col">
                     <div>
@@ -699,32 +801,33 @@
                 <div id="bb-lista"></div>
                 <div class="panel-nota">Apunta cada vez que conectas una bombona nueva (también puedes añadir cambios antiguos con su fecha). Con dos cambios de cada una, la app sabe cuánto te dura y cuánto gastas al mes, en invierno y en verano. El dinero que sacas para el gas, apúntalo con «＋ Gasto» en «Gas»: se suma a lo que tienes en casa, y cada bombona que compras se resta.</div>
             </div>
-        </details>
-
-        <div id="aviso-terminados"></div>
-
-        <div class="cycle-list" id="contenedor-ciclos"></div>
-
-        <button class="btn-add-cycle" onclick="crearNuevoCiclo()">➕ Crear Nuevo Ciclo</button>
-
+        </section>
         <!-- ===== Archivo de ciclos ===== -->
-        <details class="panel" id="panel-arch" style="margin-top: 15px;">
-            <summary>
+        <section class="panel" id="panel-arch">
+            <div class="panel-cab">
                 <span>🗂️ Archivo de ciclos</span>
-                <span class="summary-right"><span class="panel-resumen" id="arch-resumen"></span><span class="arrow">▼</span></span>
-            </summary>
+                <span class="summary-right"><span class="panel-resumen" id="arch-resumen"></span></span>
+            </div>
             <div class="panel-body">
                 <div id="arch-lista"></div>
                 <div class="panel-nota">Los ciclos archivados ya no cuentan en la proyección ni cambian tu saldo, pero alimentan el historial de tus gastos (por ejemplo, cuánto pagas de luz en invierno).</div>
             </div>
-        </details>
+        </section>
 
+        <!-- ===== Copias de seguridad ===== -->
+        <section class="panel" id="panel-copias">
+            <div class="panel-cab"><span>💾 Copias de seguridad</span></div>
+            <div class="panel-body">
+                <div class="panel-nota">Haz una copia de vez en cuando, y siempre antes de cambiar la app por una versión nueva. Guárdala en el móvil o en la nube.</div>
         <div class="action-buttons">
             <button class="btn-secondary" onclick="exportarDatos()">📥 Copia Respaldo</button>
             <button class="btn-secondary" onclick="importarDatos()">📤 Cargar Respaldo</button>
         </div>
 
         <button class="btn-reset" onclick="restablecerFabrica()">🔄 Restablecer de fábrica</button>
+            </div>
+        </section>
+        </div>
 
         <!-- Botón para apuntar un gasto en el momento -->
         <button class="fab-gasto" onclick="abrirGasto()">＋ Gasto</button>
@@ -783,7 +886,7 @@
                 <button class="btn-g-guardar" id="g-guardar" onclick="guardarGasto()">Guardar gasto</button>
             </div>
             <button class="btn-g-eliminar" id="g-eliminar" onclick="eliminarGastoEditado()" style="display:none;">🗑️ Eliminar este gasto</button>
-            <div class="g-nota-gas">⛽ La gasolina se apunta en la pestaña Gasolina y también descuenta del saldo.</div>
+            <div class="g-nota-gas">⛽ La gasolina se apunta en ⛽ Gasolina (en la barra de abajo) y también descuenta del saldo.</div>
         </div>
     </div>
 
@@ -821,7 +924,7 @@
                 <button class="btn-g-cancelar" onclick="cerrarConcepto()">Cancelar</button>
                 <button class="btn-g-guardar" id="c-guardar" onclick="guardarConcepto()">Añadir</button>
             </div>
-            <div class="g-nota-gas">¿Se repite cada año o cada varios años? Guárdalo mejor en «📅 Gastos periódicos»: la app lo pondrá sola en su ciclo.</div>
+            <div class="g-nota-gas">¿Se repite cada año o cada varios años? Guárdalo mejor en Planes → «📅 Periódicos»: la app lo pondrá sola en su ciclo.</div>
         </div>
     </div>
 
@@ -830,14 +933,15 @@
 
     <script>
         // ===== PESTAÑAS =====
-        function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            if (btn) btn.classList.add('active');
-            // Los gráficos se dibujan con la pestaña oculta; al mostrarla hay que reajustarlos
-            if (tabId === 'tab-finanzas' && chartInstance) chartInstance.resize();
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.toggle('active', t.id === tabId));
+            document.querySelectorAll('.barra-btn').forEach(b => b.classList.toggle('activo', b.dataset.tab === tabId));
+            document.body.dataset.seccion = tabId;
+            // Los gráficos se dibujan con la sección oculta; al mostrarla hay que reajustarlos
+            if (tabId === 'tab-inicio' && chartInstance) chartInstance.resize();
             if (tabId === 'tab-gasolina' && chartConsumo) chartConsumo.resize();
+            if (tabId === 'tab-ciclos') pintarNavCiclos();
+            window.scrollTo(0, 0);
         }
 
         let finanzasListo = false;
@@ -1770,23 +1874,13 @@
                     <div class="row row-alt" id="cierre-alt-${cIdx}"></div>
                 `;
 
-                const isOpen = openCycles.has(cIdx) ? 'open' : '';
                 html += `
-                    <details class="cycle-card" id="card-${cIdx}" ${isOpen}>
-                        <summary>
-                            <div class="summary-left">
-                                <button class="btn-delete-cycle" title="Archivar ciclo" onclick="eliminarCiclo(event, ${cIdx})">📦</button>
-                                <span>📅 ${esc(ciclo.nombre)}</span>
-                            </div>
-                            <div class="summary-right">
-                                <span class="summary-val" id="sum-val-${cIdx}">0.00 €</span>
-                                <span class="arrow">▼</span>
-                            </div>
-                        </summary>
+                    <div class="cycle-card${cIdx === cicloVisibleIdx() ? ' visible' : ''}" id="card-${cIdx}" data-idx="${cIdx}">
                         <div class="breakdown-table">
                             ${filas}
+                            <div class="cycle-acciones"><button type="button" class="btn-mini" onclick="eliminarCiclo(event, ${cIdx})">📦 Archivar este ciclo</button></div>
                         </div>
-                    </details>
+                    </div>
                 `;
             });
 
@@ -1923,6 +2017,7 @@
                     gastos: []
                 });
                 openCycles.add(appData.ciclos.length - 1);
+                cicloVisible = claveVista(appData.ciclos[appData.ciclos.length - 1]);   // se enseña el ciclo recién creado
                 renderizar();
                 guardar();
                 const txt = plan.delAnio.length
@@ -1936,7 +2031,7 @@
             event.stopPropagation();
             const ciclo = appData.ciclos[cIdx];
             const pend = sinMarcarDe(ciclo).map(i => String(i.desc).trim());
-            let msg = `¿Archivar el ciclo "${ciclo.nombre}"?\n\nPasará al «Archivo de ciclos»: deja de contar en la proyección y tu saldo no cambia, pero podrás consultarlo y su gasto real sigue en tu historial.`;
+            let msg = `¿Archivar el ciclo "${ciclo.nombre}"?\n\nPasará al archivo (Planes → 🗂️ Archivo): deja de contar en la proyección y tu saldo no cambia, pero podrás consultarlo y su gasto real sigue en tu historial.`;
             if (pend.length) msg += `\n\nOjo: tiene ${pend.length} concepto(s) sin marcar ni apuntar (${pend.slice(0, 5).join(', ')}${pend.length > 5 ? '…' : ''}). Si ya los pagaste, márcalos antes.`;
             if (!confirm(msg)) return;
             moverAlArchivo(cIdx);
@@ -2052,6 +2147,8 @@
             pintarArchivo();
             pintarTerminados();
             pintarBombonas();
+            pintarNavCiclos();
+            pedirPendientes();
         }
 
         function guardar(agrupar) {
@@ -2211,7 +2308,7 @@
                 poner('disp-justo-sub', 'no hay ciclos por delante');
                 ponerEstado('disp-justo-estado', null);
             }
-            poner('disp-final-sub', n ? 'al cierre de ' + etiquetaMes(appData.ciclos[n - 1]) : '');
+            poner('disp-final-sub', n ? 'a ' + finDeCiclo(appData.ciclos[n - 1]) : '');
 
             const inColchon = document.getElementById('input-colchon');
             if (inColchon && document.activeElement !== inColchon) inColchon.value = colchonActual() || '';
@@ -2373,6 +2470,7 @@
         }
 
         function pintarTarjeta() {
+            pedirPendientes();
             const t = appData.tarjeta;
             const elPlan = document.getElementById('tj-plan');
             if (!t || !elPlan) return;
@@ -2928,7 +3026,7 @@
             if (!idx.length) return;
             const pend = [];
             idx.forEach(i => sinMarcarDe(appData.ciclos[i]).forEach(it => pend.push(String(it.desc).trim())));
-            let msg = `¿Archivar ${idx.length} ciclo${idx.length > 1 ? 's' : ''} terminado${idx.length > 1 ? 's' : ''}? Tu saldo no cambia y podrás consultarlo${idx.length > 1 ? 's' : ''} en «Archivo de ciclos».`;
+            let msg = `¿Archivar ${idx.length} ciclo${idx.length > 1 ? 's' : ''} terminado${idx.length > 1 ? 's' : ''}? Tu saldo no cambia y podrás consultarlo${idx.length > 1 ? 's' : ''} en Planes → 🗂️ Archivo.`;
             if (pend.length) msg += `\n\nOjo: hay ${pend.length} concepto(s) sin marcar ni apuntar (${pend.slice(0, 5).join(', ')}${pend.length > 5 ? '…' : ''}). Si ya los pagaste, márcalos antes.`;
             if (!confirm(msg)) return;
             idx.slice().reverse().forEach(i => moverAlArchivo(i));
@@ -3633,6 +3731,7 @@
         }
 
         function pintarBombonas() {
+            pedirPendientes();
             const panel = document.getElementById('panel-gas');
             if (!panel || !appData.bombonas) return;
             const bb = appData.bombonas;
@@ -3709,6 +3808,219 @@
 
             const res = document.getElementById('bb-resumen');
             if (res) res.innerText = falta > 0 ? `⚠️ retira ${retirar} €` : (st.mes !== null ? `≈ ${Math.round((invAhora ? st.mesInv : st.mesVer) || st.mes)} €/mes` : `en casa ${bote.toFixed(0)} €`);
+        }
+
+        // =====================================================
+        // ===== NAVEGACIÓN: SECCIONES, CICLOS Y PLANES ========
+        // =====================================================
+        // (var y no let: algunas funciones de aquí se pueden llamar antes de llegar a esta parte del código)
+        var cicloVisible = null;          // ciclo que se ve en «Ciclos» (al abrir, el de hoy)
+        var _pendientesPedidos = false;
+
+        function claveVista(c) {
+            return c && c.id !== undefined && c.id !== null ? 'id:' + c.id : 'n:' + (c ? c.nombre : '');
+        }
+
+        function cicloVisibleIdx() {
+            const n = appData.ciclos.length;
+            if (!n) return -1;
+            let i = cicloVisible === null ? -1 : appData.ciclos.findIndex(c => claveVista(c) === cicloVisible);
+            if (i < 0) {   // al abrir, o si el que veías se ha archivado: el ciclo de hoy
+                const h = indiceInicioFuturo();
+                i = h >= 0 ? h : n - 1;
+                cicloVisible = claveVista(appData.ciclos[i]);
+            }
+            return i;
+        }
+
+        function verCiclo(i) {
+            const c = appData.ciclos[i];
+            if (!c) return;
+            cicloVisible = claveVista(c);
+            document.querySelectorAll('#contenedor-ciclos .cycle-card').forEach(el => el.classList.toggle('visible', Number(el.dataset.idx) === i));
+            pintarNavCiclos();
+            const nav = document.querySelector('#tab-ciclos .ciclo-nav');
+            if (nav && nav.getBoundingClientRect().top < 0) window.scrollTo(0, 0);
+        }
+
+        function moverCiclo(d) {
+            const i = cicloVisibleIdx() + d;
+            if (i >= 0 && i < appData.ciclos.length) verCiclo(i);
+        }
+
+        function verCicloActual() {
+            const h = indiceInicioFuturo();
+            if (h >= 0) verCiclo(h);
+        }
+
+        function irA(tabId, plan) {
+            switchTab(tabId);
+            if (plan) verPlan(plan);
+        }
+
+        function verPlan(id) {
+            document.querySelectorAll('#tab-planes .panel').forEach(p => p.classList.toggle('plan-visible', p.id === id));
+            document.querySelectorAll('#sub-nav button').forEach(b => b.classList.toggle('on', b.dataset.p === id));
+            const nav = document.getElementById('sub-nav'), on = nav && nav.querySelector('button.on');
+            if (on && nav.clientWidth) nav.scrollLeft = Math.max(0, on.offsetLeft - (nav.clientWidth - on.offsetWidth) / 2);
+        }
+
+        // Tocar una cifra de Inicio lleva a su ciclo
+        function verMesDeCifra(tipo) {
+            const n = appData.ciclos.length;
+            if (!n || !ultimaProyeccion) return;
+            let i = -1;
+            if (tipo === 'libre') i = indiceCicloDeFecha(new Date());
+            else if (tipo === 'final') i = n - 1;
+            else {
+                const C = ultimaProyeccion.cierres;
+                i = indiceInicioFuturo();
+                if (i >= 0) for (let j = i + 1; j < n; j++) if (C[j] < C[i]) i = j;
+            }
+            if (i < 0) return;
+            switchTab('tab-ciclos');
+            verCiclo(i);
+        }
+
+        function pintarNavCiclos() {
+            const nom = document.getElementById('ciclo-nav-nombre');
+            if (!nom) return;
+            const sub = document.getElementById('ciclo-nav-sub');
+            const tira = document.getElementById('ciclo-tira');
+            const prev = document.getElementById('ciclo-prev'), next = document.getElementById('ciclo-next');
+            const n = appData.ciclos.length;
+            if (!n || !ultimaProyeccion || ultimaProyeccion.cierres.length !== n) {
+                nom.innerText = 'No hay ciclos';
+                sub.innerText = 'Crea uno con el botón de abajo';
+                sub.className = 'ciclo-nav-sub';
+                tira.innerHTML = '';
+                prev.disabled = next.disabled = true;
+                return;
+            }
+            const i = cicloVisibleIdx();
+            const idxHoy = indiceCicloDeFecha(new Date());
+            const terminados = ciclosTerminados();
+            const C = ultimaProyeccion.cierres;
+            const e = estadoSaldo(C[i]);
+            nom.innerText = appData.ciclos[i].nombre;
+            const donde = i === idxHoy ? 'Este ciclo · ' : terminados.includes(i) ? 'Terminado · ' : '';
+            sub.innerText = `${donde}cierre ${fmtEur(C[i])}${e === 'mal' ? ' ⛔' : e === 'aviso' ? ' ⚠️' : ''}`;
+            sub.className = 'ciclo-nav-sub est-' + e;
+            prev.disabled = i <= 0;
+            next.disabled = i >= n - 1;
+            tira.innerHTML = appData.ciclos.map((c, j) =>
+                `<button type="button" class="tira-mes t-${estadoSaldo(C[j])}${j === i ? ' on' : ''}${j === idxHoy ? ' hoy' : ''}" onclick="verCiclo(${j})" aria-label="${esc(c.nombre)}"><span>${esc(etiquetaMes(c, true))}</span><b>${Math.round(C[j])}</b></button>`).join('');
+            const on = tira.querySelector('.on');
+            if (on && tira.clientWidth) tira.scrollLeft = Math.max(0, on.offsetLeft - (tira.clientWidth - on.offsetWidth) / 2);
+        }
+
+        // Deslizar el dedo a izquierda o derecha sobre el ciclo pasa al siguiente o al anterior
+        function activarDeslizarCiclos() {
+            const el = document.getElementById('contenedor-ciclos');
+            if (!el) return;
+            let x0 = null, y0 = null;
+            el.addEventListener('touchstart', e => {
+                if (e.touches.length !== 1 || e.target.closest('input, select, textarea, button')) { x0 = null; return; }
+                x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+            }, { passive: true });
+            el.addEventListener('touchend', e => {
+                if (x0 === null) return;
+                const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+                x0 = null;
+                if (Math.abs(dx) > 70 && Math.abs(dy) < 50) moverCiclo(dx < 0 ? 1 : -1);
+            }, { passive: true });
+        }
+
+        // Lo pendiente se pinta una sola vez aunque se pida varias veces seguidas
+        function pedirPendientes() {
+            if (_pendientesPedidos) return;
+            _pendientesPedidos = true;
+            Promise.resolve().then(() => { _pendientesPedidos = false; pintarPendientes(); });
+        }
+
+        // Inicio: lo que tienes pendiente; cada aviso lleva a donde se resuelve
+        function pintarPendientes() {
+            const cont = document.getElementById('pendientes');
+            if (!cont || !appData || !ultimaProyeccion) return;
+            const lista = [];
+            const add = (tipo, ico, txt, btn, js) => lista.push({ tipo: tipo, ico: ico, txt: txt, btn: btn, js: js });
+            const idxHoy = indiceCicloDeFecha(new Date());
+            const cicloHoy = idxHoy >= 0 ? appData.ciclos[idxHoy] : null;
+            const mes = i => esc(etiquetaMes(appData.ciclos[i]));
+            const verC = i => `irA('tab-ciclos'); verCiclo(${i})`;
+
+            // Ciclos que ya terminaron y siguen sin archivar
+            const term = ciclosTerminados().length;
+            if (term) add('aviso', '📦', term > 1 ? `Tienes ${term} ciclos terminados sin archivar.` : 'Tienes un ciclo terminado sin archivar.', 'Archivar', 'archivarTerminados()');
+
+            // Tarjeta
+            const deuda = numO(appData.tarjeta && appData.tarjeta.deuda, 0);
+            let tjInfo = '';
+            if (deuda > 0.005) {
+                const tj = simularTarjeta();
+                if (tj.avisos.length) add('aviso', '💳', `Tarjeta: ${tj.avisos.length === 1 ? 'una cuota no llega' : tj.avisos.length + ' cuotas no llegan'} al pago mínimo.`, 'Ver', "irA('tab-tarjeta')");
+                else if (tj.finIdx < 0) add('aviso', '💳', `Tarjeta: con los pagos que tienes puestos, al final te quedarían ${fmtEur(tj.resto)} por pagar.`, 'Ver', "irA('tab-tarjeta')");
+                else tjInfo = `Tarjeta: debes ${fmtEur(deuda)} y terminas de pagarla en ${mes(tj.finIdx)}.`;
+            }
+
+            // Gas: dinero en casa y bombonas a punto de acabarse
+            const bb = appData.bombonas;
+            if (bb) {
+                const bote = boteGas(), precio = numO(bb.precio, 0);
+                const falta = redondear(Math.max(0, precio - bote));
+                if (precio > 0 && falta > 0) add('aviso', '🔥', `Gas: en casa tienes ${fmtEur(bote)}. Retira al menos ${Math.ceil(Math.max(falta, 20) / 10) * 10} € para la próxima bombona.`, 'Ver', "irA('tab-planes', 'panel-gas')");
+                const st = statsBombonas(), ahora = Date.now(), inv = esInvierno(ahora);
+                Object.keys(TIPOS_BOMBONA).forEach(t => {
+                    const s = st.tipos[t];
+                    const dura = s && s.ultima ? ((inv ? s.mediaInv : s.mediaVer) || s.media) : null;
+                    if (!dura) return;
+                    const fin = s.ultima.ts + dura * DIA_MS;
+                    if (fin - ahora < 7 * DIA_MS) add('info', '🔥', fin > ahora ? `${TIPOS_BOMBONA[t]}: la bombona se acabaría hacia el ${fmtFechaLarga(fin)}.` : `${TIPOS_BOMBONA[t]}: la bombona ya debería estar a punto de acabarse.`, 'Ver', "irA('tab-planes', 'panel-gas')");
+                });
+            }
+
+            if (cicloHoy) {
+                // Gastos variables que este ciclo ya van por encima de lo normal
+                (appData.variables || []).forEach(k => {
+                    const it = cicloHoy.items.find(i => !esIngreso(i) && normDesc(i.desc) === k);
+                    if (!it || it.checked) return;
+                    const st = statsConcepto(k), g = realConceptoCiclo(cicloHoy, k);
+                    if (st.media !== null && g > st.media + 0.005) add('aviso', '📈', `${esc(String(it.desc).trim())}: llevas ${fmtEur(g)} este ciclo y tu media es ${fmtEur(st.media)}.`, 'Ver', verC(idxHoy));
+                });
+            }
+
+            if (tjInfo) add('info', '💳', tjInfo, 'Ver', "irA('tab-tarjeta')");
+
+            if (cicloHoy) {
+                // Lo que queda por pagar este ciclo
+                const an = analizarCiclo(cicloHoy);
+                const nombres = [];
+                let tot = 0;
+                cicloHoy.items.forEach((it, i) => {
+                    const r = an.items[i];
+                    if (!r || r.ingreso || it.checked) return;
+                    const resto = Math.max(r.presupuesto - r.gastado, 0);
+                    if (resto > 0.005) { nombres.push(esc(String(it.desc).trim())); tot += resto; }
+                });
+                if (nombres.length > 4) add('info', '🧾', `Este ciclo te quedan ${nombres.length} conceptos por pagar (hasta ${fmtEur(tot)}).`, 'Ver', verC(idxHoy));
+                else if (nombres.length) add('info', '🧾', `Te queda por pagar este ciclo: ${nombres.length > 1 ? nombres.slice(0, -1).join(', ') + ' y ' + nombres[nombres.length - 1] : nombres[0]} (hasta ${fmtEur(tot)}).`, 'Ver', verC(idxHoy));
+                // Gastos periódicos que tocan el próximo ciclo (los de este ciclo ya están en la lista de arriba)
+                const kHoy = claveCicloFinanzas(String(cicloHoy.nombre || ''));
+                if (kHoy !== null) {
+                    const meses = cl => Math.floor(cl / 100) * 12 + (cl % 100);
+                    (appData.periodicos || []).forEach(p => {
+                        if (numO(p.cadaMeses, 12) < 3) return;
+                        if (meses(claveDeTs(p.proxima)) - meses(kHoy) === 1) add('info', '📅', `El próximo ciclo toca ${esc(p.nombre)} (${fmtEur(p.importe)}).`, 'Ver', "irA('tab-planes', 'panel-per')");
+                    });
+                }
+            }
+
+            if (!lista.length) add('ok', '✓', 'Todo en orden: no tienes nada pendiente.');
+            const orden = { mal: 0, aviso: 1, info: 2, ok: 3 };
+            lista.sort((a, b) => orden[a.tipo] - orden[b.tipo]);
+            cont.innerHTML = '<div class="sec-h">Pendiente</div>' + lista.map(x => x.js
+                ? `<button type="button" class="pend ${x.tipo}" onclick="${x.js}"><span class="pend-ico">${x.ico}</span><span class="pend-txt">${x.txt}</span><span class="pend-ir">${x.btn} ›</span></button>`
+                : `<div class="pend ${x.tipo}"><span class="pend-ico">${x.ico}</span><span class="pend-txt">${x.txt}</span></div>`).join('');
         }
 
         // =====================================================
@@ -3983,6 +4295,9 @@
             finanzasListo = true;
             pintarDeshacer();
             document.getElementById('c-importe').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); guardarConcepto(); } });
+            verPlan('panel-sim');
+            switchTab('tab-inicio');
+            activarDeslizarCiclos();
         });
     </script>
 </body>
