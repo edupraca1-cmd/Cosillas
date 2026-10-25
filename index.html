@@ -1036,7 +1036,7 @@
             </div>
         </div>
         <label class="mais-opcao"><input type="checkbox" id="mais-deslizar" onchange="deslizarAlternar(this.checked)"> ↔️ Deslizar para mudar de pestanha</label>
-        <p class="app-version" id="app-version">Beta 0.1.11</p>
+        <p class="app-version" id="app-version">Beta 0.1.12</p>
     </div>
 
     <!-- SUBMÓDULOS -->
@@ -3057,15 +3057,61 @@
         // devolve { dias: { iso: { v: valor do dia, r: o que ainda falta pagar } }, ant: dívida anterior sem movimentos que a expliquem }
         // Beta 0.1.10 · N21: `man` = { iso: € } escritos à mão nos dias ANTERIORES ao primeiro movimento da app. Entram como fiados (add) desse dia
         //   e contam para explicar o saldo: a dívida de abertura (SALDO) desce o mesmo valor, por isso o TOTAL continua = saldo do cliente.
+        // ===== Beta 0.1.12 =====
+        // Histórico do «pago até»: guarda QUANDO se marcou (para saber o que estava por pagar ao começar um mês). Um «pago até» anterior a esta versão conta como marcado a 24/10/2026 (dia em que as folhas nasceram).
+        const FF_PAGO_LEGADO = '2026-10-24';
+        function ffPagoReg(cid, novo) {   // chamar ANTES de mudar o.pago[cid]
+            const o = ffObj(), k = String(cid);
+            if (!o.pagoHist || typeof o.pagoHist !== 'object' || Array.isArray(o.pagoHist)) o.pagoHist = {};
+            let h = o.pagoHist[k];
+            if (!Array.isArray(h)) h = o.pagoHist[k] = o.pago[k] ? [{ em: FF_PAGO_LEGADO, ate: o.pago[k] }] : [];
+            h.push({ em: pedHoje(), ate: novo || '' });
+            if (h.length > 60) h.splice(0, h.length - 60);
+        }
+        function ffPagoEm(cid, iso) {   // o «pago até» que valia no fim do dia `iso` ('' = nada pago)
+            const o = ffObj(), k = String(cid);
+            const h = Array.isArray(o.pagoHist && o.pagoHist[k]) ? o.pagoHist[k] : (o.pago[k] ? [{ em: FF_PAGO_LEGADO, ate: o.pago[k] }] : []);
+            let r = '';
+            h.forEach(e => { if (e && typeof e.em === 'string' && e.em <= iso) r = e.ate || ''; });
+            return r;
+        }
+        // O saco de pão triturado / a barra de fermento de um movimento: [{ s: sigla, v: € }] (o resto do valor é pão). `l.ov` = € de «outras vendas», `l.on` = texto «1 Saco Pão Triturado, 1 Barra de Fermento».
+        function ffExtrasDe(l) {
+            const am = l.amount || 0, ov = l.ov > 0 ? Math.min(l.ov, am) : 0;
+            if (!(ov > 0.004)) return [];
+            const its = String(l.on || '').split(',').map(t => t.trim()).filter(Boolean).map(t => {
+                const m = /^(\d+(?:[.,]\d+)?)\s+(.+)$/.exec(t), q = m ? parseFloat(m[1].replace(',', '.')) : 1, nm = ffNorm(m ? m[2] : t);
+                const sg = nm.includes('triturad') ? 'SPT' : (nm.includes('fermento') ? 'BFE' : '');
+                return { s: sg, w: sg === 'SPT' ? q * 8 : (sg === 'BFE' ? q * 5 : 0) };
+            });
+            if (!its.length || its.some(i => !i.s)) return [{ s: '', v: ffR2(ov) }];   // texto que não se percebe: só o valor
+            const tw = its.reduce((t, i) => t + i.w, 0), por = {}; let resto = ffR2(ov);
+            its.forEach((i, n) => {
+                const v = n === its.length - 1 ? resto : Math.min(resto, ffR2(ov * i.w / tw));
+                resto = ffR2(resto - v); por[i.s] = ffR2((por[i.s] || 0) + v);
+            });
+            return Object.keys(por).filter(k => por[k] > 0.004).map(k => ({ s: k, v: por[k] }));
+        }
+        function ffCelTxt(k) {   // «10,60» ou «2,60 + 8,00 SPT»
+            const ex = k.x ? ['SPT', 'BFE', ''].filter(s => k.x[s] > 0.004) : [];
+            if (!ex.length) return folhasEur(k.v);
+            const liq = ffR2(k.v - ex.reduce((t, s) => t + k.x[s], 0)), p = [];
+            if (liq > 0.004) p.push(folhasEur(liq));
+            ex.forEach(s => p.push(folhasEur(k.x[s]) + (s ? ' ' + s : '')));
+            return p.join(' + ');
+        }
+        function ffRaia(iso) { return (iso < pedHoje() && !ffDiaEscuro(iso)) ? '–' : ''; }   // dia já passado, sem nada registado (os domingos e feriados já vão escuros)
+
         function ffCalcNormal(c, logs, man) {
             man = man || {};
-            const bk = {}, orig = {};
+            const bk = {}, orig = {}, apl = [], exd = {};   // Beta 0.1.12: apl = o que cada pagamento abateu a cada dia; exd = saco/barra por dia
             const total = () => Object.keys(bk).reduce((t, k) => t + bk[k], 0);
             const soma = (k, v) => { bk[k] = ffR2((bk[k] || 0) + v); orig[k] = ffR2((orig[k] || 0) + v); };
-            const abate = v => {
+            const abate = (v, iso) => {
                 Object.keys(bk).sort().forEach(k => {
                     if (v <= 0.004) return;
                     const t = Math.min(bk[k], v);
+                    if (t > 0.004) apl.push({ iso: iso, k: k, v: t });
                     bk[k] = ffR2(bk[k] - t); v = ffR2(v - t);
                 });
             };
@@ -3084,18 +3130,18 @@
             const excesso = (!reset && mk.length && L0raw < -0.004) ? ffR2(-L0raw) : 0;   // os valores à mão passam o saldo: os mais antigos ficam pagos
             if (L0 > 0.004) soma('0000-00-00', L0);
             seq.forEach(l => {
-                if (l.type === 'add') { if (l.qtd && !(l.amount > 0)) return; if ((l.amount || 0) > 0) soma(ffIsoDe(l.date), l.amount); }
-                else if (l.type === 'pay' && FOLHA_DEUDA.includes(l.details || '')) abate(l.amount || 0);
+                if (l.type === 'add') { if (l.qtd && !(l.amount > 0)) return; if ((l.amount || 0) > 0) { const di = ffIsoDe(l.date); soma(di, l.amount); ffExtrasDe(l).forEach(e => { const m = exd[di] || (exd[di] = {}); m[e.s] = ffR2((m[e.s] || 0) + e.v); }); } }
+                else if (l.type === 'pay' && FOLHA_DEUDA.includes(l.details || '')) abate(l.amount || 0, ffIsoDe(l.date));
                 else if (l.type === 'correction') {
                     const t = total(), a = l.amount || 0;
-                    if (a < t - 0.004) abate(t - a); else if (a > t + 0.004) soma(ffIsoDe(l.date), a - t);
+                    if (a < t - 0.004) abate(t - a, ffIsoDe(l.date)); else if (a > t + 0.004) soma(ffIsoDe(l.date), a - t);
                 }
             });
             const t = total(), bal = c.balance || 0;   // o saldo real manda
-            if (t > bal + 0.004) abate(t - bal); else if (t < bal - 0.004) soma('0000-00-00', bal - t);
+            if (t > bal + 0.004) abate(t - bal, '9999-12-31'); else if (t < bal - 0.004) soma('0000-00-00', bal - t);
             const dias = {}; let ant = 0;
-            Object.keys(orig).forEach(k => { if (k === '0000-00-00') ant = bk[k] || 0; else dias[k] = { v: orig[k], r: bk[k] || 0, m: man[k] > 0 }; });
-            return { dias, ant: ant, excesso: excesso };
+            Object.keys(orig).forEach(k => { if (k === '0000-00-00') ant = bk[k] || 0; else { dias[k] = { v: orig[k], r: bk[k] || 0, m: man[k] > 0 }; if (exd[k]) dias[k].x = exd[k]; } });
+            return { dias, ant: ant, excesso: excesso, apl: apl };
         }
         function ffQDia(c, iso, ctx) {   // o pão desse dia, já com as correções feitas na folha do mês
             const x = folhasDiaQ(c, iso, ctx), co = folhasCorrDe(c.id, iso), q = Object.assign({}, x.q);
@@ -3129,7 +3175,7 @@
                 if (c.tipo === 'soconta' || c.tipo === 'qtd') {
                     if (!ctx) ctx = folhasCtx(inicio, ndTot);
                     const pago = ffObj().pago[String(c.id)] || '';
-                    const cel = {}, saldo = {}, total = {}, cf = ffCicloDe(c), cic = {};
+                    const cel = {}, saldo = {}, total = {}, cf = ffCicloDe(c), cic = {}, saldoPago = {}, pThen = ffPagoEm(c.id, diarioSumarDias(ini, -1));
                     let alguma = false;
                     for (let i = 0; i < ndTot; i++) {
                         const iso = diarioSumarDias(inicio, i), x = ffQDia(c, iso, ctx);
@@ -3139,9 +3185,9 @@
                         if (x.tem && !risc) {
                             folhasSomar(total, x.q); if (iso < ini) folhasSomar(saldo, x.q);
                             if (cf) { const fc = ffCicloFim(cf, iso); folhasSomar(cic[fc] || (cic[fc] = {}), x.q); }
-                        }
+                        } else if (x.tem && risc && iso < ini && iso > pThen) folhasSomar(saldoPago, x.q);   // Beta 0.1.12: estava por pagar ao começar o mês e já se pagou
                     }
-                    out[String(c.id)] = { c, modo: 'pao', pago, cel, saldo, total, alguma, cf, ciclos: cf ? ffCiclosLista(cf, cic) : [] };
+                    out[String(c.id)] = { c, modo: 'pao', pago, cel, saldo, saldoPago, total, alguma, cf, ciclos: cf ? ffCiclosLista(cf, cic) : [] };
                 } else {
                     const r = ffCalcNormal(c, L, (ffObj().man || {})[String(c.id)]), cel = {}; let saldo = 0, resto = 0, alguma = false;
                     Object.keys(r.dias).forEach(k => {
@@ -3149,7 +3195,8 @@
                         else if (k <= fim) { cel[k] = r.dias[k]; resto += r.dias[k].r; alguma = true; }
                     });
                     saldo = ffR2(saldo + r.ant);
-                    out[String(c.id)] = { c, modo: 'eur', cel, saldo, total: ffR2(saldo + resto), alguma, excesso: r.excesso };
+                    const abat = (r.apl || []).reduce((t, a) => (a.iso >= ini && a.k < ini) ? t + a.v : t, 0);   // o que os pagamentos deste mês (ou posteriores) abateram à dívida anterior
+                    out[String(c.id)] = { c, modo: 'eur', cel, saldo, saldoIni: ffR2(saldo + abat), total: ffR2(saldo + resto), alguma, excesso: r.excesso };
                 }
             }));
             return { ini, fim, nd, clientes: out, primeiro };
@@ -3175,20 +3222,29 @@
         function ffCelHtml(x, iso, marca) {
             if (!x) return '';
             const k = x.cel[iso];
-            if (!k) return '';
+            if (!k) return ffRaia(iso);   // Beta 0.1.12 · N23: dia passado sem registo = raia
             const mm = (marca && k.m) ? ' <small class="mm">✎</small>' : '';   // Beta 0.1.10: escrito à mão (só no ecrã)
             if (x.modo === 'eur') {
-                if (k.r <= 0.004) return '<s>' + folhasEur(k.v) + '</s>' + mm;
-                if (k.r < k.v - 0.004) return folhasEur(k.v) + mm + '<small class="fl" style="display:block; font-size:7px; font-weight:bold; line-height:1.1;">falta ' + folhasEur(k.r) + '</small>';
-                return folhasEur(k.v) + mm;
+                // Beta 0.1.12 · N25/N26: «2,60 + 8,00 SPT»; paga toda = tudo riscado; parcial = o valor da casa riscado + o que falta ao lado
+                const tx = ffCelTxt(k), parcial = k.r > 0.004 && k.r < k.v - 0.004, falta = parcial ? folhasEur(k.r) : '';
+                const corpo = k.r <= 0.004 ? '<s>' + tx + '</s>' : (parcial ? '<s>' + tx + '</s> ' + falta : tx);
+                return ((tx + (falta ? ' ' + falta : '')).length > 11 ? '<span style="font-size:8px; line-height:1.05;">' + corpo + '</span>' : corpo) + mm;
             }
             if (!k.tem) return k.semQ ? '?' : '';
             const t = esc(ffTxtQ(k.q));
             return (k.risc ? '<s>' + t + '</s>' : t) + mm;
         }
-        function ffSaldoHtml(x) {
+        function ffSaldoHtml(x) {   // Beta 0.1.12 · N24: o SALDO pago fica tachado (o valor que tinha ao começar o mês); se falta parte, o que falta ao lado
             if (!x) return '';
-            if (x.modo === 'eur') return x.saldo > 0.004 ? folhasEur(x.saldo) : '';
+            if (x.modo === 'eur') {
+                const ini = x.saldoIni || 0;
+                if (ini > 0.004 && x.saldo < ini - 0.004) return '<s>' + folhasEur(ini) + '</s>' + (x.saldo > 0.004 ? ' ' + folhasEur(x.saldo) : '');
+                return x.saldo > 0.004 ? folhasEur(x.saldo) : '';
+            }
+            if (x.saldoPago && ffTemQ(x.saldoPago)) {
+                const ini = {}; folhasSomar(ini, x.saldoPago); folhasSomar(ini, x.saldo);
+                return '<s>' + esc(ffTxtQ(ini)) + '</s>' + (ffTemQ(x.saldo) ? ' ' + esc(ffTxtQ(x.saldo)) : '');
+            }
             return ffTemQ(x.saldo) ? esc(ffTxtQ(x.saldo)) : '';
         }
         function ffTotalHtml(x) {
@@ -3447,13 +3503,14 @@
         }
         function ffPagarAte(fim) {
             const cid = ffPagoCid; if (!cid || !/^\d{4}-\d{2}-\d{2}$/.test(fim)) return;
-            const o = ffObj(); if (!o.pago[cid] || o.pago[cid] < fim) o.pago[cid] = fim;
+            const o = ffObj(); if (!o.pago[cid] || o.pago[cid] < fim) { ffPagoReg(cid, fim); o.pago[cid] = fim; }
             guardarEstado(); ffPagoFechar(); ffPagoRefrescar();
         }
         // ---- para o módulo (faturas): «cobre o pão até» ----
         function ffPagoGet(cid) { return ffObj().pago[String(cid)] || ''; }
         function ffPagoSet(cid, iso) {
             const o = ffObj();
+            ffPagoReg(cid, iso);
             if (iso) o.pago[String(cid)] = iso; else delete o.pago[String(cid)];
             guardarEstado(); ffPagoRefrescar();
         }
@@ -3512,11 +3569,11 @@
         function ffPagoGuardar() {
             const cid = ffPagoCid, v = document.getElementById('ff-pago-data').value;
             if (!cid || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
-            ffObj().pago[cid] = v; guardarEstado(); ffPagoFechar(); ffPagoRefrescar();
+            ffPagoReg(cid, v); ffObj().pago[cid] = v; guardarEstado(); ffPagoFechar(); ffPagoRefrescar();
         }
         function ffPagoRemover() {
             const cid = ffPagoCid; if (!cid) return;
-            delete ffObj().pago[cid]; guardarEstado(); ffPagoFechar(); ffPagoRefrescar();
+            ffPagoReg(cid, ''); delete ffObj().pago[cid]; guardarEstado(); ffPagoFechar(); ffPagoRefrescar();
         }
 
         // ===== v23.0 · Pedido: «O meu dia» e pão a mais (cesto cinzento) =====
