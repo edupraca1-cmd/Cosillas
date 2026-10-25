@@ -349,6 +349,16 @@
         .fab-deshacer[hidden] { display: none; }
         .g-importe::-webkit-outer-spin-button, .g-importe::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .g-importe { -moz-appearance: textfield; appearance: textfield; }
+
+        /* ===== BOMBONAS DE GAS ===== */
+        .bb-tipo { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-top: 8px; }
+        .bb-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13.5px; }
+        .bb-sub { font-size: 12px; color: #475569; margin-top: 4px; line-height: 1.45; }
+        .bb-hist { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+        .bb-hist td { padding: 4px 2px; border-bottom: 1px dashed var(--border); }
+        .bb-hist td.num { text-align: right; }
+        .bb-hist td.dim { color: #94a3b8; font-size: 11px; }
+        #bb-consejo .linea { margin-top: 8px; line-height: 1.45; color: #334155; }
     </style>
 </head>
 <body>
@@ -656,6 +666,38 @@
                 <button class="btn-panel btn-sim-add" onclick="anadirPeriodico()">＋ Añadir gasto periódico</button>
                 <div id="per-sugerencias"></div>
                 <div class="panel-nota">La app lo pone sola en el ciclo que toca y en los siguientes que ya tengas creados (si un ciclo aún no existe, lo añade al crearlo). Cuando lo marcas como pagado o pasa su ciclo, salta a la próxima fecha.</div>
+            </div>
+        </details>
+
+        <!-- ===== Bombonas de gas ===== -->
+        <details class="panel" id="panel-gas">
+            <summary>
+                <span>🔥 Bombonas de gas</span>
+                <span class="summary-right"><span class="panel-resumen" id="bb-resumen"></span><span class="arrow">▼</span></span>
+            </summary>
+            <div class="panel-body">
+                <div class="dos-col">
+                    <div>
+                        <label for="bb-bote">En casa tengo (€)</label>
+                        <input type="number" id="bb-bote" inputmode="decimal" step="0.01" min="0" placeholder="0.00" oninput="cambiarBote(this.value)">
+                    </div>
+                    <div>
+                        <label for="bb-precio">Precio de la bombona (€)</label>
+                        <input type="number" id="bb-precio" inputmode="decimal" step="0.01" min="0" oninput="cambiarPrecioBombona(this.value)">
+                    </div>
+                </div>
+                <div id="bb-consejo"></div>
+
+                <div class="panel-h">He conectado una bombona nueva</div>
+                <div class="var-form">
+                    <input type="date" id="bb-fecha" aria-label="Fecha del cambio">
+                    <input type="number" id="bb-pagado" inputmode="decimal" step="0.01" min="0" placeholder="Precio pagado" aria-label="Precio pagado">
+                    <button class="btn-panel" onclick="cambioBombona('cocina')">🍳 La de la cocina</button>
+                    <button class="btn-panel" onclick="cambioBombona('calentador')">🚿 La del calentador</button>
+                </div>
+
+                <div id="bb-lista"></div>
+                <div class="panel-nota">Apunta cada vez que conectas una bombona nueva (también puedes añadir cambios antiguos con su fecha). Con dos cambios de cada una, la app sabe cuánto te dura y cuánto gastas al mes, en invierno y en verano. El dinero que sacas para el gas, apúntalo con «＋ Gasto» en «Gas»: se suma a lo que tienes en casa, y cada bombona que compras se resta.</div>
             </div>
         </details>
 
@@ -1541,6 +1583,14 @@
                 if (!Array.isArray(c.gastos)) c.gastos = [];
             });
             if (!Array.isArray(data.periodicos)) data.periodicos = [];
+            // Bombonas de gas (cocina y calentador) y el dinero que guardas en casa para ellas
+            if (!data.bombonas || typeof data.bombonas !== 'object') data.bombonas = {};
+            const bb = data.bombonas;
+            bb.precio = nDef(bb.precio, 33);
+            if (!Array.isArray(bb.cambios)) bb.cambios = [];
+            if (!bb.bote || typeof bb.bote !== 'object') bb.bote = { saldo: 0, ts: Date.now() };
+            bb.bote.saldo = nDef(bb.bote.saldo, 0);
+            bb.bote.ts = nDef(bb.bote.ts, Date.now());
             if (data.modeloSaldo !== MODELO_SALDO) {
                 // Antes los repostajes no descontaban del saldo; ahora sí, igual que los gastos.
                 // Se ajusta la base para que el saldo que ya tenías no cambie al actualizar.
@@ -2001,6 +2051,7 @@
             pintarPeriodicos();
             pintarArchivo();
             pintarTerminados();
+            pintarBombonas();
         }
 
         function guardar(agrupar) {
@@ -3465,6 +3516,199 @@
             }
             if (!items.length) return { items: obtenerConceptosBase(), delAnio: [] };
             return { items: items, delAnio: delAnio };
+        }
+
+        // =====================================================
+        // ===== BOMBONAS DE GAS ===============================
+        // =====================================================
+        const TIPOS_BOMBONA = { cocina: '🍳 Cocina', calentador: '🚿 Calentador' };
+        const DIA_MS = 86400000;
+        // Noviembre a marzo cuenta como invierno
+        function esInvierno(ts) { const m = new Date(ts).getMonth(); return m >= 10 || m <= 2; }
+
+        // Dinero para el gas en casa: lo que pusiste + lo que sacaste después (gastos de «Gas») − bombonas compradas después
+        function boteGas() {
+            const bb = appData.bombonas;
+            let saldo = numO(bb.bote.saldo, 0);
+            const desde = numO(bb.bote.ts, 0);
+            appData.ciclos.concat(appData.archivo || []).forEach(c => (c.gastos || []).forEach(g => {
+                if (normDesc(g.concepto) === 'gas' && Number(g.ts) > desde) saldo += Number(g.importe) || 0;
+            }));
+            bb.cambios.forEach(x => { if (Number(x.ts) > desde) saldo -= Number(x.precio) || 0; });
+            return redondear(saldo);
+        }
+
+        function cambiarBote(v) {
+            const n = parseFloat(v);
+            appData.bombonas.bote = { saldo: isFinite(n) ? Math.max(0, n) : 0, ts: Date.now() };
+            guardar('bote-gas');
+            pintarBombonas();
+        }
+
+        function cambiarPrecioBombona(v) {
+            const n = parseFloat(v);
+            appData.bombonas.precio = isFinite(n) && n > 0 ? n : 0;
+            guardar('precio-bombona');
+            pintarBombonas();
+        }
+
+        function cambioBombona(tipo) {
+            const bb = appData.bombonas;
+            const f = document.getElementById('bb-fecha').value;
+            const inPrecio = document.getElementById('bb-pagado');
+            const precio = redondear(parseFloat(inPrecio.value) || numO(bb.precio, 0));
+            let ts = Date.now();
+            if (f && f !== aISO(new Date())) { const p = f.split('-').map(Number); ts = new Date(p[0], p[1] - 1, p[2], 12).getTime(); }
+            if (ts > Date.now() + DIA_MS) { alert('La fecha no puede ser futura.'); return; }
+            bb.cambios.push({ id: nuevoId(), ts: ts, tipo: tipo, precio: precio });
+            inPrecio.value = '';
+            document.getElementById('bb-fecha').value = aISO(new Date());
+            guardar();
+            pintarBombonas();
+            mostrarAviso(`Bombona de ${tipo === 'cocina' ? 'la cocina' : 'el calentador'}: ${fmtFechaLarga(ts)} · ${precio.toFixed(2)} €`);
+        }
+
+        function borrarCambioBombona(id) {
+            const bb = appData.bombonas;
+            const x = bb.cambios.find(c => c.id === id);
+            if (!x) return;
+            if (!confirm(`¿Borrar el cambio del ${fmtFechaLarga(x.ts)}?`)) return;
+            bb.cambios = bb.cambios.filter(c => c.id !== id);
+            guardar();
+            pintarBombonas();
+        }
+
+        // Cuánto dura cada bombona y cuánto cuesta al mes (en general, en invierno y en verano)
+        function statsBombonas() {
+            const bb = appData.bombonas;
+            const precio = numO(bb.precio, 0);
+            const res = { tipos: {}, mes: null, mesInv: null, mesVer: null, completo: true };
+            Object.keys(TIPOS_BOMBONA).forEach(t => {
+                const cs = bb.cambios.filter(c => c.tipo === t).sort((a, b) => a.ts - b.ts);
+                const dur = [];
+                for (let i = 1; i < cs.length; i++) {
+                    const dias = (cs[i].ts - cs[i - 1].ts) / DIA_MS;
+                    if (dias > 0) dur.push({ dias: dias, desde: cs[i - 1].ts, hasta: cs[i].ts, invierno: esInvierno((cs[i].ts + cs[i - 1].ts) / 2) });
+                }
+                const media = arr => arr.length ? arr.reduce((a, d) => a + d.dias, 0) / arr.length : null;
+                const st = {
+                    cambios: cs, dur: dur, ultima: cs.length ? cs[cs.length - 1] : null,
+                    media: media(dur.slice(-3)),
+                    mediaInv: media(dur.filter(d => d.invierno)),
+                    mediaVer: media(dur.filter(d => !d.invierno))
+                };
+                st.mes = st.media ? precio * 30.44 / st.media : null;
+                st.mesInv = (st.mediaInv || st.media) ? precio * 30.44 / (st.mediaInv || st.media) : null;
+                st.mesVer = (st.mediaVer || st.media) ? precio * 30.44 / (st.mediaVer || st.media) : null;
+                res.tipos[t] = st;
+                if (st.mes === null) res.completo = false;
+            });
+            const suma = campo => { let s = 0, alguno = false; Object.values(res.tipos).forEach(st => { if (st[campo] !== null) { s += st[campo]; alguno = true; } }); return alguno ? redondear(s) : null; };
+            res.mes = suma('mes');
+            res.mesInv = suma('mesInv');
+            res.mesVer = suma('mesVer');
+            return res;
+        }
+
+        // Pone como tope de «Gas» lo que gastas de verdad (según la estación de cada ciclo)
+        function aplicarTopeGas() {
+            const st = statsBombonas();
+            const ini = indiceInicioFuturo();
+            if (ini < 0 || st.mes === null) return;
+            const cambios = [];
+            for (let i = ini; i < appData.ciclos.length; i++) {
+                const c = appData.ciclos[i];
+                const cl = claveCicloFinanzas(String(c.nombre || ''));
+                if (cl === null) continue;
+                const inv = esInvierno(new Date(Math.floor(cl / 100), cl % 100, 28).getTime());
+                const v = Math.ceil(((inv ? st.mesInv : st.mesVer) || st.mes) - 0.001);
+                c.items.forEach(it => {
+                    if (!it.checked && normDesc(it.desc) === 'gas') { it.valor = v.toFixed(2); it.topeBase = it.valor; cambios.push(v); }
+                });
+            }
+            if (!cambios.length) { alert('No hay conceptos «Gas» sin pagar en tus ciclos.'); return; }
+            guardar();
+            renderizar();
+            mostrarAviso(`Tope de gas actualizado en ${cambios.length} ciclos`);
+        }
+
+        function pintarBombonas() {
+            const panel = document.getElementById('panel-gas');
+            if (!panel || !appData.bombonas) return;
+            const bb = appData.bombonas;
+            const eur = n => `${(Number(n) || 0).toFixed(2)}&nbsp;€`;
+            const poner = (id, v) => { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = v; };
+            const bote = boteGas();
+            const precio = numO(bb.precio, 0);
+            poner('bb-bote', bote ? bote.toFixed(2) : '');
+            poner('bb-precio', precio || '');
+            const fecha = document.getElementById('bb-fecha');
+            if (fecha && !fecha.value) fecha.value = aISO(new Date());
+            const pag = document.getElementById('bb-pagado');
+            if (pag) pag.placeholder = `Precio (${precio.toFixed(2)})`;
+
+            const st = statsBombonas();
+            const ahora = Date.now();
+            const invAhora = esInvierno(ahora);
+
+            // Consejo: dinero en casa, cuánto retirar y cómo va el tope de Gas
+            let html = '';
+            const n = precio > 0 ? Math.floor((bote + 0.005) / precio) : 0;
+            const falta = redondear(Math.max(0, precio - bote));
+            const retirar = Math.ceil(Math.max(falta, 20) / 10) * 10;   // en billetes de 10 €
+            html += `<div class="${falta > 0 ? 'aviso-linea' : 'ok-linea'}" style="display:block">` +
+                (falta > 0 ? `⚠️ En casa tienes ${eur(bote)}: no llega para una bombona. Retira al menos <b>${retirar}&nbsp;€</b>.`
+                    : `✓ En casa tienes ${eur(bote)}: te llega para ${n} bombona${n > 1 ? 's' : ''}.`) + `</div>`;
+            if (st.mes !== null) {
+                const delMes = invAhora ? (st.mesInv || st.mes) : (st.mesVer || st.mes);
+                html += `<div class="linea">Según tus bombonas, el gas te cuesta unos <b>${eur(delMes)} al mes</b>` +
+                    (st.mesInv !== null && st.mesVer !== null && Math.abs(st.mesInv - st.mesVer) >= 0.5 ? ` (de noviembre a marzo ${eur(st.mesInv)}; el resto del año ${eur(st.mesVer)})` : '') +
+                    (st.completo ? '' : ' <span class="aviso-media">(aún falta saber cuánto dura una de las dos)</span>') + '.</div>';
+                const idxHoy = indiceCicloDeFecha(new Date());
+                const itGas = idxHoy >= 0 ? appData.ciclos[idxHoy].items.find(i => normDesc(i.desc) === 'gas') : null;
+                if (itGas) {
+                    const tope = parseFloat(itGas.valor) || 0;
+                    const sugerido = Math.ceil(delMes - 0.001);
+                    if (Math.abs(sugerido - tope) >= 1) {
+                        html += `<div class="linea">Tu tope de «Gas» este ciclo es ${eur(tope)}: ${sugerido > tope ? '<span class="aviso-media">se queda corto</span>' : 'te sobra'}.</div>` +
+                            `<button class="btn-panel btn-sim-add" onclick="aplicarTopeGas()">Poner ${st.mesInv !== null && st.mesVer !== null && Math.abs(st.mesInv - st.mesVer) >= 0.5 ? `${Math.ceil(st.mesInv - 0.001)} € (nov–mar) y ${Math.ceil(st.mesVer - 0.001)} € (resto del año)` : `${sugerido} €`} de tope de gas en los próximos ciclos</button>`;
+                    }
+                }
+            } else {
+                html += `<div class="linea">Aún no sé cuánto gastas: apunta cuándo cambias cada bombona.</div>`;
+            }
+            document.getElementById('bb-consejo').innerHTML = html;
+
+            // Cada bombona
+            document.getElementById('bb-lista').innerHTML = Object.keys(TIPOS_BOMBONA).map(t => {
+                const s = st.tipos[t];
+                let estado;
+                if (!s.ultima) estado = 'Aún no has apuntado ningún cambio.';
+                else {
+                    const dias = Math.floor((ahora - s.ultima.ts) / DIA_MS);
+                    estado = `Conectada el <b>${fmtFechaLarga(s.ultima.ts)}</b> (lleva ${dias} día${dias === 1 ? '' : 's'}).`;
+                    const dura = (invAhora ? s.mediaInv : s.mediaVer) || s.media;
+                    if (dura) {
+                        const fin = s.ultima.ts + dura * DIA_MS;
+                        estado += ` Suele durar <b>${Math.round(dura)} días</b>` + (fin > ahora ? ` → se acabaría hacia el <b>${fmtFechaLarga(fin)}</b>.` : ' → ya debería estar al terminarse.');
+                    } else {
+                        estado += ' Cuando la cambies, sabré cuánto dura.';
+                    }
+                }
+                const filas = s.cambios.slice().reverse().map((c, i, arr) => {
+                    const sig = i > 0 ? arr[i - 1] : null;   // la que la sustituyó
+                    const dur = sig ? Math.round((sig.ts - c.ts) / DIA_MS) + ' días' + (esInvierno((sig.ts + c.ts) / 2) ? ' ❄️' : ' ☀️') : 'en uso';
+                    return `<tr><td>${fmtFechaLarga(c.ts)}</td><td class="num">${eur(c.precio)}</td><td class="dim">${dur}</td><td class="num"><button class="btn-delete" title="Borrar" onclick="borrarCambioBombona('${esc(c.id)}')">✕</button></td></tr>`;
+                }).join('');
+                return `<div class="bb-tipo">
+                    <div class="bb-cab"><b>${TIPOS_BOMBONA[t]}</b>${s.mes !== null ? `<span class="var-datos">≈ ${eur(s.mes)} al mes</span>` : ''}</div>
+                    <div class="bb-sub">${estado}</div>
+                    ${filas ? `<table class="bb-hist">${filas}</table>` : ''}
+                </div>`;
+            }).join('');
+
+            const res = document.getElementById('bb-resumen');
+            if (res) res.innerText = falta > 0 ? `⚠️ retira ${retirar} €` : (st.mes !== null ? `≈ ${Math.round((invAhora ? st.mesInv : st.mesVer) || st.mes)} €/mes` : `en casa ${bote.toFixed(0)} €`);
         }
 
         // =====================================================
