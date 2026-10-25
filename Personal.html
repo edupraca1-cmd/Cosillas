@@ -427,6 +427,26 @@
         .sub-nav button.on { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
         #tab-planes .panel { display: none; }
         #tab-planes .panel.plan-visible { display: block; }
+
+        /* ===== FECHAS DE PAGO ===== */
+        .pend.pregunta { flex-wrap: wrap; background: #eff6ff; border-color: #bfdbfe; color: #1e3a8a; }
+        .pend .pend-botones { display: flex; justify-content: flex-end; gap: 8px; width: 100%; }
+        .pend .pend-botones button { padding: 8px 14px; font-size: 12.5px; }
+        .fp-dias-fila { display: flex; align-items: center; gap: 8px; margin: 12px 0 2px; font-size: 13px; font-weight: 700; color: #334155; }
+        .panel-body .fp-dias-fila label { display: inline; margin: 0; font-size: 13px; color: #334155; }
+        .panel-body .fp-dias-fila input[type="number"] { width: 64px; text-align: center; padding: 7px 6px; }
+        .fp-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 9px 0; border-bottom: 1px dashed var(--border); }
+        .fp-item:last-child { border-bottom: none; }
+        .fp-txt { display: flex; flex-direction: column; gap: 2px; flex: 1 1 170px; min-width: 0; font-size: 13.5px; }
+        .fp-txt span { font-size: 12px; color: #64748b; line-height: 1.4; }
+        .fp-acc { display: flex; gap: 6px; flex-shrink: 0; }
+        .fp-item.pregunta { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 9px 10px; margin: 4px 0 6px; }
+        .fp-item.pregunta .fp-txt span { color: #1e3a8a; }
+        .fp-en-ciclo { display: block; color: #1d4ed8; font-weight: 600; }
+
+        /* ===== VERSIÓN ===== */
+        .app-title { margin-bottom: 2px; }
+        .app-version { text-align: center; font-size: 11.5px; font-weight: 600; color: #94a3b8; margin: 0 0 14px; }
     </style>
 </head>
 <body>
@@ -548,6 +568,7 @@
         <!-- ===== INICIO: cifras, gráfico y lo pendiente ===== -->
         <div id="tab-inicio" class="tab-content active">
             <div class="app-title">📊 Mi Control Financiero</div>
+            <div class="app-version" id="app-version">Versión 0.1 · 25 oct 2026</div>
         <div class="metrics">
             <div class="metric-card saldo">
                 <div class="metric-title">SALDO EN BANCO (€)</div>
@@ -589,8 +610,8 @@
             <div class="leyenda-proy" id="leyenda-proy"></div>
             <div class="colchon-fila">
                 <span class="muestra-colchon" aria-hidden="true"></span>
-                <label for="input-colchon">Colchón: aviso si un mes baja de</label>
-                <input type="number" id="input-colchon" inputmode="decimal" step="1" min="0" placeholder="0" oninput="cambiarColchon(this.value)">
+                <span>Colchón: aviso si un mes baja de</span>
+                <input type="number" id="input-colchon" aria-label="Colchón (€)" inputmode="decimal" step="1" min="0" placeholder="0" oninput="cambiarColchon(this.value)">
                 <span>€</span>
             </div>
         </div>
@@ -688,6 +709,7 @@
                 <button type="button" data-p="panel-sim" onclick="verPlan('panel-sim')">🧮 Simulador</button>
                 <button type="button" data-p="panel-per" onclick="verPlan('panel-per')">📅 Periódicos</button>
                 <button type="button" data-p="panel-var" onclick="verPlan('panel-var')">📈 Variables</button>
+                <button type="button" data-p="panel-fechas" onclick="verPlan('panel-fechas')">🔔 Fechas</button>
                 <button type="button" data-p="panel-gas" onclick="verPlan('panel-gas')">🔥 Bombonas</button>
                 <button type="button" data-p="panel-arch" onclick="verPlan('panel-arch')">🗂️ Archivo</button>
                 <button type="button" data-p="panel-copias" onclick="verPlan('panel-copias')">💾 Copias</button>
@@ -764,13 +786,30 @@
                     <input type="number" id="var-importe" inputmode="decimal" step="0.01" min="0" placeholder="Importe" aria-label="Importe" enterkeyhint="done">
                     <button class="btn-panel" onclick="anadirPagoAnterior()">＋ Añadir</button>
                 </div>
-                <div class="panel-nota">Para que la tendencia funcione desde ya, añade tus últimas facturas. En la luz, añade también las del invierno pasado: así tiene en cuenta que en invierno pagas más.</div>
+                <div class="panel-nota">Para que la tendencia funcione desde ya, añade tus últimas facturas con el día en que te las cobraron (así la app también aprende cuándo suelen llegar). En la luz, añade también las del invierno pasado: así tiene en cuenta que en invierno pagas más.</div>
 
                 <div class="panel-h">Qué conceptos sigo</div>
                 <div class="chips" id="var-chips"></div>
                 <div class="panel-nota">El tope de cada concepto sube solo cuando pagas más que nunca y no baja de lo más alto que has pagado. La proyección realista usa la media de tus 3 últimos pagos (y la del mismo mes del año pasado, si la tienes). Al marcar como pagada una factura (luz, agua, internet…), la app te pregunta cuánto pagaste; la comida y la gasolina entran solas al terminar el ciclo.</div>
             </div>
         </section>
+        <!-- ===== Fechas de pago ===== -->
+        <section class="panel" id="panel-fechas">
+            <div class="panel-cab">
+                <span>🔔 Fechas de pago</span>
+                <span class="summary-right"><span class="panel-resumen" id="fp-resumen"></span></span>
+            </div>
+            <div class="panel-body">
+                <div class="fp-dias-fila">
+                    <span>Avisarme</span>
+                    <input type="number" id="fp-dias" aria-label="Días de antelación" inputmode="numeric" min="0" max="10" step="1" oninput="cambiarAvisoDias(this.value)">
+                    <span>días antes</span>
+                </div>
+                <div id="fp-lista"></div>
+                <div class="panel-nota">La app apunta el día cada vez que marcas un concepto como pagado o apuntas su gasto. Cuando 3 ciclos coinciden (con pocos días de diferencia), te pregunta en Inicio si quieres fijar ese día, y desde entonces te avisa antes. Si un día deja de cuadrar, vuelve a preguntarte. Las facturas antiguas que añadas en «Variables» con su fecha también cuentan. Lo que se paga una vez al año (IUC, seguro…) te lo avisa «Periódicos».</div>
+            </div>
+        </section>
+
         <!-- ===== Bombonas de gas ===== -->
         <section class="panel" id="panel-gas">
             <div class="panel-cab">
@@ -1687,6 +1726,9 @@
                 if (!Array.isArray(c.gastos)) c.gastos = [];
             });
             if (!Array.isArray(data.periodicos)) data.periodicos = [];
+            // Fechas de pago (aprendidas o puestas a mano) y con cuántos días de antelación avisar
+            if (!data.fechasPago || typeof data.fechasPago !== 'object' || Array.isArray(data.fechasPago)) data.fechasPago = {};
+            data.avisoDias = Math.min(10, Math.max(0, Math.round(nDef(data.avisoDias, 3))));
             // Bombonas de gas (cocina y calentador) y el dinero que guardas en casa para ellas
             if (!data.bombonas || typeof data.bombonas !== 'object') data.bombonas = {};
             const bb = data.bombonas;
@@ -1914,6 +1956,8 @@
                 }
             }
             item.checked = checked;
+            // Día en que lo marcas como pagado: así la app aprende cuándo suele llegar
+            if (checked) item.pagadoTs = Date.now(); else delete item.pagadoTs;
             // Pago de la tarjeta: al marcarlo baja la deuda; al desmarcarlo vuelve a subir
             if (esTarjeta(item) && appData.tarjeta) {
                 const t = appData.tarjeta;
@@ -2148,6 +2192,8 @@
             pintarTerminados();
             pintarBombonas();
             pintarNavCiclos();
+            pintarFechasEnCiclos();
+            pintarFechas();
             pedirPendientes();
         }
 
@@ -2828,7 +2874,10 @@
                 const total = realConceptoCiclo(ciclo, k);
                 if (total <= 0) return;
                 appData.historial = appData.historial.filter(h => !(h.k === k && h.clave === cl));
-                appData.historial.push({ id: nuevoId(), k: k, clave: cl, total: total, origen: 'borrado' });
+                const evPago = eventosPago(ciclo, k);
+                const enHist = { id: nuevoId(), k: k, clave: cl, total: total, origen: 'borrado' };
+                if (evPago.length === 1) enHist.ts = evPago[0];
+                appData.historial.push(enHist);
             });
         }
 
@@ -2843,7 +2892,7 @@
             const p = fecha.split('-').map(Number);
             const cl = claveDeTs(new Date(p[0], p[1] - 1, p[2], 12).getTime());
             appData.historial = appData.historial.filter(h => !(h.k === k && h.clave === cl));
-            appData.historial.push({ id: nuevoId(), k: k, clave: cl, total: imp, origen: 'manual' });
+            appData.historial.push({ id: nuevoId(), k: k, clave: cl, total: imp, origen: 'manual', ts: new Date(p[0], p[1] - 1, p[2], 12).getTime() });
             inImp.value = '';
             if (document.activeElement) document.activeElement.blur();
             openVar.add(k);
@@ -3949,6 +3998,45 @@
             const mes = i => esc(etiquetaMes(appData.ciclos[i]));
             const verC = i => `irA('tab-ciclos'); verCiclo(${i})`;
 
+            // Lo que suele llegar en los próximos días (y lo que ya debería haber llegado)
+            const N = Math.max(0, numO(appData.avisoDias, 3));
+            recordatoriosPago().forEach(r => {
+                const fc = fechaCorta(r.fecha);
+                let txt;
+                if (r.tarjeta) {
+                    txt = r.d < 0 ? `Tarjeta: el cobro del ${fc} (${fmtEur(r.imp)}) aún no lo has marcado como pagado.`
+                        : `Tarjeta: ${r.d === 0 ? 'hoy' : r.d === 1 ? `mañana (${fc})` : `el ${fc} (dentro de ${r.d} días)`} se cobran ${fmtEur(r.imp)}.`;
+                } else {
+                    const cuanto = r.imp > 0 ? ` (${r.estimado ? 'unos ' : ''}${fmtEur(r.imp)})` : '';
+                    txt = r.d < 0 ? `${esc(r.nombre)}: suele llegar hacia el ${fc} y aún no lo has marcado como pagado.`
+                        : `${esc(r.nombre)}: suele llegar ${r.d === 0 ? 'hoy' : r.d === 1 ? `mañana, ${fc}` : `el ${fc}, dentro de ${r.d} días`}${cuanto}.`;
+                }
+                add('aviso', r.tarjeta ? '💳' : '🔔', txt, 'Ver', verC(r.ci));
+            });
+
+            // Lo que llega siempre el mismo día: ¿fijarlo? (o ¿cambiarlo?, si ha dejado de cuadrar)
+            const props = propuestasFecha();
+            props.forEach(pr => {
+                const nom = esc(nombreConcepto(pr.k)), kq = esc(JSON.stringify(pr.k));
+                const fechas = listaY(pr.fechas.map(ts => 'el ' + fechaCorta(ts)));
+                const txt = pr.antes
+                    ? `${nom}: las 3 últimas veces llegó ${fechas}. Tenías puesto el día ${pr.antes}: ¿lo cambio al ${pr.dia}?`
+                    : `${nom}: lo pagaste ${fechas}. ¿Fijo el día ${pr.dia} y te aviso ${N ? (N === 1 ? '1 día' : N + ' días') + ' antes' : 'ese mismo día'}?`;
+                lista.push({ tipo: 'pregunta', ico: '🔔', txt: txt,
+                    botones: `<button type="button" class="btn-mini" onclick="rechazarFecha(${kq})">No</button><button type="button" class="btn-panel" onclick="aceptarFecha(${kq}, ${pr.dia})">${pr.antes ? 'Sí, cambiar' : 'Sí, avísame'}</button>` });
+            });
+            // Si aparece una pregunta nueva mientras estás en otra sección, un aviso para que la veas
+            const clavesProp = props.map(pr => pr.k + ':' + pr.dia + ':' + (pr.antes || ''));
+            if (_propVistas === null) _propVistas = new Set(clavesProp);
+            else {
+                const nuevas = props.filter((pr, i) => !_propVistas.has(clavesProp[i]));
+                clavesProp.forEach(c => _propVistas.add(c));
+                if (nuevas.length && document.body.dataset.seccion !== 'tab-inicio') {
+                    const pr = nuevas[0];
+                    setTimeout(() => mostrarAviso(`🔔 ${nombreConcepto(pr.k)} llega casi siempre hacia el día ${pr.dia}. Te pregunto en Inicio si quieres que te avise.`), 2800);
+                }
+            }
+
             // Ciclos que ya terminaron y siguen sin archivar
             const term = ciclosTerminados().length;
             if (term) add('aviso', '📦', term > 1 ? `Tienes ${term} ciclos terminados sin archivar.` : 'Tienes un ciclo terminado sin archivar.', 'Archivar', 'archivarTerminados()');
@@ -4016,11 +4104,295 @@
             }
 
             if (!lista.length) add('ok', '✓', 'Todo en orden: no tienes nada pendiente.');
-            const orden = { mal: 0, aviso: 1, info: 2, ok: 3 };
+            const orden = { mal: 0, aviso: 1, pregunta: 2, info: 3, ok: 4 };
             lista.sort((a, b) => orden[a.tipo] - orden[b.tipo]);
-            cont.innerHTML = '<div class="sec-h">Pendiente</div>' + lista.map(x => x.js
+            cont.innerHTML = '<div class="sec-h">Pendiente</div>' + lista.map(x => x.botones
+                ? `<div class="pend ${x.tipo}"><span class="pend-ico">${x.ico}</span><span class="pend-txt">${x.txt}</span><span class="pend-botones">${x.botones}</span></div>`
+                : x.js
                 ? `<button type="button" class="pend ${x.tipo}" onclick="${x.js}"><span class="pend-ico">${x.ico}</span><span class="pend-txt">${x.txt}</span><span class="pend-ir">${x.btn} ›</span></button>`
                 : `<div class="pend ${x.tipo}"><span class="pend-ico">${x.ico}</span><span class="pend-txt">${x.txt}</span></div>`).join('');
+        }
+
+        // =====================================================
+        // ===== FECHAS DE PAGO: CUÁNDO SUELE LLEGAR CADA COSA ==
+        // =====================================================
+        const FP_TOLERANCIA = 5;   // como mucho 5 días entre el pago más temprano y el más tardío de los 3
+        var _propVistas = null;    // preguntas ya enseñadas (para avisar solo de las nuevas)
+
+        // Diferencia entre dos días del mes, dando la vuelta al final de mes (30 y 2 → 2 días)
+        function difDia(a, b) { let d = a - b; if (d > 15) d -= 30; if (d < -15) d += 30; return d; }
+        function fechaCorta(f) { const d = new Date(f); return `${d.getDate()} ${MESES_CORTOS[d.getMonth()].toLowerCase()}`; }
+        function listaY(arr) { return arr.length > 1 ? arr.slice(0, -1).join(', ') + ' y ' + arr[arr.length - 1] : (arr[0] || ''); }
+
+        // Fecha (a mediodía) en la que cae ese día del mes dentro del ciclo (que va del 22 al 21)
+        function fechaEnCiclo(clave, dia) {
+            const a = Math.floor(clave / 100), m = clave % 100;
+            const diasMes = (y, mm) => new Date(y, mm + 1, 0).getDate();
+            if (dia >= DIA_INICIO_CICLO) return new Date(a, m, Math.min(dia, diasMes(a, m)), 12);
+            return new Date(a, m + 1, Math.min(dia, diasMes(a, m + 1)), 12);
+        }
+
+        function diasHasta(fecha) {
+            const hoy = new Date();
+            hoy.setHours(12, 0, 0, 0);
+            return Math.round((fecha.getTime() - hoy.getTime()) / DIA_MS);
+        }
+
+        // Cuándo se pagó un concepto en un ciclo: sus gastos apuntados (en gasolina, los repostajes);
+        // si no hay ninguno, el día en que lo marcaste como pagado
+        function eventosPago(ciclo, k) {
+            const ev = [];
+            (ciclo.gastos || []).forEach(g => { if (normDesc(g.concepto) === k && Number(g.ts)) ev.push(Number(g.ts)); });
+            if (k === 'gasolina') {
+                const cl = claveCicloFinanzas(String(ciclo.nombre || ''));
+                if (cl !== null) gasData.registros.forEach(r => { if ((Number(r.coste) || 0) > 0 && claveDeTs(r.ts) === cl) ev.push(Number(r.ts)); });
+            }
+            if (!ev.length) {
+                const it = ciclo.items.find(i => !esIngreso(i) && normDesc(i.desc) === k && i.checked && Number(i.pagadoTs));
+                if (it) ev.push(Number(it.pagadoTs));
+            }
+            return ev.sort((a, b) => a - b);
+        }
+
+        // Un registro por ciclo ya cerrado para ese concepto (archivado, terminado o marcado como pagado)
+        function pagosConFecha(k) {
+            const ahora = Date.now();
+            const porClave = {};
+            (appData.historial || []).forEach(h => { if (h.k === k && Number(h.ts)) porClave[h.clave] = { clave: Number(h.clave), ev: [Number(h.ts)] }; });
+            const meter = (c, archivado) => {
+                const cl = claveCicloFinanzas(String(c.nombre || ''));
+                if (cl === null) return;
+                const item = c.items.find(it => !esIngreso(it) && normDesc(it.desc) === k);
+                if (!item) return;
+                if (!(archivado || item.checked || finCicloClave(cl).getTime() < ahora)) return;   // aún puede haber más pagos
+                const ev = eventosPago(c, k);
+                if (!ev.length && porClave[cl]) return;   // sin fecha: vale la del pago que añadiste a mano
+                porClave[cl] = { clave: cl, ev: ev };
+            };
+            (appData.archivo || []).forEach(c => meter(c, true));
+            appData.ciclos.forEach(c => meter(c, false));
+            return Object.values(porClave).sort((a, b) => a.clave - b.clave);
+        }
+
+        // ¿Se paga siempre hacia el mismo día? Mira los 3 últimos ciclos con un único pago fechado
+        function patronFecha(k) {
+            if (k === 'gasolina') return { irregular: true };   // se reposta varias veces al mes
+            const regs = pagosConFecha(k);
+            if (regs.slice(-4).some(r => r.ev.length > 1)) return { irregular: true };   // varios pagos por ciclo (ej. la comida)
+            const con = regs.filter(r => r.ev.length === 1).slice(-3);
+            const fechas = con.map(r => r.ev[0]);
+            const dias = fechas.map(ts => new Date(ts).getDate());
+            if (con.length < 3) return { faltan: 3 - con.length, dias: dias, fechas: fechas };
+            const off = dias.map(d => difDia(d, dias[0]));
+            if (Math.max(...off) - Math.min(...off) > FP_TOLERANCIA) return { disperso: true, dias: dias, fechas: fechas };
+            let dia = dias[0] + Math.round(off.reduce((a, b) => a + b, 0) / off.length);
+            if (dia < 1) dia += 30;
+            if (dia > 31) dia -= 30;
+            return { dia: dia, dias: dias, fechas: fechas };
+        }
+
+        // Conceptos de gasto que se repiten en tus próximos ciclos (en al menos 2 de los 4 siguientes).
+        // Lo de una vez al año (IUC, seguro…) ya avisa desde «Periódicos»; la tarjeta tiene su día de cobro.
+        function conceptosConFecha() {
+            let ini = indiceInicioFuturo();
+            if (ini < 0) ini = Math.max(0, appData.ciclos.length - 4);
+            const ventana = appData.ciclos.slice(ini, ini + 4);
+            const minimo = ventana.length >= 2 ? 2 : 1;
+            const cuenta = new Map();
+            ventana.forEach(c => {
+                const vistos = new Set();
+                c.items.forEach(it => {
+                    const k = normDesc(it.desc);
+                    if (!k || esIngreso(it) || esTarjeta(it) || vistos.has(k)) return;
+                    vistos.add(k);
+                    cuenta.set(k, (cuenta.get(k) || 0) + 1);
+                });
+            });
+            const fp = appData.fechasPago || {};
+            const out = [];
+            cuenta.forEach((n, k) => { if (n >= minimo || (fp[k] && fp[k].estado === 'si')) out.push(k); });
+            return out;
+        }
+
+        // Lo que se repite y aún no te ha preguntado (o que ha cambiado desde tu última respuesta)
+        function propuestasFecha() {
+            const fp = appData.fechasPago || {};
+            const out = [];
+            conceptosConFecha().forEach(k => {
+                const pat = patronFecha(k);
+                if (!pat.dia) return;
+                const f = fp[k];
+                if (f && f.estado === 'no') return;
+                if (f && f.ts && pat.fechas.some(ts => ts <= f.ts)) return;   // solo cuentan los pagos después de tu última respuesta
+                if (f && f.estado === 'si' && Math.abs(difDia(pat.dia, f.dia)) < 3) return;   // ya lo tienes así
+                out.push({ k: k, dia: pat.dia, fechas: pat.fechas, antes: f && f.estado === 'si' ? f.dia : null });
+            });
+            return out;
+        }
+
+        function diaPagoDe(item) {
+            if (!item || esIngreso(item)) return null;
+            if (esTarjeta(item)) {
+                const d = appData.tarjeta && Number(appData.tarjeta.diaCobro);
+                return d ? { dia: d, tarjeta: true } : null;
+            }
+            const f = (appData.fechasPago || {})[normDesc(item.desc)];
+            return f && f.estado === 'si' && Number(f.dia) ? { dia: Number(f.dia), tarjeta: false } : null;
+        }
+
+        // Lo que suele llegar en los próximos días (o que ya debería haber llegado) y aún no está pagado
+        function recordatoriosPago() {
+            const out = [];
+            const idxHoy = indiceCicloDeFecha(new Date());
+            if (idxHoy < 0) return out;
+            const N = Math.max(0, numO(appData.avisoDias, 3));
+            let tj = null;
+            [idxHoy, idxHoy + 1].forEach(ci => {
+                const c = appData.ciclos[ci];
+                if (!c) return;
+                const cl = claveCicloFinanzas(String(c.nombre || ''));
+                if (cl === null) return;
+                const vistos = new Set();
+                c.items.forEach(it => {
+                    if (it.checked) return;
+                    const f = diaPagoDe(it);
+                    const k = normDesc(it.desc);
+                    if (!f || vistos.has(k)) return;
+                    vistos.add(k);
+                    if (eventosPago(c, k).length) return;   // ya apuntaste su gasto
+                    const fecha = fechaEnCiclo(cl, f.dia);
+                    const d = diasHasta(fecha);
+                    if (d > N || d < (ci === idxHoy ? -7 : 0)) return;
+                    let imp = Math.abs(parseFloat(it.valor) || 0), estimado = false;
+                    if (f.tarjeta) {
+                        if (!tj) tj = simularTarjeta();
+                        const fila = tj.filas.find(x => x.i === ci);
+                        if (fila) imp = fila.pago;
+                    } else if (esVariable(k)) {
+                        const st = statsConcepto(k);
+                        const est = st.n ? estimacionConcepto(st, cl) : null;
+                        if (est !== null) { imp = est; estimado = true; }
+                    }
+                    out.push({ k: k, nombre: String(it.desc).trim(), tarjeta: f.tarjeta, fecha: fecha, d: d, imp: imp, estimado: estimado, ci: ci });
+                });
+            });
+            return out.sort((a, b) => a.d - b.d);
+        }
+
+        function aceptarFecha(k, dia) {
+            if (!appData.fechasPago) appData.fechasPago = {};
+            appData.fechasPago[k] = { dia: dia, estado: 'si', ts: Date.now() };
+            guardar();
+            recalcular();
+            const N = Math.max(0, numO(appData.avisoDias, 3));
+            mostrarAviso(`🔔 ${nombreConcepto(k)}: día ${dia}. Te avisaré ${N ? (N === 1 ? '1 día' : N + ' días') + ' antes' : 'ese mismo día'}.`);
+        }
+
+        function rechazarFecha(k) {
+            if (!appData.fechasPago) appData.fechasPago = {};
+            const f = appData.fechasPago[k];
+            if (f && f.estado === 'si') f.ts = Date.now();   // se queda con su día; solo vuelve a preguntar si cambia otra vez
+            else appData.fechasPago[k] = { estado: 'no', ts: Date.now() };
+            guardar();
+            recalcular();
+        }
+
+        function ponerDiaFecha(k) {
+            const f = (appData.fechasPago || {})[k];
+            const pat = patronFecha(k);
+            const sugerido = f && f.dia ? f.dia : (pat.dia || (pat.dias && pat.dias.length ? pat.dias[pat.dias.length - 1] : ''));
+            const r = prompt(`¿Qué día del mes suele llegar «${nombreConcepto(k)}»? (del 1 al 31)`, sugerido);
+            if (r === null) return;
+            const d = parseInt(String(r).trim(), 10);
+            if (!(d >= 1 && d <= 31)) { alert('Pon un día del 1 al 31.'); return; }
+            aceptarFecha(k, d);
+        }
+
+        function quitarFecha(k) {
+            if (!confirm(`¿Quitar el aviso de «${nombreConcepto(k)}»? No volveré a preguntarte por su fecha (puedes ponerla tú cuando quieras).`)) return;
+            appData.fechasPago[k] = { estado: 'no', ts: Date.now() };
+            guardar();
+            recalcular();
+        }
+
+        function cambiarAvisoDias(v) {
+            const n = parseInt(v, 10);
+            if (!isFinite(n)) return;
+            appData.avisoDias = Math.min(10, Math.max(0, n));
+            guardar('aviso-dias');
+            pintarFechas();
+            pedirPendientes();
+        }
+
+        function verAjustesTarjeta() {
+            switchTab('tab-tarjeta');
+            const d = document.querySelector('#panel-tarjeta details.tj-ajustes');
+            if (d) { d.open = true; d.scrollIntoView({ block: 'start' }); }
+        }
+
+        // Planes → 🔔 Fechas
+        function pintarFechas() {
+            const lista = document.getElementById('fp-lista');
+            if (!lista) return;
+            const inDias = document.getElementById('fp-dias');
+            if (inDias && document.activeElement !== inDias) inDias.value = Math.max(0, numO(appData.avisoDias, 3));
+            const fp = appData.fechasPago || {};
+            const props = {};
+            propuestasFecha().forEach(p => { props[p.k] = p; });
+            const kq = k => esc(JSON.stringify(k));
+            const preguntas = [], conAviso = [], aprende = [], sinDia = [];
+            conceptosConFecha().forEach(k => {
+                const nom = esc(nombreConcepto(k));
+                const f = fp[k], pr = props[k], pat = patronFecha(k);
+                if (pr) {
+                    preguntas.push(`<div class="fp-item pregunta"><div class="fp-txt"><b>${nom}</b><span>${pr.antes ? `Tenías el día ${pr.antes}; las 3 últimas veces llegó ` : 'Lo pagaste '}${listaY(pr.fechas.map(ts => 'el ' + fechaCorta(ts)))} → ¿día ${pr.dia}?</span></div>` +
+                        `<div class="fp-acc"><button type="button" class="btn-mini" onclick="rechazarFecha(${kq(k)})">No</button><button type="button" class="btn-panel" onclick="aceptarFecha(${kq(k)}, ${pr.dia})">Sí</button></div></div>`);
+                } else if (f && f.estado === 'si') {
+                    conAviso.push(`<div class="fp-item"><div class="fp-txt"><b>${nom}</b><span>🔔 Hacia el día ${f.dia}</span></div>` +
+                        `<div class="fp-acc"><button type="button" class="btn-mini" onclick="ponerDiaFecha(${kq(k)})">Cambiar</button><button type="button" class="btn-mini" onclick="quitarFecha(${kq(k)})">Quitar</button></div></div>`);
+                } else if (pat.irregular) {
+                    sinDia.push(nom);
+                } else {
+                    let txt, orden;
+                    if (f && f.estado === 'no') { txt = 'Sin aviso'; orden = -2; }
+                    else if (pat.disperso) { txt = `Días distintos (${listaY(pat.dias.map(String))}): aún no tiene un día fijo`; orden = -1; }
+                    else if (pat.dias.length) { txt = `Aprendiendo: ${pat.dias.length} de 3 pagos (día${pat.dias.length > 1 ? 's' : ''} ${listaY(pat.dias.map(String))})`; orden = pat.dias.length; }
+                    else { txt = 'Aprendiendo: aún no hay pagos con fecha'; orden = 0; }
+                    aprende.push({ orden: orden, html: `<div class="fp-item"><div class="fp-txt"><b>${nom}</b><span>${txt}</span></div>` +
+                        `<div class="fp-acc"><button type="button" class="btn-mini" onclick="ponerDiaFecha(${kq(k)})">Poner día</button></div></div>` });
+                }
+            });
+            aprende.sort((a, b) => b.orden - a.orden);   // primero lo que está más cerca de aprenderse
+            const t = appData.tarjeta;
+            if (t && Number(t.diaCobro)) conAviso.push(`<div class="fp-item"><div class="fp-txt"><b>Tarjeta de crédito</b><span>🔔 El día ${t.diaCobro}, su día de cobro</span></div>` +
+                `<div class="fp-acc"><button type="button" class="btn-mini" onclick="verAjustesTarjeta()">Cambiar</button></div></div>`);
+            let html = '';
+            if (preguntas.length) html += '<div class="panel-h">Por confirmar</div>' + preguntas.join('');
+            html += '<div class="panel-h">Con aviso</div>' + (conAviso.join('') || '<div class="panel-nota" style="margin-top:0">Aún ninguno.</div>');
+            if (aprende.length) html += '<div class="panel-h">Aprendiendo</div>' + aprende.map(a => a.html).join('');
+            if (sinDia.length) html += `<div class="panel-nota">Sin día fijo (se paga varias veces en el ciclo): ${listaY(sinDia)}.</div>`;
+            lista.innerHTML = html;
+            const res = document.getElementById('fp-resumen');
+            if (res) res.innerText = preguntas.length ? `${preguntas.length} por confirmar` : `${conAviso.length} con aviso`;
+        }
+
+        // En el ciclo de hoy, debajo de cada concepto con fecha: cuándo suele llegar
+        function pintarFechasEnCiclos() {
+            const idxHoy = indiceCicloDeFecha(new Date());
+            const c = idxHoy >= 0 ? appData.ciclos[idxHoy] : null;
+            if (!c) return;
+            const cl = claveCicloFinanzas(String(c.nombre || ''));
+            if (cl === null) return;
+            c.items.forEach((it, i) => {
+                if (it.checked) return;
+                const f = diaPagoDe(it);
+                const el = document.getElementById(`info-${idxHoy}-${i}`);
+                if (!f || !el || eventosPago(c, normDesc(it.desc)).length) return;
+                const fecha = fechaEnCiclo(cl, f.dia);
+                const pasado = diasHasta(fecha) < 0;
+                const txt = f.tarjeta ? `🔔 ${pasado ? 'se cobró' : 'se cobra'} el ${fechaCorta(fecha)}` : `🔔 suele llegar hacia el ${fechaCorta(fecha)}`;
+                el.insertAdjacentHTML('beforeend', `<span class="fp-en-ciclo">${txt}</span>`);
+            });
         }
 
         // =====================================================
