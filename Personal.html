@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Mi Panel">
     <!-- Chart.js (gráficos de Gasolina y Finanzas) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
     <style>
         :root {
             --bg-color: #f1f5f9;
@@ -198,6 +198,59 @@
 
         .toast { position: fixed; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 3000; background: #0f172a; color: #fff; padding: 10px 16px; border-radius: 20px; font-size: 13px; max-width: 88%; text-align: center; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
         .toast.visible { opacity: 1; }
+
+        /* ===== RESUMEN, COLCHÓN, TARJETA Y SIMULADOR ===== */
+        .metric-card.libre .metric-title, .metric-card.justo .metric-title { color: #475569; }
+        .metric-card.libre .metric-value, .metric-card.justo .metric-value { color: var(--text-main); }
+        .metric-sub { font-size: 11px; color: #64748b; margin-top: 2px; }
+        .metric-sub:empty { display: none; }
+        .metric-estado { font-size: 11px; font-weight: 700; margin-top: 4px; }
+        .metric-estado:empty { display: none; }
+        .est-ok { color: #047857; }
+        .est-aviso { color: #b45309; }
+        .est-mal { color: #b91c1c; }
+        .colchon-fila { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; font-size: 12px; color: #475569; margin-top: 8px; }
+        .colchon-fila input { width: 56px; text-align: right; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; font-size: 13px; font-weight: 600; padding: 3px 6px; }
+        .muestra-colchon { display: inline-block; width: 18px; border-top: 2px dashed #f59e0b; }
+        details.cycle-card.alert-warn { border-left-color: #f59e0b; }
+
+        details.panel { background: #fff; border: 1px solid var(--border); border-radius: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
+        details.panel > summary { padding: 14px; }
+        .panel-resumen { font-size: 12.5px; font-weight: 700; color: #475569; text-align: right; }
+        .panel-body { border-top: 1px solid var(--border); padding: 4px 14px 14px; font-size: 13px; }
+        .panel-body label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin: 10px 0 4px; }
+        .panel-body input[type="number"], .panel-body input[type="text"], .panel-body select { width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; background: #fff; color: var(--text-main); font-family: inherit; }
+        .panel-body input:focus, .panel-body select:focus { border-color: var(--primary); outline: none; }
+        .dos-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+        .panel-h { font-size: 11px; font-weight: 800; color: #475569; letter-spacing: .5px; text-transform: uppercase; margin: 16px 0 6px; }
+        .panel-nota { font-size: 11.5px; color: #64748b; margin-top: 10px; line-height: 1.45; }
+        .tj-disponible { margin-top: 10px; color: #334155; }
+        .tj-disponible:empty { display: none; }
+        .presu-bar.tj-bar > div { background: #3b82f6; }
+        .presu-bar.tj-bar.mal > div { background: #ef4444; }
+        .tj-compra { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px; }
+        details.cycle-card .summary-val { white-space: nowrap; }
+        .btn-panel { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 9px 12px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; font-family: inherit; }
+        .btn-panel:active { background: var(--primary-dark); }
+        .btn-panel:disabled { background: #94a3b8; cursor: default; }
+        .compra-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 10px; border-top: 1px dashed var(--border); font-size: 12.5px; }
+        .compra-row .c-izq { min-width: 0; }
+        .compra-row .c-desc { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .compra-row .c-sub { font-size: 11px; color: #64748b; }
+        .compra-row .c-der { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .tabla-plan { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+        .tabla-plan th { text-align: right; font-size: 10px; color: #64748b; font-weight: 700; padding: 4px; border-bottom: 1px solid var(--border); text-transform: uppercase; }
+        .tabla-plan td { text-align: right; padding: 6px 4px; border-bottom: 1px dashed var(--border); white-space: nowrap; }
+        .tabla-plan th:first-child, .tabla-plan td:first-child { text-align: left; }
+        .tabla-plan tr.corto td { background: #fffbeb; color: #92400e; }
+        .aviso-linea { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 12.5px; color: #92400e; line-height: 1.4; }
+        .ok-linea, .mal-linea { border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 12.5px; line-height: 1.4; }
+        .ok-linea { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+        .mal-linea { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+        details.tj-ajustes { margin-top: 14px; border-top: 1px dashed var(--border); }
+        details.tj-ajustes > summary { padding: 10px 0 0; font-size: 13px; color: #334155; justify-content: flex-start; gap: 6px; }
+        .sim-res .linea { margin-top: 8px; line-height: 1.45; color: #334155; }
+        .btn-sim-add { width: 100%; margin-top: 12px; padding: 12px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -319,9 +372,22 @@
                 <div class="metric-title">SALDO EN BANCO (€)</div>
                 <input type="number" id="input-saldo-banco" class="saldo-input-directo" step="0.01" value="1585.70" oninput="cambiarSaldoDirecto(this.value)">
             </div>
+            <div class="metric-card libre">
+                <div class="metric-title">LIBRE ESTE CICLO</div>
+                <div class="metric-value" id="disp-libre">—</div>
+                <div class="metric-sub" id="disp-libre-sub"></div>
+                <div class="metric-estado" id="disp-libre-estado"></div>
+            </div>
+            <div class="metric-card justo">
+                <div class="metric-title">MES MÁS JUSTO</div>
+                <div class="metric-value" id="disp-justo">—</div>
+                <div class="metric-sub" id="disp-justo-sub"></div>
+                <div class="metric-estado" id="disp-justo-estado"></div>
+            </div>
             <div class="metric-card proyeccion">
                 <div class="metric-title">PROYECCIÓN FINAL</div>
                 <div class="metric-value" id="disp-meta-final">0.00 €</div>
+                <div class="metric-sub" id="disp-final-sub"></div>
             </div>
         </div>
 
@@ -330,7 +396,95 @@
             <div style="height: 150px; position: relative;">
                 <canvas id="graficoProyeccion"></canvas>
             </div>
+            <div class="colchon-fila">
+                <span class="muestra-colchon" aria-hidden="true"></span>
+                <label for="input-colchon">Colchón: aviso si un mes baja de</label>
+                <input type="number" id="input-colchon" inputmode="decimal" step="1" min="0" placeholder="0" oninput="cambiarColchon(this.value)">
+                <span>€</span>
+            </div>
         </div>
+
+        <!-- ===== Tarjeta de crédito ===== -->
+        <details class="panel" id="panel-tarjeta">
+            <summary>
+                <span>💳 Tarjeta de crédito</span>
+                <span class="summary-right"><span class="panel-resumen" id="tj-resumen"></span><span class="arrow">▼</span></span>
+            </summary>
+            <div class="panel-body">
+                <div class="dos-col">
+                    <div>
+                        <label for="tj-deuda">Deuda actual (€)</label>
+                        <input type="number" id="tj-deuda" inputmode="decimal" step="0.01" min="0" placeholder="0.00" oninput="cambiarTarjeta('deuda', this.value)">
+                    </div>
+                    <div>
+                        <label for="tj-limite">Límite (€)</label>
+                        <input type="number" id="tj-limite" inputmode="decimal" step="0.01" min="0" placeholder="0.00" oninput="cambiarTarjeta('limite', this.value)">
+                    </div>
+                </div>
+                <div class="tj-disponible" id="tj-disponible"></div>
+
+                <div class="panel-h">Compra con la tarjeta</div>
+                <div class="tj-compra">
+                    <input type="number" id="tj-compra-importe" inputmode="decimal" step="0.01" min="0" placeholder="Importe" enterkeyhint="next">
+                    <input type="text" id="tj-compra-nota" placeholder="Qué es" autocomplete="off" enterkeyhint="done">
+                    <button class="btn-panel" onclick="anadirCompraTarjeta()">＋ Añadir</button>
+                </div>
+                <div id="tj-compras"></div>
+
+                <div class="panel-h">Plan de pagos</div>
+                <div id="tj-plan"></div>
+
+                <details class="tj-ajustes">
+                    <summary>⚙️ Intereses y pago mínimo <span class="arrow">▼</span></summary>
+                    <div class="dos-col">
+                        <div>
+                            <label for="tj-tan">TAN (%)</label>
+                            <input type="number" id="tj-tan" inputmode="decimal" step="0.01" min="0" oninput="cambiarTarjeta('tan', this.value)">
+                        </div>
+                        <div>
+                            <label for="tj-comision">Comisión al mes (€)</label>
+                            <input type="number" id="tj-comision" inputmode="decimal" step="0.01" min="0" oninput="cambiarTarjeta('comision', this.value)">
+                        </div>
+                        <div>
+                            <label for="tj-minpct">Pago mínimo (%)</label>
+                            <input type="number" id="tj-minpct" inputmode="decimal" step="0.5" min="0" oninput="cambiarTarjeta('minPct', this.value)">
+                        </div>
+                        <div>
+                            <label for="tj-mineur">Pago mínimo (€)</label>
+                            <input type="number" id="tj-mineur" inputmode="decimal" step="0.01" min="0" oninput="cambiarTarjeta('minEur', this.value)">
+                        </div>
+                    </div>
+                    <div class="panel-nota">El TAN viene en tu extracto. Con 18 % los intereses salen por lo alto (el peor escenario).</div>
+                </details>
+                <div class="panel-nota">Los pagos salen de los conceptos «Tarjeta…» de tus ciclos. Cuando el banco te cobre, marca ese concepto y la deuda baja sola. Si el extracto dice otra cifra (por los intereses), escríbela en «Deuda actual».</div>
+            </div>
+        </details>
+
+        <!-- ===== Simulador ===== -->
+        <details class="panel" id="panel-sim">
+            <summary>
+                <span>🧮 ¿Me lo puedo permitir?</span>
+                <span class="arrow">▼</span>
+            </summary>
+            <div class="panel-body">
+                <label for="sim-nombre">Qué quieres comprar</label>
+                <input type="text" id="sim-nombre" placeholder="Ej. Cocina (seQura)" autocomplete="off">
+                <div class="dos-col">
+                    <div>
+                        <label for="sim-cuota">Cuota al mes (€)</label>
+                        <input type="number" id="sim-cuota" inputmode="decimal" step="0.01" min="0" placeholder="Ej. 27.04" oninput="actualizarSimulador()">
+                    </div>
+                    <div>
+                        <label for="sim-n">Nº de cuotas</label>
+                        <input type="number" id="sim-n" inputmode="numeric" step="1" min="1" max="60" value="1" oninput="actualizarSimulador()">
+                    </div>
+                </div>
+                <label for="sim-desde">Primera cuota en el ciclo</label>
+                <select id="sim-desde" onchange="actualizarSimulador()"></select>
+                <div class="sim-res" id="sim-res"></div>
+                <button class="btn-panel btn-sim-add" id="sim-anadir" onclick="anadirSimulacionAlPlan()" disabled>➕ Añadir a mis ciclos</button>
+            </div>
+        </details>
 
         <div class="cycle-list" id="contenedor-ciclos"></div>
 
@@ -372,6 +526,7 @@
             </div>
             <button class="btn-g-eliminar" id="g-eliminar" onclick="eliminarGastoEditado()" style="display:none;">🗑️ Eliminar este gasto</button>
             <div class="g-nota-gas">⛽ La gasolina se apunta en la pestaña Gasolina y también descuenta del saldo.</div>
+            <div class="g-nota-gas">💳 Si lo pagas con la tarjeta de crédito, apúntalo en el panel «Tarjeta de crédito», no aquí.</div>
         </div>
     </div>
     <div class="toast" id="toast"></div>
@@ -1093,6 +1248,18 @@
                 if (!Array.isArray(c.items)) c.items = [];
                 if (!Array.isArray(c.gastos)) c.gastos = [];
             });
+            // Tarjeta de crédito y colchón (los respaldos antiguos no los tienen)
+            const nDef = (v, d) => { const x = parseFloat(v); return isFinite(x) ? x : d; };
+            if (!data.tarjeta || typeof data.tarjeta !== 'object') data.tarjeta = {};
+            const tj = data.tarjeta;
+            tj.deuda = nDef(tj.deuda, 0);
+            tj.limite = nDef(tj.limite, 1000);
+            tj.tan = nDef(tj.tan, 18);
+            tj.comision = nDef(tj.comision, 0);
+            tj.minPct = nDef(tj.minPct, 5);
+            tj.minEur = nDef(tj.minEur, 12.5);
+            if (!Array.isArray(tj.compras)) tj.compras = [];
+            data.colchon = nDef(data.colchon, 50);
             if (data.modeloSaldo !== MODELO_SALDO) {
                 // Antes los repostajes no descontaban del saldo; ahora sí, igual que los gastos.
                 // Se ajusta la base para que el saldo que ya tenías no cambie al actualizar.
@@ -1117,28 +1284,51 @@
                 chartInstance.destroy();
             }
 
+            // Rojo: negativo · Ámbar: por debajo del colchón · Verde: bien
+            const colchon = colchonActual();
+            const colorPunto = v => v < 0 ? '#ef4444' : (v < colchon ? '#f59e0b' : '#10b981');
+            const datasets = [{
+                label: 'Saldo (€)',
+                data: datos,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.25,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                pointBackgroundColor: datos.map(colorPunto),
+                pointBorderColor: datos.map(colorPunto)
+            }];
+            if (colchon > 0) {
+                datasets.push({
+                    label: 'Colchón',
+                    data: datos.map(() => colchon),
+                    borderColor: '#f59e0b',
+                    borderWidth: 1.5,
+                    borderDash: [6, 4],
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    pointHitRadius: 0,
+                    fill: false,
+                    tension: 0
+                });
+            }
+
             chartInstance = new Chart(ctx.getContext('2d'), {
                 type: 'line',
                 data: {
                     labels: etiquetas,
-                    datasets: [{
-                        label: 'Saldo (€)',
-                        data: datos,
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.25,
-                        pointRadius: 3,
-                        pointBackgroundColor: datos.map(v => v < 0 ? '#ef4444' : '#10b981')
-                    }]
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
+                            filter: (item) => item.datasetIndex === 0,
                             callbacks: {
                                 label: (context) => `Saldo: ${context.raw.toFixed(2)} €`
                             }
@@ -1189,7 +1379,7 @@
                             <div class="item-left">
                                 <button class="btn-delete" title="Eliminar concepto" onclick="eliminarItem(${cIdx}, ${iIdx})">✕</button>
                                 <input type="checkbox" ${isChecked} onchange="toggleCheck(${cIdx}, ${iIdx}, this.checked)">
-                                <span class="desc-text">${item.desc}</span>
+                                <span class="desc-text">${esc(item.desc)}</span>
                             </div>
                             <div class="item-right">
                                 <button class="btn-sync" title="Aplicar este importe a todos los ciclos futuros" onclick="actualizarEnCadena(${cIdx}, ${iIdx})">🔄</button>
@@ -1231,7 +1421,7 @@
                         <summary>
                             <div class="summary-left">
                                 <button class="btn-delete-cycle" title="Eliminar ciclo completo" onclick="eliminarCiclo(event, ${cIdx})">🗑️</button>
-                                <span>📅 ${ciclo.nombre}</span>
+                                <span>📅 ${esc(ciclo.nombre)}</span>
                             </div>
                             <div class="summary-right">
                                 <span class="summary-val" id="sum-val-${cIdx}">0.00 €</span>
@@ -1257,7 +1447,25 @@
         }
 
         function toggleCheck(cIdx, iIdx, checked) {
-            appData.ciclos[cIdx].items[iIdx].checked = checked;
+            const item = appData.ciclos[cIdx].items[iIdx];
+            item.checked = checked;
+            // Pago de la tarjeta: al marcarlo baja la deuda; al desmarcarlo vuelve a subir
+            if (esTarjeta(item) && appData.tarjeta) {
+                const t = appData.tarjeta;
+                const antes = redondear(numO(t.deuda, 0));
+                if (checked) {
+                    const baja = Math.min(Math.abs(parseFloat(item.valor) || 0), antes);
+                    if (baja > 0) {
+                        t.deuda = redondear(antes - baja);
+                        item.tjDescontado = redondear(baja);
+                        mostrarAviso(`Deuda de la tarjeta: ${antes.toFixed(2)} → ${t.deuda.toFixed(2)} €`);
+                    }
+                } else if (item.tjDescontado) {
+                    t.deuda = redondear(antes + item.tjDescontado);
+                    delete item.tjDescontado;
+                    mostrarAviso(`Deuda de la tarjeta: ${antes.toFixed(2)} → ${t.deuda.toFixed(2)} €`);
+                }
+            }
             renderizar();
             guardar();
         }
@@ -1385,6 +1593,9 @@
             }
         }
 
+        // Última proyección calculada (la usan el resumen y el simulador)
+        let ultimaProyeccion = null;
+
         function recalcular() {
             const analisis = appData.ciclos.map(analizarCiclo);
             const saldoActualReal = appData.saldoBase + analisis.reduce((suma, an) => suma + an.real, 0);
@@ -1397,33 +1608,31 @@
             let acumuladoProyectado = saldoActualReal;
             const etiquetasGrafico = [];
             const datosGrafico = [];
+            const cierres = [];
 
             appData.ciclos.forEach((ciclo, cIdx) => {
                 const an = analisis[cIdx];
                 acumuladoProyectado += an.pendiente;
+                cierres.push(acumuladoProyectado);
 
-                etiquetasGrafico.push(ciclo.nombre.split(' - ')[0]);
+                etiquetasGrafico.push(etiquetaMes(ciclo, true));
                 datosGrafico.push(acumuladoProyectado);
 
                 const elSum = document.getElementById(`sum-val-${cIdx}`);
                 const elCierre = document.getElementById(`cierre-val-${cIdx}`);
                 const cardEl = document.getElementById(`card-${cIdx}`);
 
-                if (elSum) elSum.innerText = acumuladoProyectado.toFixed(2) + " €";
-                if (elCierre) elCierre.innerText = acumuladoProyectado.toFixed(2) + " €";
+                // Rojo: en negativo · Ámbar: por debajo del colchón
+                const estado = estadoSaldo(acumuladoProyectado);
+                const icono = estado === 'mal' ? '⛔ ' : (estado === 'aviso' ? '⚠️ ' : '');
+                const color = estado === 'mal' ? "var(--danger)" : (estado === 'aviso' ? "#b45309" : "var(--primary-dark)");
 
-                const esNegativo = acumuladoProyectado < 0;
-                const color = esNegativo ? "var(--danger)" : "var(--primary-dark)";
-
-                if (elSum) elSum.style.color = color;
-                if (elCierre) elCierre.style.color = color;
+                if (elSum) { elSum.innerText = icono + acumuladoProyectado.toFixed(2) + " €"; elSum.style.color = color; }
+                if (elCierre) { elCierre.innerText = acumuladoProyectado.toFixed(2) + " €"; elCierre.style.color = color; }
 
                 if (cardEl) {
-                    if (esNegativo) {
-                        cardEl.classList.add("alert-danger");
-                    } else {
-                        cardEl.classList.remove("alert-danger");
-                    }
+                    cardEl.classList.toggle("alert-danger", estado === 'mal');
+                    cardEl.classList.toggle("alert-warn", estado === 'aviso');
                 }
 
                 // Debajo de cada concepto: lo gastado de verdad frente a lo presupuestado
@@ -1450,7 +1659,11 @@
             });
 
             document.getElementById("disp-meta-final").innerText = acumuladoProyectado.toFixed(2) + " €";
+            ultimaProyeccion = { saldoActual: saldoActualReal, cierres: cierres };
             renderizarGrafico(etiquetasGrafico, datosGrafico);
+            pintarResumen(cierres);
+            pintarTarjeta();
+            pintarSimulador();
         }
 
         function guardar() {
@@ -1507,6 +1720,399 @@
                 renderizar();
                 actualizarPantallaGasolina();
             }
+        }
+
+        // =====================================================
+        // ===== RESUMEN, COLCHÓN, TARJETA Y SIMULADOR =========
+        // =====================================================
+        function redondear(x) { return Math.round((Number(x) || 0) * 100) / 100; }
+        function numO(v, def) { const x = parseFloat(v); return isFinite(x) ? x : def; }
+        function fmtEur(n) { return (Number(n) || 0).toFixed(2) + ' €'; }
+
+        // "Oct 2026" (o "Oct 26" en corto) a partir del nombre del ciclo
+        function etiquetaMes(ciclo, corta) {
+            const nombre = String((ciclo && ciclo.nombre) || '');
+            const k = claveCicloFinanzas(nombre);
+            if (k === null) return nombre.split(/\s[-–]\s/)[0];
+            const a = Math.floor(k / 100), m = k % 100;
+            return `${MESES_CORTOS[m]} ${corta ? String(a).slice(2) : a}`;
+        }
+
+        function finDeCiclo(ciclo) {
+            const p = String(ciclo.nombre || '').split(/\s[-–]\s/);
+            return (p[1] || p[0]).trim();
+        }
+
+        // Ciclo de hoy; si hoy no cae en ninguno, el primero que empieza después (-1 si no hay)
+        function indiceInicioFuturo() {
+            const hoy = new Date();
+            const i = indiceCicloDeFecha(hoy);
+            if (i >= 0) return i;
+            const kHoy = claveCiclo(cicloDeFecha(hoy));
+            return appData.ciclos.findIndex(c => {
+                const k = claveCicloFinanzas(String(c.nombre || ''));
+                return k !== null && k > kHoy;
+            });
+        }
+
+        // ----- Colchón -----
+        function colchonActual() { return Math.max(0, numO(appData.colchon, 0)); }
+
+        function estadoSaldo(v) {
+            const r = Math.round(v * 100) / 100;
+            if (r < 0) return 'mal';
+            return r < colchonActual() ? 'aviso' : 'ok';
+        }
+
+        function cambiarColchon(v) {
+            const n = parseFloat(v);
+            appData.colchon = isFinite(n) && n > 0 ? n : 0;
+            guardar();
+            recalcular();
+        }
+
+        // ----- Resumen de arriba -----
+        function pintarResumen(cierres) {
+            const n = appData.ciclos.length;
+            const idxHoy = indiceCicloDeFecha(new Date());
+            const ini = indiceInicioFuturo();
+            const poner = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
+            const ponerEstado = (id, v) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (v === null) { el.className = 'metric-estado'; el.innerText = ''; return; }
+                const e = estadoSaldo(v);
+                el.className = 'metric-estado est-' + e;
+                el.innerText = e === 'mal' ? '⛔ En negativo'
+                    : e === 'aviso' ? `⚠️ Bajo tu colchón (${colchonActual().toFixed(0)} €)`
+                    : '✓ Bien';
+            };
+
+            if (idxHoy >= 0) {
+                poner('disp-libre', fmtEur(cierres[idxHoy]));
+                poner('disp-libre-sub', 'hasta el ' + finDeCiclo(appData.ciclos[idxHoy]));
+                ponerEstado('disp-libre-estado', cierres[idxHoy]);
+            } else {
+                poner('disp-libre', '—');
+                poner('disp-libre-sub', 'hoy no cae en ningún ciclo');
+                ponerEstado('disp-libre-estado', null);
+            }
+
+            if (ini >= 0) {
+                let m = ini;
+                for (let i = ini + 1; i < n; i++) if (cierres[i] < cierres[m]) m = i;
+                poner('disp-justo', fmtEur(cierres[m]));
+                poner('disp-justo-sub', etiquetaMes(appData.ciclos[m]) + (m === idxHoy ? ' · este ciclo' : ''));
+                ponerEstado('disp-justo-estado', cierres[m]);
+            } else {
+                poner('disp-justo', '—');
+                poner('disp-justo-sub', 'no hay ciclos por delante');
+                ponerEstado('disp-justo-estado', null);
+            }
+            poner('disp-final-sub', n ? 'al cierre de ' + etiquetaMes(appData.ciclos[n - 1]) : '');
+
+            const inColchon = document.getElementById('input-colchon');
+            if (inColchon && document.activeElement !== inColchon) inColchon.value = colchonActual() || '';
+        }
+
+        // ----- Tarjeta de crédito -----
+        // Un concepto es un pago de tarjeta si su nombre lleva "tarjeta" (p. ej. "Tarjeta de crédito último pago")
+        function esTarjeta(item) { return !esIngreso(item) && normDesc(item.desc).includes('tarjeta'); }
+
+        // Simula la deuda ciclo a ciclo con los pagos «Tarjeta…» aún sin marcar.
+        // Mínimo = % de la deuda (nunca menos del mínimo en €) + intereses + comisión.
+        // Si el pago previsto no llega al mínimo, el banco cobra el mínimo.
+        function simularTarjeta() {
+            const t = appData.tarjeta;
+            const ciclos = appData.ciclos;
+            const res = { filas: [], avisos: [], intereses: 0, finIdx: -1, resto: 0, sinCiclos: false };
+            let D = redondear(Math.max(0, numO(t.deuda, 0)));
+            if (D <= 0.005) return res;
+            let s = indiceInicioFuturo();
+            const idxHoy = indiceCicloDeFecha(new Date());
+            // Si el pago de este ciclo ya está marcado, la deuda puesta ya lo tiene descontado
+            if (s >= 0 && s === idxHoy && ciclos[s].items.some(it => esTarjeta(it) && it.checked)) s++;
+            if (s < 0 || s >= ciclos.length) { res.sinCiclos = true; res.resto = D; return res; }
+            const r = Math.max(0, numO(t.tan, 0)) / 100 / 12;
+            const pct = Math.max(0, numO(t.minPct, 5)) / 100;
+            const minEur = Math.max(0, numO(t.minEur, 0));
+            const fee = Math.max(0, numO(t.comision, 0));
+            for (let i = s; i < ciclos.length; i++) {
+                const esHoy = (i === idxHoy);   // la deuda de hoy ya incluye los intereses hasta ahora
+                const interes = esHoy ? 0 : redondear(D * r * 1.04);   // + 4 % de imposto do selo
+                const comision = esHoy ? 0 : fee;
+                const total = redondear(D + interes + comision);
+                const minimo = redondear(Math.min(total, Math.max(minEur, D * pct) + interes + comision));
+                const plan = redondear(ciclos[i].items
+                    .filter(it => esTarjeta(it) && !it.checked)
+                    .reduce((a, it) => a + Math.abs(parseFloat(it.valor) || 0), 0));
+                const pago = redondear(Math.min(total, Math.max(plan, minimo)));
+                const corto = plan + 0.005 < minimo;
+                D = redondear(total - pago);
+                res.intereses += interes;
+                res.filas.push({ i: i, plan: plan, minimo: minimo, pago: pago, deuda: D, corto: corto });
+                if (corto) res.avisos.push({ i: i, plan: plan, minimo: minimo });
+                if (D <= 0.005) { res.finIdx = i; D = 0; break; }
+            }
+            res.resto = D;
+            res.intereses = redondear(res.intereses);
+            return res;
+        }
+
+        function cambiarTarjeta(campo, valor) {
+            const v = parseFloat(valor);
+            appData.tarjeta[campo] = isFinite(v) ? Math.max(0, v) : 0;
+            guardar();
+            pintarTarjeta();
+        }
+
+        function anadirCompraTarjeta() {
+            const inImp = document.getElementById('tj-compra-importe');
+            const inNota = document.getElementById('tj-compra-nota');
+            const imp = redondear(parseFloat(inImp.value));
+            if (!(imp > 0)) { alert('Pon el importe de la compra.'); inImp.focus(); return; }
+            const t = appData.tarjeta;
+            const antes = redondear(numO(t.deuda, 0));
+            t.compras.push({ id: nuevoId(), ts: Date.now(), importe: imp, nota: inNota.value.trim() });
+            t.deuda = redondear(antes + imp);
+            inImp.value = '';
+            inNota.value = '';
+            if (document.activeElement) document.activeElement.blur();
+            guardar();
+            pintarTarjeta();
+            mostrarAviso(`Compra con tarjeta: +${imp.toFixed(2)} € · deuda ${t.deuda.toFixed(2)} €`);
+        }
+
+        function borrarCompraTarjeta(id) {
+            const t = appData.tarjeta;
+            const c = t.compras.find(x => x.id === id);
+            if (!c) return;
+            if (!confirm(`¿Quitar la compra de ${(Number(c.importe) || 0).toFixed(2)} €? También se restará de la deuda.`)) return;
+            t.compras = t.compras.filter(x => x.id !== id);
+            t.deuda = redondear(Math.max(0, numO(t.deuda, 0) - (Number(c.importe) || 0)));
+            guardar();
+            pintarTarjeta();
+        }
+
+        // Sube el pago «Tarjeta…» de un ciclo hasta el importe indicado
+        function subirPagoTarjeta(cIdx, objetivo) {
+            const ciclo = appData.ciclos[cIdx];
+            if (!ciclo) return;
+            const items = ciclo.items.filter(it => esTarjeta(it) && !it.checked);
+            const actual = items.reduce((a, it) => a + Math.abs(parseFloat(it.valor) || 0), 0);
+            const falta = redondear(objetivo - actual);
+            if (falta <= 0) return;
+            if (items.length) {
+                const it = items[items.length - 1];
+                it.valor = redondear(Math.abs(parseFloat(it.valor) || 0) + falta).toFixed(2);
+            } else {
+                ciclo.items.push({ desc: 'Tarjeta de crédito', valor: redondear(objetivo).toFixed(2), checked: false });
+            }
+            guardar();
+            renderizar();
+            mostrarAviso(`Tarjeta en ${etiquetaMes(ciclo)}: ${redondear(objetivo).toFixed(2)} €`);
+        }
+
+        function pintarTarjeta() {
+            const t = appData.tarjeta;
+            const elPlan = document.getElementById('tj-plan');
+            if (!t || !elPlan) return;
+            const poner = (id, v) => {
+                const el = document.getElementById(id);
+                if (el && document.activeElement !== el) el.value = v;
+            };
+            const deuda = redondear(Math.max(0, numO(t.deuda, 0)));
+            const limite = Math.max(0, numO(t.limite, 0));
+            poner('tj-deuda', deuda > 0 ? deuda.toFixed(2) : '');
+            poner('tj-limite', limite > 0 ? limite : '');
+            poner('tj-tan', numO(t.tan, 0));
+            poner('tj-comision', numO(t.comision, 0));
+            poner('tj-minpct', numO(t.minPct, 0));
+            poner('tj-mineur', numO(t.minEur, 0));
+
+            // Disponible
+            const elDisp = document.getElementById('tj-disponible');
+            if (limite > 0) {
+                const pct = Math.min(100, deuda / limite * 100);
+                elDisp.innerHTML = `Disponible: <b>${fmtEur(limite - deuda)}</b> de ${fmtEur(limite)}` +
+                    `<div class="presu-bar tj-bar ${pct > 90 ? 'mal' : ''}"><div style="width:${pct}%"></div></div>`;
+            } else {
+                elDisp.innerHTML = '';
+            }
+
+            // Compras apuntadas
+            const elCompras = document.getElementById('tj-compras');
+            const compras = (t.compras || []).slice().sort((a, b) => b.ts - a.ts);
+            if (!compras.length) {
+                elCompras.innerHTML = '';
+            } else {
+                const previo = elCompras.querySelector('details');
+                const abierto = previo ? previo.open : false;
+                const total = compras.reduce((a, c) => a + (Number(c.importe) || 0), 0);
+                elCompras.innerHTML = `
+                    <details class="gastos-lista" ${abierto ? 'open' : ''}>
+                        <summary><span>🧾 Compras apuntadas (${compras.length})</span><span class="g-total">+${total.toFixed(2)} € <span class="arrow">▼</span></span></summary>
+                        ${compras.map(c => `
+                        <div class="compra-row">
+                            <div class="c-izq"><div class="c-desc">${esc(c.nota || 'Compra')}</div><div class="c-sub">${fmtFecha(c.ts)}</div></div>
+                            <div class="c-der"><b>+${(Number(c.importe) || 0).toFixed(2)} €</b><button class="btn-delete" title="Quitar compra" onclick="borrarCompraTarjeta('${esc(c.id)}')">✕</button></div>
+                        </div>`).join('')}
+                    </details>`;
+            }
+
+            // Plan de pagos
+            const res = simularTarjeta();
+            const mes = (i, corta) => esc(etiquetaMes(appData.ciclos[i], corta));
+            let html = '';
+            if (deuda <= 0.005) {
+                html = `<div class="panel-nota" style="margin-top:0">No debes nada. Si compras con la tarjeta, añádelo arriba.</div>`;
+            } else if (res.sinCiclos) {
+                html = `<div class="mal-linea">⛔ No hay ciclos por delante para planificar los pagos. Crea ciclos nuevos.</div>`;
+            } else {
+                html += `<table class="tabla-plan"><thead><tr><th>Ciclo</th><th>Pagas</th><th>Mínimo</th><th>Debes después</th></tr></thead><tbody>`;
+                res.filas.forEach(f => {
+                    html += `<tr class="${f.corto ? 'corto' : ''}"><td>${mes(f.i, true)}</td><td>${f.corto ? '⚠️ ' : ''}${f.plan.toFixed(2)}</td><td>${f.minimo.toFixed(2)}</td><td>${f.deuda.toFixed(2)}</td></tr>`;
+                });
+                html += `</tbody></table>`;
+                res.avisos.slice(0, 4).forEach(a => {
+                    const objetivo = Math.ceil(a.minimo - 0.001);
+                    html += `<div class="aviso-linea"><span>⚠️ <b>${mes(a.i)}</b>: tienes ${a.plan.toFixed(2)} € y el mínimo será ≈ ${a.minimo.toFixed(2)} €</span>` +
+                        `<button class="btn-panel" onclick="subirPagoTarjeta(${a.i}, ${objetivo})">Subir a ${objetivo} €</button></div>`;
+                });
+                if (res.avisos.length > 4) html += `<div class="panel-nota">…y ${res.avisos.length - 4} aviso(s) más en la tabla.</div>`;
+                if (res.finIdx >= 0) {
+                    const ult = res.filas[res.filas.length - 1];
+                    const sobra = ult.plan - ult.pago;
+                    html += `<div class="ok-linea">✓ Terminas de pagar en <b>${mes(res.finIdx)}</b> · intereses estimados ≈ ${res.intereses.toFixed(2)} €` +
+                        (sobra >= 0.5 ? `<br><small>En ese ciclo te bastan ≈ ${ult.pago.toFixed(2)} € (tienes ${ult.plan.toFixed(2)} €).</small>` : '') + `</div>`;
+                } else {
+                    html += `<div class="mal-linea">⛔ Al final de tus ciclos aún deberías ≈ <b>${fmtEur(res.resto)}</b>. Sube algún pago «Tarjeta…» o crea más ciclos.</div>`;
+                }
+                if (res.avisos.length) html += `<div class="panel-nota">Si tu pago no llega al mínimo, el banco cobra el mínimo igualmente (la tabla ya lo cuenta así).</div>`;
+            }
+            elPlan.innerHTML = html;
+
+            // Resumen en la cabecera del panel
+            let resumen;
+            if (deuda <= 0.005) resumen = 'Sin deuda';
+            else if (res.sinCiclos) resumen = `${fmtEur(deuda)} · ⛔ sin ciclos`;
+            else if (res.avisos.length) resumen = `${fmtEur(deuda)} · ⚠️ ${res.avisos.length} aviso${res.avisos.length > 1 ? 's' : ''}`;
+            else if (res.finIdx >= 0) resumen = `${fmtEur(deuda)} · ✓ acabas ${etiquetaMes(appData.ciclos[res.finIdx], true)}`;
+            else resumen = `${fmtEur(deuda)} · ⛔ no acabas`;
+            document.getElementById('tj-resumen').innerText = resumen;
+        }
+
+        // ----- Simulador "¿Me lo puedo permitir?" -----
+        function pintarSimulador() {
+            const sel = document.getElementById('sim-desde');
+            if (!sel) return;
+            const ini = indiceInicioFuturo();
+            const idxHoy = indiceCicloDeFecha(new Date());
+            const firma = appData.ciclos.map(c => c.nombre).join('|') + '#' + ini;
+            if (sel.dataset.firma !== firma) {
+                const previo = sel.value;
+                let html = '';
+                if (ini >= 0) {
+                    appData.ciclos.forEach((c, i) => {
+                        if (i < ini) return;
+                        html += `<option value="${i}">${esc(etiquetaMes(c))}${i === idxHoy ? ' (este ciclo)' : ''}</option>`;
+                    });
+                }
+                sel.innerHTML = html;
+                sel.dataset.firma = firma;
+                if (previo !== '' && sel.querySelector(`option[value="${previo}"]`)) sel.value = previo;
+            }
+            actualizarSimulador();
+        }
+
+        function leerSimulador() {
+            const cuota = redondear(parseFloat(document.getElementById('sim-cuota').value) || 0);
+            const n = Math.max(1, Math.min(60, parseInt(document.getElementById('sim-n').value, 10) || 1));
+            const desde = parseInt(document.getElementById('sim-desde').value, 10);
+            return { cuota: cuota, n: n, desde: desde };
+        }
+
+        // Cierres desde "desde" restando la cuota durante n ciclos (solo los que existen)
+        function efectoCompra(cierres, desde, n, cuota) {
+            let acum = 0, min = Infinity, minIdx = -1;
+            const negativos = [];
+            for (let i = desde; i < cierres.length; i++) {
+                if (i < desde + n) acum += cuota;
+                const v = cierres[i] - acum;
+                if (v < min) { min = v; minIdx = i; }
+                if (Math.round(v * 100) < 0) negativos.push(i);
+            }
+            return { min: min, minIdx: minIdx, negativos: negativos, caben: Math.max(0, Math.min(n, cierres.length - desde)) };
+        }
+
+        function actualizarSimulador() {
+            const elRes = document.getElementById('sim-res');
+            const btn = document.getElementById('sim-anadir');
+            if (!elRes || !ultimaProyeccion) return;
+            const { cuota, n, desde } = leerSimulador();
+            const cierres = ultimaProyeccion.cierres;
+            const ciclos = appData.ciclos;
+            const colchon = colchonActual();
+            btn.disabled = true;
+            if (isNaN(desde) || desde < 0 || desde >= ciclos.length) {
+                elRes.innerHTML = '<div class="panel-nota">No hay ciclos por delante. Crea ciclos nuevos para simular.</div>';
+                return;
+            }
+            if (!(cuota > 0)) {
+                elRes.innerHTML = '<div class="panel-nota">Pon la cuota al mes y el número de cuotas (1 si lo pagas de una vez).</div>';
+                return;
+            }
+            const ef = efectoCompra(cierres, desde, n, cuota);
+            const mes = (i, corta) => esc(etiquetaMes(ciclos[i], corta));
+            let html = '';
+            const estado = estadoSaldo(ef.min);
+            if (estado === 'mal') {
+                html += `<div class="mal-linea">⛔ <b>No cabe.</b> Quedarías en negativo en: ${ef.negativos.map(i => mes(i, true)).join(', ')}.</div>`;
+            } else if (estado === 'aviso') {
+                html += `<div class="aviso-linea">⚠️ <span><b>Cabe muy justo:</b> bajarías de tu colchón de ${colchon.toFixed(0)} €.</span></div>`;
+            } else {
+                html += `<div class="ok-linea">✅ <b>Cabe.</b></div>`;
+            }
+            html += `<div class="linea">Tu mes más justo sería <b>${mes(ef.minIdx)}</b> con <b>${fmtEur(ef.min)}</b> (sin esta compra: ${fmtEur(cierres[ef.minIdx])}).</div>`;
+
+            // Lo antes que cabe sin bajar del colchón (con todas las cuotas dentro de tus ciclos)
+            const ini = Math.max(0, indiceInicioFuturo());
+            let primero = -1;
+            for (let s = ini; s + n <= ciclos.length; s++) {
+                if (efectoCompra(cierres, s, n, cuota).min >= colchon - 0.005) { primero = s; break; }
+            }
+            if (primero === desde) html += `<div class="linea">👍 Es lo antes que cabe sin bajar de ${colchon.toFixed(0)} €.</div>`;
+            else if (primero > desde) html += `<div class="linea">👉 Lo antes que cabe sin bajar de ${colchon.toFixed(0)} €: <b>${mes(primero)}</b>.</div>`;
+            else if (primero >= 0) html += `<div class="linea">👉 También cabría antes: desde <b>${mes(primero)}</b>.</div>`;
+            else if (n > ciclos.length - ini) html += `<div class="linea">Para ver las ${n} cuotas necesitas crear más ciclos.</div>`;
+            else html += `<div class="linea">Sin bajar de ${colchon.toFixed(0)} € no cabe en ninguno de tus ciclos.</div>`;
+
+            if (ef.caben < n) html += `<div class="panel-nota">Solo ${ef.caben} de las ${n} cuotas caen dentro de tus ciclos; el resto no está contado.</div>`;
+            html += `<div class="panel-nota">Total: ${n} × ${fmtEur(cuota)} = <b>${fmtEur(n * cuota)}</b></div>`;
+            elRes.innerHTML = html;
+            btn.disabled = false;
+        }
+
+        function anadirSimulacionAlPlan() {
+            const { cuota, n, desde } = leerSimulador();
+            const ciclos = appData.ciclos;
+            if (!(cuota > 0) || isNaN(desde) || desde < 0 || desde >= ciclos.length) return;
+            const nombre = document.getElementById('sim-nombre').value.trim() || 'Compra a plazos';
+            const hasta = Math.min(desde + n, ciclos.length);
+            const caben = hasta - desde;
+            let msg = `Se añadirá «${nombre}» de ${cuota.toFixed(2)} € en ${caben} ciclo${caben > 1 ? 's' : ''}: ` +
+                etiquetaMes(ciclos[desde]) + (caben > 1 ? ' → ' + etiquetaMes(ciclos[hasta - 1]) : '') + '.';
+            if (caben < n) msg += `\n\n${n - caben} cuota(s) no caben en tus ciclos: añádelas cuando crees más.`;
+            if (!confirm(msg + '\n\n¿Continuar?')) return;
+            for (let i = desde; i < hasta; i++) {
+                ciclos[i].items.push({ desc: nombre, valor: cuota.toFixed(2), checked: false });
+            }
+            document.getElementById('sim-cuota').value = '';
+            document.getElementById('sim-n').value = '1';
+            document.getElementById('sim-nombre').value = '';
+            guardar();
+            renderizar();
+            mostrarAviso(`«${nombre}» añadida en ${caben} ciclo${caben > 1 ? 's' : ''}`);
         }
 
         // =====================================================
@@ -1734,6 +2340,8 @@
             document.getElementById('coste').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); guardarRegistroGasolina(); } });
             document.getElementById('g-importe').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('g-nota').focus(); } });
             document.getElementById('g-nota').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); guardarGasto(); } });
+            document.getElementById('tj-compra-importe').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('tj-compra-nota').focus(); } });
+            document.getElementById('tj-compra-nota').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); anadirCompraTarjeta(); } });
 
             resetearFormulario();
             actualizarPantallaGasolina();
