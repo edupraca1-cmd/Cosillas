@@ -1036,7 +1036,7 @@
             </div>
         </div>
         <label class="mais-opcao"><input type="checkbox" id="mais-deslizar" onchange="deslizarAlternar(this.checked)"> ↔️ Deslizar para mudar de pestanha</label>
-        <p class="app-version" id="app-version">Beta 0.1.13</p>
+        <p class="app-version" id="app-version">Beta 0.1.15</p>
     </div>
 
     <!-- SUBMÓDULOS -->
@@ -3139,9 +3139,11 @@
             });
             const t = total(), bal = c.balance || 0;   // o saldo real manda
             if (t > bal + 0.004) abate(t - bal, '9999-12-31'); else if (t < bal - 0.004) soma('0000-00-00', bal - t);
+            const pg = {};   // Beta 0.1.14 · N28: o que o cliente pagou em cada dia
+            seq.forEach(l => { if (l.type === 'pay' && !l.man && FOLHA_DEUDA.includes(l.details || '') && (l.amount || 0) > 0.004 && l.date) { const di = ffIsoDe(l.date); pg[di] = ffR2((pg[di] || 0) + l.amount); } });
             const dias = {}; let ant = 0;
             Object.keys(orig).forEach(k => { if (k === '0000-00-00') ant = bk[k] || 0; else { dias[k] = { v: orig[k], r: bk[k] || 0, m: man[k] > 0 }; if (exd[k]) dias[k].x = exd[k]; } });
-            return { dias, ant: ant, excesso: excesso, apl: apl };
+            return { dias, ant: ant, excesso: excesso, apl: apl, pg: pg };
         }
         function ffQDia(c, iso, ctx) {   // o pão desse dia, já com as correções feitas na folha do mês
             const x = folhasDiaQ(c, iso, ctx), co = folhasCorrDe(c.id, iso), q = Object.assign({}, x.q);
@@ -3187,7 +3189,11 @@
                             if (cf) { const fc = ffCicloFim(cf, iso); folhasSomar(cic[fc] || (cic[fc] = {}), x.q); }
                         } else if (x.tem && risc && iso < ini && iso > pThen) folhasSomar(saldoPago, x.q);   // Beta 0.1.12: estava por pagar ao começar o mês e já se pagou
                     }
-                    out[String(c.id)] = { c, modo: 'pao', pago, cel, saldo, saldoPago, total, alguma, cf, ciclos: cf ? ffCiclosLista(cf, cic) : [] };
+                    // Beta 0.1.14 · N28: dia em que se marcou «pago até / tudo pago» (a marca guardada no pagoHist; a marca de 24/10 que veio da versão antiga não é um dia real) ou em que há um pagamento de dívida no registo
+                    const pgP = {}, phi = ffObj().pagoHist && ffObj().pagoHist[String(c.id)];
+                    (Array.isArray(phi) ? phi : []).forEach(e => { if (e && typeof e.em === 'string' && e.em !== FF_PAGO_LEGADO && e.em >= ini && e.em <= fim) { if (e.ate) pgP[e.em] = 1; else delete pgP[e.em]; } });   // o estado final desse dia
+                    L.forEach(l => { if (l && l.name === c.name && l.type === 'pay' && FOLHA_DEUDA.includes(l.details || '') && (l.amount || 0) > 0.004 && l.date && l.date.length === 10) { const di = ffIsoDe(l.date); if (di >= ini && di <= fim) pgP[di] = 1; } });
+                    out[String(c.id)] = { c, modo: 'pao', pago, cel, saldo, saldoPago, total, alguma, cf, ciclos: cf ? ffCiclosLista(cf, cic) : [], pg: pgP };
                 } else {
                     const r = ffCalcNormal(c, L, (ffObj().man || {})[String(c.id)]), cel = {}; let saldo = 0, resto = 0, alguma = false;
                     Object.keys(r.dias).forEach(k => {
@@ -3195,8 +3201,13 @@
                         else if (k <= fim) { cel[k] = r.dias[k]; resto += r.dias[k].r; alguma = true; }
                     });
                     saldo = ffR2(saldo + r.ant);
-                    const abat = (r.apl || []).reduce((t, a) => (a.iso >= ini && a.k < ini) ? t + a.v : t, 0);   // o que os pagamentos deste mês (ou posteriores) abateram à dívida anterior
-                    out[String(c.id)] = { c, modo: 'eur', cel, saldo, saldoIni: ffR2(saldo + abat), total: ffR2(saldo + resto), alguma, excesso: r.excesso };
+                    // Beta 0.1.15 · N29: só contam os pagamentos REAIS (com data) deste mês ou posteriores que abateram casas de meses anteriores; a diferença sem data («o saldo real manda», 9999-12-31) já estava paga: não se risca em lado nenhum
+                    const evs = {};
+                    (r.apl || []).forEach(a => { if (a.iso >= ini && a.k < ini && a.iso < '9999') evs[a.iso] = ffR2((evs[a.iso] || 0) + a.v); });
+                    const dsv = Object.keys(evs).sort(), abat = dsv.reduce((t, d) => t + evs[d], 0), seq = [ffR2(saldo + abat)];
+                    dsv.forEach(d => seq.push(ffR2(seq[seq.length - 1] - evs[d])));   // o saldo depois de cada dia de pagamento
+                    const pgE = {}; Object.keys(r.pg || {}).forEach(k => { if (k >= ini && k <= fim) pgE[k] = r.pg[k]; });   // Beta 0.1.14 · N28
+                    out[String(c.id)] = { c, modo: 'eur', cel, saldo, saldoIni: ffR2(saldo + abat), saldoSeq: seq, total: ffR2(saldo + resto), alguma, excesso: r.excesso, pg: pgE };
                 }
             }));
             return { ini, fim, nd, clientes: out, primeiro };
@@ -3222,22 +3233,30 @@
         function ffCelHtml(x, iso, marca) {
             if (!x) return '';
             const k = x.cel[iso];
-            if (!k) return ffRaia(iso);   // Beta 0.1.12 · N23: dia passado sem registo = raia
+            const pgm = (x.pg && x.pg[iso]) ? ' <b style="font-size:0.9em;">✓</b>' : '';   // Beta 0.1.14 · N28: neste dia pagou (parcial ou tudo)
+            if (!k) return (ffRaia(iso) + pgm).replace(/^ /, '');   // Beta 0.1.12 · N23: dia passado sem registo = raia
             const mm = (marca && k.m) ? ' <small class="mm">✎</small>' : '';   // Beta 0.1.10: escrito à mão (só no ecrã)
             if (x.modo === 'eur') {
                 // Beta 0.1.12 · N25/N26: «2,60 + 8,00 SPT»; paga toda = tudo riscado; parcial = o valor da casa riscado + o que falta ao lado
                 const tx = ffCelTxt(k), parcial = k.r > 0.004 && k.r < k.v - 0.004, falta = parcial ? folhasEur(k.r) : '';
                 const corpo = k.r <= 0.004 ? '<s>' + tx + '</s>' : (parcial ? '<s>' + tx + '</s> ' + falta : tx);
-                return ((tx + (falta ? ' ' + falta : '')).length > 11 ? '<span style="font-size:8px; line-height:1.05;">' + corpo + '</span>' : corpo) + mm;
+                return ((tx + (falta ? ' ' + falta : '') + (pgm ? ' ✓' : '')).length > 11 ? '<span style="font-size:8px; line-height:1.05;">' + corpo + pgm + '</span>' : corpo + pgm) + mm;
             }
-            if (!k.tem) return k.semQ ? '?' : '';
+            if (!k.tem) return ((k.semQ ? '?' : '') + pgm).replace(/^ /, '');
             const t = esc(ffTxtQ(k.q));
-            return (k.risc ? '<s>' + t + '</s>' : t) + mm;
+            return (k.risc ? '<s>' + t + '</s>' : t) + pgm + mm;
         }
         function ffSaldoHtml(x) {   // Beta 0.1.12 · N24: o SALDO pago fica tachado (o valor que tinha ao começar o mês); se falta parte, o que falta ao lado
             if (!x) return '';
             if (x.modo === 'eur') {
                 const ini = x.saldoIni || 0;
+                const sq = x.saldoSeq || [];
+                if (sq.length > 1) {   // Beta 0.1.15 · N29: 50 → 40 → 25: cada pagamento do mês risca o valor que tinha e põe o novo; pago tudo de uma vez = só o 1.º riscado
+                    let par = sq.slice(0, -1).map(v => '<s>' + folhasEur(v) + '</s>');
+                    if (sq[sq.length - 1] > 0.004) par.push(folhasEur(sq[sq.length - 1]));
+                    if (par.length > 6) par = [par[0], '…'].concat(par.slice(-4));
+                    return par.length > 2 ? '<span style="font-size:8px; line-height:1.05;">' + par.join(' ') + '</span>' : par.join(' ');
+                }
                 if (ini > 0.004 && x.saldo < ini - 0.004) return '<s>' + folhasEur(ini) + '</s>' + (x.saldo > 0.004 ? ' ' + folhasEur(x.saldo) : '');
                 return x.saldo > 0.004 ? folhasEur(x.saldo) : '';
             }
@@ -3343,7 +3362,7 @@
             bEd.style.display = jan ? '' : 'none';
             bEd.textContent = ffEdit ? '✓ Acabar de preencher' : '✏️ Preencher dias antes da app (até ' + folhasDM(jan || ffMes) + ')';
             bEd.style.background = ffEdit ? '#16a34a' : '';
-            document.getElementById('ff-legenda').textContent = ffEdit ? 'Toca numa casa com contorno a tracejado para escrever o que ficaste a dever nesse dia (ou o pão que deixaste). São os dias antes de a app ter movimentos (o primeiro foi a ' + folhasDM(dados.primeiro) + '). Os valores descontam-se do SALDO, por isso o TOTAL não muda.' : (ffSel === 5 ? 'Folha extra: para clientes novos. Toca no nome de uma coluna para escolher o cliente.' : '● = folha com valores por pagar. Valor riscado = já pago.');
+            document.getElementById('ff-legenda').textContent = ffEdit ? 'Toca numa casa com contorno a tracejado para escrever o que ficaste a dever nesse dia (ou o pão que deixaste). São os dias antes de a app ter movimentos (o primeiro foi a ' + folhasDM(dados.primeiro) + '). Os valores descontam-se do SALDO, por isso o TOTAL não muda.' : (ffSel === 5 ? 'Folha extra: para clientes novos. Toca no nome de uma coluna para escolher o cliente.' : '● = folha com valores por pagar. Valor riscado = já pago. ✓ = dia em que pagou.');
             const av = f[ffSel].map(sl => { const c = ffClienteDe(sl), x = c && dados.clientes[String(c.id)]; return x && x.excesso > 0.004 ? c.name + ' (' + folhasEur(x.excesso) + ' €)' : ''; }).filter(Boolean);
             const eAv = document.getElementById('ff-aviso');
             eAv.style.display = av.length ? '' : 'none';
