@@ -489,6 +489,15 @@
 
         .modal-gasto .dos-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
         .nc-previa { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 9px 10px; margin-top: 12px; line-height: 1.45; }
+
+        /* ===== PLAN DE PAGOS DE LA TARJETA ===== */
+        .btn-plan-tj { width: 100%; padding: 11px; font-size: 13px; margin-top: 10px; }
+        .pt-op { display: flex; flex-direction: column; gap: 3px; width: 100%; text-align: left; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-top: 8px; cursor: pointer; font-family: inherit; color: #334155; }
+        .pt-op.on { border-color: var(--primary); background: #ecfdf5; box-shadow: 0 0 0 2px rgba(16, 185, 129, .25); }
+        .pt-tit { font-weight: 800; font-size: 14.5px; color: var(--text-main); }
+        .pt-res { font-size: 13px; }
+        .pt-sub { font-size: 11.5px; color: #64748b; line-height: 1.4; }
+        #pt-detalle { max-height: 220px; overflow-y: auto; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -610,7 +619,7 @@
         <!-- ===== INICIO: cifras, gráfico y lo pendiente ===== -->
         <div id="tab-inicio" class="tab-content active">
             <div class="app-title">📊 Mi Control Financiero</div>
-            <div class="app-version" id="app-version">Versión 0.3 · 25 oct 2026</div>
+            <div class="app-version" id="app-version">Versión 0.4 · 26 oct 2026</div>
         <div class="metrics">
             <div class="metric-card saldo">
                 <div class="metric-title">SALDO EN BANCO (€)</div>
@@ -722,6 +731,7 @@
 
                 <div class="panel-h">Plan de pagos</div>
                 <div id="tj-plan"></div>
+                <button type="button" class="btn-secondary btn-plan-tj" onclick="abrirPlanTarjeta()">📅 Elegir cómo pagarla</button>
 
                 <div class="panel-h">💶 Amortizar</div>
                 <div class="cr-sim"><input type="number" id="tj-amort" inputmode="decimal" step="0.01" min="0" placeholder="¿Cuánto quieres amortizar? (€)" oninput="simularAmortTarjeta()"></div>
@@ -1061,6 +1071,24 @@
                 <button class="btn-g-guardar" id="nc-guardar" onclick="guardarNuevoCredito()">Añadir crédito</button>
             </div>
             <div class="g-nota-gas">El día de la próxima cuota es su día de pago: la app te avisará antes. Lo demás (capital inicial, fin del contrato, seguro) lo puedes poner luego en «⚙️ Datos del crédito».</div>
+        </div>
+    </div>
+
+    <!-- ================= VENTANA: PLAN DE PAGOS DE LA TARJETA ================= -->
+    <div class="modal-fondo" id="modal-plan-tj" onclick="if (event.target === this) cerrarPlanTarjeta()">
+        <div class="modal-gasto hoja">
+            <div class="m-cab">
+                <h3>💳 ¿Cómo pagas la tarjeta?</h3>
+                <button type="button" class="m-cerrar" onclick="cerrarPlanTarjeta()" aria-label="Cerrar">✕</button>
+            </div>
+            <div class="g-hint" id="pt-intro" style="margin-top:0"></div>
+            <div id="pt-opciones"></div>
+            <div id="pt-detalle"></div>
+            <div class="g-botones">
+                <button class="btn-g-cancelar" onclick="cerrarPlanTarjeta()">Dejar como está</button>
+                <button class="btn-g-guardar" id="pt-aplicar" onclick="aplicarPlanTarjeta(planTjElegido)">Poner en mis ciclos</button>
+            </div>
+            <div class="g-nota-gas" id="pt-nota"></div>
         </div>
     </div>
 
@@ -2566,7 +2594,7 @@
                 const capital = redondear(D + nuevas);
                 const total = redondear(capital + interes + comision);
                 const minimo = redondear(Math.min(total, (capital > 0.005 ? Math.max(minEur, capital * pct) : 0) + interes + comision));
-                const plan = redondear(ciclos[i].items
+                const plan = (opcSim && opcSim.pagos && opcSim.pagos[i] !== undefined) ? redondear(Math.max(0, opcSim.pagos[i])) : redondear(ciclos[i].items
                     .filter(it => esTarjeta(it) && !it.checked)
                     .reduce((a, it) => a + Math.abs(parseFloat(it.valor) || 0), 0));
                 const pago = redondear(Math.min(total + sumaPend(), Math.max(plan, minimo)));
@@ -2626,6 +2654,7 @@
             guardar();
             pintarTarjeta();
             mostrarAviso(`Compra con tarjeta: +${imp.toFixed(2)} € · deuda ${t.deuda.toFixed(2)} €`);
+            setTimeout(() => abrirPlanTarjeta(`Nueva compra de ${imp.toFixed(2)} €.`), 350);
         }
 
         function borrarCompraTarjeta(id) {
@@ -5194,6 +5223,199 @@
         }
 
         // =====================================================
+        // ===== PLAN DE PAGOS DE LA TARJETA ===================
+        // =====================================================
+        var planTjElegido = 'rapido';
+        var planesTj = null;
+        const PLANES_TJ = {
+            rapido: { ico: '⚡', nombre: 'Lo antes posible', txt: 'Cada ciclo pagas todo lo que puedes sin bajar de tu reserva; si no llega, el mínimo.' },
+            mixto: { ico: '⚖️', nombre: 'Mixto', txt: 'El mínimo más la mitad de lo que te sobra: terminas antes y te queda margen.' },
+            minimo: { ico: '🐢', nombre: 'Solo el mínimo', txt: 'Lo mínimo que pide el banco: más intereses y tardas más.' }
+        };
+
+        function cuotasTarjetaEnCiclo(c) {
+            return c.items.filter(it => esTarjeta(it) && !it.checked).reduce((a, it) => a + Math.abs(parseFloat(it.valor) || 0), 0);
+        }
+
+        // Por ciclo: el saldo al cierre en el peor caso y cuánto tendrías sin los pagos de la tarjeta que ya tienes puestos
+        // (desde el primer pago que queda); L = lo que puedes pagar en total hasta ese ciclo sin bajar de la reserva
+        function capacidadTarjeta(desde) {
+            const W = saldosPeorCaso();
+            const R = Math.max(0, numO(appData.reservaAmortizar, 300));
+            let ya = 0;
+            return appData.ciclos.map((c, j) => {
+                if (j >= desde) ya += cuotasTarjetaEnCiclo(c);
+                const w = W[j] || 0;
+                return { W: w, sinTj: w + ya, L: w + ya - R };
+            });
+        }
+
+        // Pagos de un plan por ciclo; cuando ya no debes nada, sigue la comisión mensual de la tarjeta
+        function pagosConComision(res) {
+            const fee = Math.max(0, numO(appData.tarjeta.comision, 0));
+            const p = {};
+            res.filas.forEach(f => { p[f.i] = f.pago; });
+            if (res.finIdx >= 0) for (let i = res.finIdx + 1; i < appData.ciclos.length; i++) p[i] = fee;
+            return p;
+        }
+
+        // Más allá de tus ciclos, pagando el mínimo: cuándo terminarías y cuántos intereses más
+        function extrapolarTarjeta(D) {
+            const t = appData.tarjeta;
+            const r = Math.max(0, numO(t.tan, 0)) / 100 / 12, pct = Math.max(0, numO(t.minPct, 5)) / 100;
+            const minEur = Math.max(0, numO(t.minEur, 0)), fee = Math.max(0, numO(t.comision, 0));
+            let meses = 0, inter = 0;
+            D = redondear(D);
+            while (D > 0.005 && meses < 600) {
+                const i = redondear(D * r * 1.04);
+                inter += i;
+                const total = redondear(D + i + fee);
+                const pago = redondear(Math.min(total, Math.max(minEur, D * pct) + i + fee));
+                D = redondear(total - pago);
+                meses++;
+            }
+            const ult = appData.ciclos[appData.ciclos.length - 1];
+            const k = ult ? claveCicloFinanzas(String(ult.nombre || '')) : null;
+            const f = k !== null ? fechaEnCiclo(k, Math.max(1, Math.round(numO(t.diaCobro, 5)))) : new Date();
+            return { meses: meses, intereses: redondear(inter), fin: new Date(f.getFullYear(), f.getMonth() + meses, Math.min(f.getDate(), 28), 12).getTime() };
+        }
+
+        // Plan según la estrategia: 'rapido', 'mixto' o 'minimo'. Cada ciclo se decide mirando que, pagando
+        // después solo el mínimo, ningún mes baje de la reserva (en el peor caso)
+        function planTarjetaEstrategia(estr) {
+            const n = appData.ciclos.length;
+            const ceros = {};
+            for (let i = 0; i < n; i++) ceros[i] = 0;
+            const fijos = {};
+            const sim = extra => simularTarjeta({ pagos: Object.assign({}, ceros, fijos, extra || {}) });
+            const r0 = sim();
+            if (r0.sinCiclos || !r0.filas.length) return { estr: estr, res: r0, pagos: {}, desde: -1, cap: null };
+            const s = r0.filas[0].i;
+            const cap = capacidadTarjeta(s);
+            const holguraDesde = (res, desde) => {
+                const p = pagosConComision(res);
+                let C = 0, h = Infinity;
+                for (let j = s; j < n; j++) { C += p[j] || 0; if (j >= desde) h = Math.min(h, cap[j].L - C); }
+                return h;
+            };
+            const idxHoy = indiceCicloDeFecha(new Date());
+            for (let i = s; i < n; i++) {
+                // El extracto de este ciclo ya salió: no se paga menos de lo que tienes puesto (p. ej. la comisión)
+                const piso = i === idxHoy ? redondear(cuotasTarjetaEnCiclo(appData.ciclos[i])) : 0;
+                const conMin = sim({ [i]: piso });   // con 0, el banco cobra el mínimo
+                const fi = conMin.filas.find(f => f.i === i);
+                if (!fi) break;
+                const minimo = fi.pago, todo = redondear(fi.pago + fi.deuda);
+                let x = minimo;
+                if (estr !== 'minimo' && todo > minimo + 0.005) {
+                    const libre = Math.max(0, holguraDesde(conMin, i));   // lo que te sobra este ciclo
+                    if (estr === 'mixto') x = Math.min(todo, redondear(minimo + Math.floor(libre / 2)));
+                    else {
+                        const ok = v => holguraDesde(sim({ [i]: v }), i) >= -0.005;
+                        if (ok(todo)) x = todo;
+                        else if (ok(minimo)) {
+                            let lo = minimo, hi = todo;
+                            for (let k = 0; k < 25; k++) { const mid = (lo + hi) / 2; if (ok(mid)) lo = mid; else hi = mid; }
+                            x = Math.max(minimo, Math.floor(lo));
+                        }
+                    }
+                }
+                fijos[i] = redondear(x);
+                const f2 = sim().filas.find(f => f.i === i);
+                if (!f2 || f2.deuda <= 0.005) break;
+            }
+            const res = sim();
+            return { estr: estr, res: res, pagos: pagosConComision(res), desde: s, cap: cap };
+        }
+
+        // Fin, intereses y mes más justo de un plan
+        function resumenPlanTj(pl) {
+            const res = pl.res, n = appData.ciclos.length;
+            let W2 = saldosPeorCaso();
+            if (pl.desde >= 0 && pl.cap) {
+                let C = 0;
+                W2 = pl.cap.map((x, j) => { if (j >= pl.desde) C += pl.pagos[j] || 0; return j >= pl.desde ? x.sinTj - C : x.W; });
+            }
+            // El mes más justo a partir del ciclo que viene (el de hoy ya casi no se puede cambiar)
+            let desde = Math.max(0, pl.desde);
+            if (desde === indiceCicloDeFecha(new Date()) && desde + 1 < n) desde++;
+            let jMin = desde;
+            for (let j = desde + 1; j < n; j++) if (W2[j] < W2[jMin]) jMin = j;
+            const ext = res.finIdx < 0 && res.resto > 0.005 ? extrapolarTarjeta(res.resto) : null;
+            return {
+                fin: res.finIdx >= 0 ? etiquetaMes(appData.ciclos[res.finIdx]) : (ext ? mesAnio(ext.fin) : '—'),
+                intereses: redondear(res.intereses + (ext ? ext.intereses : 0)),
+                justo: { i: jMin, valor: W2[jMin] }, filas: res.filas, resto: res.finIdx < 0 ? res.resto : 0
+            };
+        }
+
+        function abrirPlanTarjeta(nota) {
+            const D = redondear(numO(appData.tarjeta && appData.tarjeta.deuda, 0));
+            if (!(D > 0.005)) { alert('No debes nada en la tarjeta.'); return; }
+            planesTj = { rapido: planTarjetaEstrategia('rapido'), mixto: planTarjetaEstrategia('mixto'), minimo: planTarjetaEstrategia('minimo') };
+            if (planesTj.rapido.desde < 0) { alert('No hay ciclos por delante para hacer el plan.'); return; }
+            const ahora = resumenPlanTj({ res: simularTarjeta(), pagos: {}, desde: -1, cap: null });
+            const R = Math.max(0, numO(appData.reservaAmortizar, 300));
+            document.getElementById('pt-intro').innerHTML = `${nota ? esc(nota) + ' ' : ''}Debes <b>${fmtEur(D)}</b>. Con los pagos que tienes puestos terminas en <b>${ahora.fin}</b>.`;
+            document.getElementById('pt-nota').innerText = `Los planes no dejan que ningún mes de tus ciclos baje de tu reserva de ${R.toFixed(0)} € (la del consejero, en el peor caso), salvo que ni el mínimo llegue: el mínimo se paga siempre. Al ponerlo, se cambian los pagos «Tarjeta…» sin marcar de tus ciclos.`;
+            const t = appData.tarjeta;
+            planTjElegido = PLANES_TJ[t.planElegido] ? t.planElegido : 'rapido';
+            pintarPlanTarjeta();
+            document.getElementById('modal-plan-tj').classList.add('abierto');
+        }
+
+        function cerrarPlanTarjeta() {
+            document.getElementById('modal-plan-tj').classList.remove('abierto');
+        }
+
+        function elegirPlanTj(e) {
+            planTjElegido = e;
+            pintarPlanTarjeta();
+        }
+
+        function pintarPlanTarjeta() {
+            if (!planesTj) return;
+            document.getElementById('pt-opciones').innerHTML = ['rapido', 'mixto', 'minimo'].map(e => {
+                const r = resumenPlanTj(planesTj[e]);
+                const p = PLANES_TJ[e];
+                return `<button type="button" class="pt-op ${e === planTjElegido ? 'on' : ''}" data-plan="${e}" onclick="elegirPlanTj('${e}')">` +
+                    `<span class="pt-tit">${p.ico} ${p.nombre}</span>` +
+                    `<span class="pt-res">Terminas en <b>${r.fin}</b> · intereses ≈ ${fmtEur(r.intereses)}</span>` +
+                    `<span class="pt-sub">${p.txt} Mes más justo: ${esc(etiquetaMes(appData.ciclos[r.justo.i]))} (${fmtEur(r.justo.valor)}).</span></button>`;
+            }).join('');
+            const r = resumenPlanTj(planesTj[planTjElegido]);
+            document.getElementById('pt-detalle').innerHTML = '<table class="tabla-consejo"><tr><th>Ciclo</th><th>Pagas</th><th>Debes después</th></tr>' +
+                r.filas.map(f => `<tr><td>${esc(etiquetaMes(appData.ciclos[f.i], true))}</td><td>${fmtEur(f.pago)}</td><td>${fmtEur(f.deuda)}</td></tr>`).join('') + '</table>' +
+                (r.resto > 0.005 ? `<div class="panel-nota">Al acabar tus ciclos aún deberías ${fmtEur(r.resto)}; pagando el mínimo, terminarías hacia ${r.fin}.</div>` : '');
+        }
+
+        // Pone el plan en tus ciclos: un pago «Tarjeta de crédito» por ciclo (y la comisión cuando ya no debes nada)
+        function aplicarPlanTarjeta(estr) {
+            const pl = planesTj && planesTj[estr] ? planesTj[estr] : planTarjetaEstrategia(estr);
+            if (pl.desde < 0) return;
+            for (let i = pl.desde; i < appData.ciclos.length; i++) {
+                const v = pl.pagos[i];
+                if (v === undefined) continue;
+                const c = appData.ciclos[i];
+                const libres = c.items.filter(it => esTarjeta(it) && !it.checked);
+                if (libres.length) {
+                    const it = libres[0];
+                    c.items = c.items.filter(x => !(esTarjeta(x) && !x.checked) || x === it);
+                    if (v > 0.005) { it.valor = redondear(v).toFixed(2); it.desc = 'Tarjeta de crédito'; }
+                    else c.items = c.items.filter(x => x !== it);
+                } else if (v > 0.005) {
+                    c.items.push({ desc: 'Tarjeta de crédito', valor: redondear(v).toFixed(2), checked: false });
+                }
+            }
+            appData.tarjeta.planElegido = estr;
+            cerrarPlanTarjeta();
+            guardar();
+            renderizar();
+            const r = resumenPlanTj(pl);
+            mostrarAviso(`Plan «${PLANES_TJ[estr].nombre}» puesto en tus ciclos: terminas de pagar la tarjeta en ${r.fin}.`);
+        }
+
+        // =====================================================
         // ===== GASTOS AL MOMENTO =============================
         // =====================================================
         const ULTIMO_CONCEPTO_KEY = 'finanzas_ultimo_concepto';
@@ -5389,6 +5611,7 @@
                 guardar();
                 renderizar();
                 mostrarAviso(`Compra con tarjeta: +${importe.toFixed(2)} € · deuda ${t.deuda.toFixed(2)} €`);
+                setTimeout(() => abrirPlanTarjeta(`Nueva compra de ${importe.toFixed(2)} €.`), 350);
                 return;
             }
             if (cIdx < 0) {
