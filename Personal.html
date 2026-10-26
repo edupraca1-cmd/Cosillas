@@ -619,7 +619,7 @@
         <!-- ===== INICIO: cifras, gráfico y lo pendiente ===== -->
         <div id="tab-inicio" class="tab-content active">
             <div class="app-title">📊 Mi Control Financiero</div>
-            <div class="app-version" id="app-version">Versión 0.4 · 26 oct 2026</div>
+            <div class="app-version" id="app-version">Versión 0.5 · 26 oct 2026</div>
         <div class="metrics">
             <div class="metric-card saldo">
                 <div class="metric-title">SALDO EN BANCO (€)</div>
@@ -909,7 +909,7 @@
                 </div>
 
                 <div id="bb-lista"></div>
-                <div class="panel-nota">Apunta cada vez que conectas una bombona nueva (también puedes añadir cambios antiguos con su fecha). Con dos cambios de cada una, la app sabe cuánto te dura y cuánto gastas al mes, en invierno y en verano. El dinero que sacas para el gas, apúntalo con «＋ Gasto» en «Gas»: se suma a lo que tienes en casa, y cada bombona que compras se resta.</div>
+                <div class="panel-nota">Apunta cada vez que conectas una bombona nueva (también puedes añadir cambios antiguos con su fecha). Con dos cambios de cada una, la app sabe cuánto te dura y cuánto gastas al mes, en invierno y en verano. El dinero que sacas para el gas se suma a lo que tienes en casa: márcalo como pagado en «Gas» de tu ciclo (o apúntalo con «＋ Gasto» en «Gas»). Cada bombona que compras se resta.</div>
             </div>
         </section>
         <!-- ===== Archivo de ciclos ===== -->
@@ -2138,6 +2138,9 @@
             }
             renderizar();
             guardar();
+            if (!esIngreso(item) && normDesc(item.desc) === 'gas' && appData.bombonas) {
+                mostrarAviso(`${checked ? 'Gas marcado' : 'Gas desmarcado'}: en casa tienes ${fmtEur(boteGas())} para las bombonas`);
+            }
         }
 
         function actualizarValor(cIdx, iIdx, val) {
@@ -3850,9 +3853,14 @@
             const bb = appData.bombonas;
             let saldo = numO(bb.bote.saldo, 0);
             const desde = numO(bb.bote.ts, 0);
-            appData.ciclos.concat(appData.archivo || []).forEach(c => (c.gastos || []).forEach(g => {
-                if (normDesc(g.concepto) === 'gas' && Number(g.ts) > desde) saldo += Number(g.importe) || 0;
-            }));
+            appData.ciclos.concat(appData.archivo || []).forEach(c => {
+                const gastosGas = (c.gastos || []).filter(g => normDesc(g.concepto) === 'gas');
+                gastosGas.forEach(g => { if (Number(g.ts) > desde) saldo += Number(g.importe) || 0; });
+                // «Gas» marcado como pagado (sin gastos apuntados) = el dinero que sacas para las bombonas
+                if (!gastosGas.length) c.items.forEach(it => {
+                    if (!esIngreso(it) && it.checked && normDesc(it.desc) === 'gas' && Number(it.pagadoTs) > desde) saldo += Math.abs(parseFloat(it.valor) || 0);
+                });
+            });
             bb.cambios.forEach(x => { if (Number(x.ts) > desde) saldo -= Number(x.precio) || 0; });
             return redondear(saldo);
         }
