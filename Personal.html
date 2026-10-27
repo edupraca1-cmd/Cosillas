@@ -498,6 +498,10 @@
         .pt-res { font-size: 13px; }
         .pt-sub { font-size: 11.5px; color: #64748b; line-height: 1.4; }
         #pt-detalle { max-height: 220px; overflow-y: auto; margin-top: 10px; }
+
+        /* ===== 0.6: margen de la tarjeta ===== */
+        .modal-gasto .pt-margen { margin: 10px 0 2px; }
+        .modal-gasto .pt-margen input[type="number"] { width: 84px; text-align: center; padding: 7px 6px; }
     </style>
 </head>
 <body>
@@ -619,7 +623,7 @@
         <!-- ===== INICIO: cifras, gráfico y lo pendiente ===== -->
         <div id="tab-inicio" class="tab-content active">
             <div class="app-title">📊 Mi Control Financiero</div>
-            <div class="app-version" id="app-version">Versión 0.5 · 26 oct 2026</div>
+            <div class="app-version" id="app-version">Versión 0.6 · 27 oct 2026</div>
         <div class="metrics">
             <div class="metric-card saldo">
                 <div class="metric-title">SALDO EN BANCO (€)</div>
@@ -690,7 +694,7 @@
         <div id="tab-tarjeta" class="tab-content">
             <div class="cr-total" id="cr-total"></div>
             <section class="panel" id="panel-consejo">
-                <div class="panel-cab"><span>💡 Consejero</span><span class="summary-right"><span class="panel-resumen" id="consejo-resumen"></span></span></div>
+                <div class="panel-cab"><span>💡 Asesor</span><span class="summary-right"><span class="panel-resumen" id="consejo-resumen"></span></span></div>
                 <div class="panel-body">
                     <div id="consejo-cuerpo"></div>
                     <div class="fp-dias-fila consejo-reserva">
@@ -698,7 +702,7 @@
                         <input type="number" id="consejo-reserva" aria-label="Reserva (€)" inputmode="decimal" min="0" step="10" oninput="cambiarReservaAmortizar(this.value)">
                         <span>€</span>
                     </div>
-                    <div class="panel-nota">El consejero mira tus ciclos en el peor caso (con los topes) y solo te propone amortizar si ningún mes baja de esa reserva. Empieza por la deuda más cara. En un crédito hay que avisar al banco con 30 días y puede cobrar hasta un 0,5 % (ya está descontado en lo que te ahorras). Si piensas hacer una compra grande, ponla antes en tus ciclos para que la tenga en cuenta.</div>
+                    <div class="panel-nota">El asesor mira tus ciclos en el peor caso (con los topes) y solo te propone amortizar si ningún mes baja de esa reserva. Para pagar la tarjeta se usa otro margen, el de «📅 Elegir cómo pagarla». Empieza por la deuda más cara. En un crédito hay que avisar al banco con 30 días y puede cobrar hasta un 0,5 % (ya está descontado en lo que te ahorras). Si piensas hacer una compra grande, ponla antes en tus ciclos para que la tenga en cuenta.</div>
                 </div>
             </section>
         <!-- ===== Tarjeta de crédito ===== -->
@@ -1082,6 +1086,11 @@
                 <button type="button" class="m-cerrar" onclick="cerrarPlanTarjeta()" aria-label="Cerrar">✕</button>
             </div>
             <div class="g-hint" id="pt-intro" style="margin-top:0"></div>
+            <div class="fp-dias-fila pt-margen">
+                <span>Margen que no quiero tocar</span>
+                <input type="number" id="pt-margen" aria-label="Margen (€)" inputmode="decimal" min="0" step="10" oninput="cambiarMargenTarjeta(this.value)">
+                <span>€</span>
+            </div>
             <div id="pt-opciones"></div>
             <div id="pt-detalle"></div>
             <div class="g-botones">
@@ -1840,6 +1849,7 @@
             tj.diaExtracto = Math.min(28, Math.max(1, Math.round(nDef(tj.diaExtracto, 15))));
             tj.diaCobro = Math.min(28, Math.max(1, Math.round(nDef(tj.diaCobro, 5))));
             if (!Array.isArray(tj.compras)) tj.compras = [];
+            tj.margenPlan = Math.max(0, Math.round(nDef(tj.margenPlan, 200)));   // lo que no se toca al pagar la tarjeta (peor caso)
             data.colchon = nDef(data.colchon, 50);
             // Historial de pagos, conceptos variables, archivo de ciclos y gastos periódicos
             if (!Array.isArray(data.historial)) data.historial = [];
@@ -2642,6 +2652,7 @@
             if (!(imp > 0)) { alert('Pon el importe de la compra.'); inImp.focus(); return; }
             const t = appData.tarjeta;
             const antes = redondear(numO(t.deuda, 0));
+            if (imp > disponibleTarjeta() + 0.005) { alert(textoNoCabeTarjeta(imp)); inImp.focus(); return; }
             const inFecha = document.getElementById('tj-compra-fecha');
             let ts = Date.now();
             if (inFecha.value && inFecha.value !== aISO(new Date())) {
@@ -5236,7 +5247,7 @@
         var planTjElegido = 'rapido';
         var planesTj = null;
         const PLANES_TJ = {
-            rapido: { ico: '⚡', nombre: 'Lo antes posible', txt: 'Cada ciclo pagas todo lo que puedes sin bajar de tu reserva; si no llega, el mínimo.' },
+            rapido: { ico: '⚡', nombre: 'Lo antes posible', txt: 'Cada ciclo pagas todo lo que puedes sin bajar de tu margen; si no llega, el mínimo.' },
             mixto: { ico: '⚖️', nombre: 'Mixto', txt: 'El mínimo más la mitad de lo que te sobra: terminas antes y te queda margen.' },
             minimo: { ico: '🐢', nombre: 'Solo el mínimo', txt: 'Lo mínimo que pide el banco: más intereses y tardas más.' }
         };
@@ -5249,7 +5260,7 @@
         // (desde el primer pago que queda); L = lo que puedes pagar en total hasta ese ciclo sin bajar de la reserva
         function capacidadTarjeta(desde) {
             const W = saldosPeorCaso();
-            const R = Math.max(0, numO(appData.reservaAmortizar, 300));
+            const R = margenTarjeta();
             let ya = 0;
             return appData.ciclos.map((c, j) => {
                 if (j >= desde) ya += cuotasTarjetaEnCiclo(c);
@@ -5363,9 +5374,10 @@
             planesTj = { rapido: planTarjetaEstrategia('rapido'), mixto: planTarjetaEstrategia('mixto'), minimo: planTarjetaEstrategia('minimo') };
             if (planesTj.rapido.desde < 0) { alert('No hay ciclos por delante para hacer el plan.'); return; }
             const ahora = resumenPlanTj({ res: simularTarjeta(), pagos: {}, desde: -1, cap: null });
-            const R = Math.max(0, numO(appData.reservaAmortizar, 300));
             document.getElementById('pt-intro').innerHTML = `${nota ? esc(nota) + ' ' : ''}Debes <b>${fmtEur(D)}</b>. Con los pagos que tienes puestos terminas en <b>${ahora.fin}</b>.`;
-            document.getElementById('pt-nota').innerText = `Los planes no dejan que ningún mes de tus ciclos baje de tu reserva de ${R.toFixed(0)} € (la del consejero, en el peor caso), salvo que ni el mínimo llegue: el mínimo se paga siempre. Al ponerlo, se cambian los pagos «Tarjeta…» sin marcar de tus ciclos.`;
+            const inM = document.getElementById('pt-margen');
+            if (inM) inM.value = margenTarjeta();
+            pintarNotaPlanTj();
             const t = appData.tarjeta;
             planTjElegido = PLANES_TJ[t.planElegido] ? t.planElegido : 'rapido';
             pintarPlanTarjeta();
@@ -5421,6 +5433,50 @@
             renderizar();
             const r = resumenPlanTj(pl);
             mostrarAviso(`Plan «${PLANES_TJ[estr].nombre}» puesto en tus ciclos: terminas de pagar la tarjeta en ${r.fin}.`);
+        }
+
+        // =====================================================
+        // ===== 0.6: MARGEN Y LÍMITE DE LA TARJETA ============
+        // =====================================================
+        // Lo que no se toca al pagar la tarjeta (en el peor caso). Es distinto de la reserva del Asesor.
+        function margenTarjeta() {
+            return Math.max(0, Math.round(numO(appData.tarjeta && appData.tarjeta.margenPlan, 200)));
+        }
+
+        var tmrMargenTj = null;
+        function cambiarMargenTarjeta(v) {
+            const n = parseFloat(String(v).replace(',', '.'));
+            if (!isFinite(n) || n < 0) return;   // campo vacío mientras escribes: no se toca nada
+            appData.tarjeta.margenPlan = Math.round(n);
+            guardar('tarjeta-margen');
+            clearTimeout(tmrMargenTj);
+            tmrMargenTj = setTimeout(recalcularPlanesTj, 250);
+        }
+
+        function recalcularPlanesTj() {
+            const m = document.getElementById('modal-plan-tj');
+            if (!m || !m.classList.contains('abierto')) return;
+            planesTj = { rapido: planTarjetaEstrategia('rapido'), mixto: planTarjetaEstrategia('mixto'), minimo: planTarjetaEstrategia('minimo') };
+            pintarNotaPlanTj();
+            pintarPlanTarjeta();
+        }
+
+        function pintarNotaPlanTj() {
+            const el = document.getElementById('pt-nota');
+            if (el) el.innerText = `Los planes no dejan que ningún mes de tus ciclos baje de ${margenTarjeta()} € en el peor caso (con los gastos variables en su tope), salvo que ni el mínimo llegue: el mínimo se paga siempre. Este margen es solo para la tarjeta; el Asesor tiene su propia reserva para amortizar créditos. Al ponerlo, se cambian los pagos «Tarjeta…» sin marcar de tus ciclos.`;
+        }
+
+        // Lo que queda de límite en la tarjeta (sin límite puesto: no hay tope)
+        function disponibleTarjeta() {
+            const t = appData.tarjeta || {};
+            const lim = Math.max(0, numO(t.limite, 0));
+            return lim > 0 ? redondear(lim - Math.max(0, numO(t.deuda, 0))) : Infinity;
+        }
+
+        function textoNoCabeTarjeta(imp) {
+            const t = appData.tarjeta;
+            const lim = Math.max(0, numO(t.limite, 0)), deuda = Math.max(0, numO(t.deuda, 0));
+            return `No cabe en la tarjeta: con esta compra deberías ${fmtEur(deuda + imp)} y tu límite es ${fmtEur(lim)}. Te quedan ${fmtEur(Math.max(0, lim - deuda))}.\n\nSi el banco te la aceptó, revisa en la tarjeta la deuda actual o el límite.`;
         }
 
         // =====================================================
@@ -5567,8 +5623,16 @@
                 return;
             }
             if (!gastoEditando && gastoPago === 'tarjeta') {
-                hint.className = 'g-hint';
-                hint.innerText = `No sale de tu cuenta: se suma a la deuda de la tarjeta (ahora ${fmtEur(numO(appData.tarjeta.deuda, 0))}) y lo pagas con las cuotas «Tarjeta…» de tus ciclos.`;
+                const dispTj = disponibleTarjeta();
+                const impTj = parseFloat(document.getElementById('g-importe').value) || 0;
+                if (impTj > dispTj + 0.005) {
+                    hint.className = 'g-hint mal';
+                    hint.innerText = `No cabe en la tarjeta: te quedan ${fmtEur(Math.max(0, dispTj))} de límite.`;
+                } else {
+                    hint.className = 'g-hint';
+                    hint.innerText = `No sale de tu cuenta: se suma a la deuda de la tarjeta (ahora ${fmtEur(numO(appData.tarjeta.deuda, 0))}` +
+                        (isFinite(dispTj) ? `; te quedan ${fmtEur(dispTj)} de límite` : '') + `) y lo pagas con las cuotas «Tarjeta…» de tus ciclos.`;
+                }
                 return;
             }
             if (sel.disabled) return;
@@ -5613,6 +5677,7 @@
                 const t = appData.tarjeta;
                 const ts = fechaISO === hoyISO ? Date.now() : fecha.getTime();
                 const conc = document.getElementById('g-concepto').value;
+                if (importe > disponibleTarjeta() + 0.005) { alert(textoNoCabeTarjeta(importe)); inImporte.focus(); return; }
                 t.compras.push({ id: nuevoId(), ts: ts, importe: importe, nota: [conc, notaRapida].filter(Boolean).join(' · ') });
                 t.deuda = redondear(numO(t.deuda, 0) + importe);
                 cerrarGasto();
