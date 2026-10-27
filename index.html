@@ -1037,7 +1037,7 @@
             </div>
         </div>
         <label class="mais-opcao"><input type="checkbox" id="mais-deslizar" onchange="deslizarAlternar(this.checked)"> ↔️ Deslizar para mudar de pestanha</label>
-        <p class="app-version" id="app-version">Beta 0.1.18</p>
+        <p class="app-version" id="app-version">Beta 0.1.19</p>
     </div>
 
     <!-- SUBMÓDULOS -->
@@ -1156,7 +1156,7 @@
             <div class="folha-fila"><span>− Importe diário</span><span class="fv" id="folha-sm"></span></div>
             <div class="folha-sub" id="folha-sm-sub"></div>
             <div class="folha-fila"><label for="folha-devolucao">− Devolução da Volta</label><input type="number" id="folha-devolucao" inputmode="decimal" step="0.01" min="0" placeholder="0,00" oninput="folhaDevolucaoCampo(this.value)"></div>
-            <div class="folha-sub">Pão que sobrou. Calcula-se sozinha com as Sobras de hoje (Pedido › passo 4): sobrou + comi, ao preço normal. Se mudares as sobras, o valor substitui-se (não soma). Também pode escrevê-lo à mão.</div>
+            <div class="folha-sub">Pão que sobrou. Calcula-se sozinha com as Sobras de hoje (Pedido › passo 3): sobrou + comi, ao preço normal. Se mudares as sobras, o valor substitui-se (não soma). Também pode escrevê-lo à mão.</div>
         </div>
         <div class="folha-total" id="folha-total"><span>💶 Dinheiro a entregar</span><span class="ft-v" id="folha-dinheiro"></span></div>
         <div class="jornada-card">
@@ -3725,7 +3725,12 @@
             Object.keys(d.p).forEach(id => { if (d.p[id] > 0) d.f[id] = pedFicaram(d, id); });
             d.fim = true;
             guardarEstado();
-            pedPant = 'hub';
+            const hj = pedHoje();
+            // Beta 0.1.19: com as sobras antes do fim, o pão a mais pode mudar o que se deixou em clientes de lista (São Miguel): se a sugestão aplicada já não bate, volta-se às sobras
+            const mudou = pedSobLer(hj).feito && PED_BASE_IDS.some(id => { const e = pedSobEst(hj, id, pedSugId(hj, id)); return e.ap !== 0 && e.k !== 'ap'; });
+            if (mudou) avisoRapido('⚠️ O pão a mais mudou a sugestão das sobras: confirma o passo 3');
+            pedPant = mudou ? 'sobras' : ((pedSobLer(hj).feito && pedAlvos(hj).length) ? 'pedido' : 'hub');
+            if (pedPant === 'pedido') pedDataSel = null;
             renderPedido();
             window.scrollTo(0, 0);
         }
@@ -3734,7 +3739,7 @@
             return `<div class="ped-head"><div class="ped-hl">${volta ? `<button type="button" class="ped-back" aria-label="Voltar ao meu dia" onclick="pedIr('hub')">←</button>` : ''}<div><small>${esc(eyebrow)}</small><h2>${esc(titulo)}</h2><div class="ped-dt">${esc(pedFechaTxt())}</div></div></div>${chip ? `<span class="ped-chip">${esc(chip)}</span>` : ''}</div>`;
         }
         function pedAbas(ativa) {
-            const ab = [['manha', '1 · Manhã', 'Recebi'], ['rota', '2 · Rota', 'Passei'], ['fim', '3 · Fim', 'Ficaram']];
+            const ab = [['manha', 'Manhã', 'Recebi'], ['rota', 'Rota', 'Passei'], ['fim', 'Fim', 'Ficaram']];   // Beta 0.1.19: sem números (o fim da rota passa a ser o passo 4)
             return '<div class="ped-tabs">' + ab.map(a => `<button type="button" class="${a[0] === ativa ? 'on' : ''}" onclick="pedIr('${a[0]}')"><b>${a[1]}</b><span>${a[2]}</span></button>`).join('') + '</div>';
         }
         function pedCtl(tipo, id, valor, nome, off) {
@@ -3747,19 +3752,21 @@
         function pedHub() {
             const hj = pedHoje(), d = pedLer(), sr = pedSoma(d.r), sp = pedSoma(d.p);
             const sem = d.sem && sr === 0;
-            const d1 = sr > 0 || sem, d3 = !!d.fim || sem, d2 = d3;
+            const d1 = sr > 0 || sem, dFim = !!d.fim || sem;   // Beta 0.1.19: as sobras passam a passo 3 e o fim da rota a passo 4
             const sb = pedSobLer(hj), tot4 = pedTotDe(hj);
             const nPed = PED_ORDEM.filter(id => (tot4[id] || 0) > 0).length;
             const nCont = Object.keys(sb.s).length;
-            const d4 = !!sb.feito;
-            const nAj = PED_ORDEM.filter(id => (sb.d[id] || 0) !== 0).length;
+            const dSob = !!sb.feito, d2 = dFim || dSob || nCont > 0;   // a Rota fica feita quando se começam a contar as sobras (ou o fim fecha)
+            const mov = PED_ORDEM.filter(id => (sb.d[id] || 0) !== 0), diaHj = DIARIO_DIAS[pedDiaSem(hj)].split('-')[0];
+            const movTxt = mov.slice(0, 4).map(id => (PED_SIGLA[id] || id) + ' ' + (sb.d[id] > 0 ? '+' : '−') + Math.abs(sb.d[id])).join(' · ') + (mov.length > 4 ? ' · +' + (mov.length - 4) + (mov.length - 4 === 1 ? ' tipo' : ' tipos') : '');
+            const vm = pedVendidoMapa(d);
             const alvos = pedAlvos(hj), T = alvos[0], pT = T ? pedPedLer(T) : null, d5 = !!(pT && pT.feito);
             const diaT = T ? DIARIO_DIAS[pedDiaSem(T)] : '';
             const passos = [
-                { n: 1, t: 'Pão a mais · manhã', desc: 'Regista o pão do cesto cinzento ao carregar a carrinha.', pill: sem ? 'Hoje sem pão a mais' : (d1 ? 'Feito · ' + sr + (sr === 1 ? ' pão' : ' pães') : 'Por fazer'), done: d1, ir: 'manha' },
-                { n: 2, t: 'Pão a mais · na rota', desc: 'Quando um pão se acaba, passa-o ao cesto branco.', pill: sr === 0 ? 'Sem pão a mais' : (sp > 0 ? 'Passaste ' + sp + (sp === 1 ? ' pão' : ' pães') : 'Nada passado ainda'), done: d2, ir: 'rota' },
-                { n: 3, t: 'Pão a mais · no fim da rota', desc: 'Conta o que volta ao cinzento e vê o que vendeste a mais.', pill: sem ? 'Sem pão a mais' : (d3 ? 'Feito · vendeste ' + pedVendidoTotal(d) + ' a mais' : 'Por fazer'), done: d3, ir: 'fim' },
-                { n: 4, t: 'Sobras de hoje', desc: 'Conta o pão que sobrou. A app sugere subir ou descer a base.', pill: d4 ? 'Feito · ' + nAj + (nAj === 1 ? ' ajuste' : ' ajustes') : (nCont > 0 ? 'Contaste ' + nCont + ' de ' + Math.max(nPed, nCont) : 'Por fazer'), done: d4, ir: 'sobras' },
+                { n: 1, t: 'Pão a mais · manhã', desc: 'Regista o pão do cesto cinzento ao carregar a carrinha.', pill: sem ? 'Hoje sem pão a mais' : (d1 ? 'Feito · ' + pedTiposTxt(d.r) : 'Por fazer'), done: d1, ir: 'manha' },
+                { n: 2, t: 'Pão a mais · na rota', desc: 'Quando um pão se acaba, passa-o ao cesto branco.', pill: sr === 0 ? 'Sem pão a mais' : (sp > 0 ? 'Passaste ' + pedTiposTxt(d.p) : 'Nada passado ainda'), done: d2, ir: 'rota' },
+                { n: 3, t: 'Sobras de hoje', desc: 'Conta o pão que sobrou. A app sugere subir ou descer a base.', pill: dSob ? 'Feito · base de ' + diaHj + (mov.length ? ': ' + movTxt : ' sem alterações') : (nCont > 0 ? 'Contaste ' + nCont + ' de ' + Math.max(nPed, nCont) + ' tipos de pão' : 'Por fazer'), done: dSob, ir: 'sobras' },
+                { n: 4, t: 'Pão a mais · no fim da rota', desc: 'Conta o que volta ao cinzento e vê o que vendeste a mais.', pill: sem ? 'Sem pão a mais' : (dFim ? (Object.keys(vm).length ? 'Feito · vendeste a mais: ' + pedTiposTxt(vm) : 'Feito · nada vendido a mais') : 'Por fazer'), done: dFim, ir: 'fim' },
                 { n: 5, t: 'Pedido para ' + (T === pedProxDia(hj) ? 'amanhã' : diaT.split('-')[0]), desc: 'Base, encomendas e ajustes. Para preencheres a folha do pedido.', pill: d5 ? 'Feito · ' + diaT + pedExtPill(T) : 'Por fazer · ' + diaT, done: d5, ir: 'pedido' }
             ];
             if (!T) passos.pop();   // v23.25: ao sábado não há passo 5
@@ -3785,6 +3792,22 @@
         function pedVendidoTotal(d) {
             return Object.keys(d.p).reduce((a, id) => a + Math.max(0, (d.p[id] || 0) - pedFicaram(d, id)), 0);
         }
+        // ===== Beta 0.1.19 · desdobramento por tipo de pão (siglas, ordem da nota do Keep) em vez de somar unidades de pães diferentes (1 PS não é 1 GM) =====
+        function pedTiposTxt(o, max) {
+            const ids = PED_ORDEM.filter(id => (o[id] || 0) > 0).concat(Object.keys(o).filter(id => (o[id] || 0) > 0 && PED_ORDEM.indexOf(id) < 0));
+            const n = max || 4, ps = ids.map(id => o[id] + ' ' + (PED_SIGLA[id] || id));
+            return ps.length > n ? ps.slice(0, n).join(' · ') + ' · +' + (ps.length - n) + (ps.length - n === 1 ? ' tipo' : ' tipos') : ps.join(' · ');
+        }
+        function pedVendidoMapa(d) {   // vendido a mais por pão = passei − ficaram
+            const m = {};
+            Object.keys(d.p).forEach(id => { const v = Math.max(0, (d.p[id] || 0) - pedFicaram(d, id)); if (v > 0) m[id] = v; });
+            return m;
+        }
+        function pedPorPassarMapa(d) {   // ainda no cesto cinzento = recebi − passei
+            const m = {};
+            Object.keys(d.r).forEach(id => { const v = Math.max(0, (d.r[id] || 0) - (d.p[id] || 0)); if (v > 0) m[id] = v; });
+            return m;
+        }
 
         function pedManhaGuardar() {
             const sr = pedSoma(pedLer().r);
@@ -3799,7 +3822,7 @@
                 const v = d.r[x.id] || 0;
                 return `<div class="ped-row ${v > 0 ? 'tem' : ''}"><div class="ped-l1"><div class="ped-nome ${v > 0 ? '' : 'solo'}" title="${esc(x.nome)}">${esc(PED_SIGLA[x.id] || x.nome)}</div>${pedCtl('r', x.id, v, x.nome)}</div></div>`;
             }).join('');
-            return pedCab('Pão a mais · cesto cinzento', 'Ao carregar a carrinha', sr + (sr === 1 ? ' pão a mais' : ' pães a mais'), true)
+            return pedCab('Pão a mais · cesto cinzento', 'Ao carregar a carrinha', (sr > 0 ? pedTiposTxt(d.r, 2) : 'Sem pão a mais'), true)
                 + pedAbas('manha')
                 + '<p class="ped-ayuda">Conta o pão que te dão no cesto cinzento antes de saíres. A lista é sempre a mesma; as quantidades voltam a 0 todos os dias.</p>'
                 + '<div class="ped-cols"><span>Pão</span><span>Recebi</span></div>' + filas
@@ -3816,7 +3839,7 @@
                 return `<div class="ped-row"><div class="ped-l1"><div class="ped-chipn ${resta === 0 ? 'ok' : ''}" title="No cesto cinzento">${resta}</div><div class="ped-nome">${esc(x.nome)}</div>${pedCtl('p', x.id, p, x.nome)}</div><div class="ped-l2"><span>Recebi ${r}${p > 0 && resta > 0 ? ' · faltam ' + resta : ''}</span>${pill}</div>${btn}</div>`;
             }).join('');
             if (!ids.length) filas = pedVazio();
-            return pedCab('Pão a mais · cesto cinzento', 'Na rota', ids.length ? pedPorPassar(d) + ' por passar' : '', true)
+            return pedCab('Pão a mais · cesto cinzento', 'Na rota', ids.length ? (pedPorPassar(d) > 0 ? 'Por passar: ' + pedTiposTxt(pedPorPassarMapa(d), 2) : 'Tudo passado') : '', true)
                 + pedAbas('rota')
                 + '<p class="ped-ayuda">Quando se acaba um pão do teu pedido, toca em «Passar ao branco» e regista quantos passaste.</p>'
                 + (ids.length ? '<div class="ped-cols"><span>No cesto</span><span>Passei</span></div>' : '') + filas
@@ -3998,7 +4021,7 @@
         function pedMixTol(g) { const c = PED_CAT[g]; return g === 'miu' ? 8 : (c === 'bola' || c === 'agua') ? 6 : c === 'bico' ? 3 : 2; }
         function pedMixConfInner(D) {
             const cf = _mixConf, pm = pedLer();
-            if (!cf || cf.D !== D || !cf.O || !pm.fim) return '';
+            if (!cf || cf.D !== D || !cf.O) return '';   // Beta 0.1.19: vive no ecrã do fim da rota (passo 4), já com as sobras contadas
             const r = pedSobLer(D), tot = pedTotDe(D), vistos = {}, linhas = [];
             PED_BASE_IDS.forEach(id0 => {
                 const g = pedMixGr(id0); if (vistos[g]) return; vistos[g] = 1;
@@ -4007,6 +4030,7 @@
                 mem.forEach(m => {
                     const gm = tot[m] || 0, p = pedN9(pm.p[m]);
                     G += gm; P += p; C += r.c[m] || 0; V += Math.max(0, p - pedFicaram(pm, m));
+                    if (p > 0 && !pm.fim && pm.f[m] === undefined) falta = true;   // Beta 0.1.19: só confere o que já contaste em «Ficaram»
                     if (r.s[m] !== undefined) S += r.s[m]; else if (gm > 0) falta = true;
                 });
                 if (falta || (G <= 0 && P <= 0)) return;
@@ -4022,12 +4046,12 @@
             pedMixSaidas(D, null).then(O => {
                 ref.O = O; ref.t = Date.now(); ref.carregando = false;
                 const el = document.getElementById('ped-mix-conf');
-                if (el && pedPant === 'sobras') el.innerHTML = pedMixConfInner(D);
+                if (el && pedPant === 'fim') el.innerHTML = pedMixConfInner(D);
             }).catch(() => { ref.carregando = false; });
         }
         function pedMixConfHtml(D) {
             let h = '';
-            try { h = pedMixConfInner(D); if (pedLer().fim) pedMixConfCarregar(D); } catch (e) {}
+            try { h = pedMixConfInner(D); pedMixConfCarregar(D); } catch (e) {}
             return '<div id="ped-mix-conf">' + h + '</div>';
         }
         function pedFim() {
@@ -4048,10 +4072,10 @@
             if (!recebidos.length) filas = pedVazio();
             else if (!ids.length) filas = `<div class="ped-vazio">Hoje não passaste nenhum pão ao cesto branco.<br><button type="button" class="ped-link" onclick="pedIr('rota')">Ir ao passo 2 · Rota</button></div>`;
             const tot = vendidos.length ? `<div class="ped-total"><b>Vendeste a mais:</b> ${esc(vendidos.join(' · '))}<br><small>Para somares à Guia de Transporte.</small></div>` : '';
-            return pedCab('Pão a mais · cesto cinzento', 'No fim da rota', vendidos.length ? pedVendidoTotal(d) + ' a mais' : '', true)
+            return pedCab('Pão a mais · cesto cinzento', 'No fim da rota', vendidos.length ? 'A mais: ' + pedTiposTxt(pedVendidoMapa(d), 2) : '', true)
                 + pedAbas('fim')
                 + '<p class="ped-ayuda">Conta quantos dos que passaste aos cestos brancos ainda ficaram e volta a pô-los no cesto cinzento. O que falta é o que vendeste a mais. Só aparecem os pães que passaste; se faltar algum, regista-o antes no passo 2.</p>'
-                + (ids.length ? '<div class="ped-cols fim"><span>Ficaram</span><span>Vendi a mais</span></div>' : '') + filas + tot + pedDestCard(d)
+                + (ids.length ? '<div class="ped-cols fim"><span>Ficaram</span><span>Vendi a mais</span></div>' : '') + filas + tot + pedDestCard(d) + pedMixConfHtml(pedHoje())
                 + '<button type="button" class="ped-guardar" onclick="pedFimGuardar()">Guardar</button>'
                 + '<p class="ped-nota">Só quantidades. O valor da Guia continua a ser escrito por ti.</p>';
         }
@@ -4953,7 +4977,7 @@
                 avisoRapido('✔ Sobras guardadas · ' + (vazia0 ? (ac.length ? 'base de ' + DIARIO_DIAS[w] + ' com ' + ac.length + (ac.length === 1 ? ' pão' : ' pães') : 'base de ' + DIARIO_DIAS[w] + ' sem alterações')
                     : (nAj ? nAj + (nAj === 1 ? ' ajuste' : ' ajustes') + ' à base de ' + DIARIO_DIAS[w] : 'base de ' + DIARIO_DIAS[w] + ' sem alterações')) + (!vazia0 && nPend ? ' · ' + nPend + (nPend === 1 ? ' sugestão por aplicar' : ' sugestões por aplicar') : ''));
                 pedDataSel = null;
-                pedIr(pedAlvos(D).length ? 'pedido' : 'hub');   // v23.25: ao sábado não há pedido a seguir
+                { const pm = pedLer(); pedIr((pedSoma(pm.r) > 0 && !pm.fim) ? 'fim' : (pedAlvos(D).length ? 'pedido' : 'hub')); }   // v23.25: ao sábado não há pedido a seguir · Beta 0.1.19: depois das sobras vem o fim da rota (se há pão a mais por fechar)
             } finally { window.__sobGuardando = false; }
         }
 
@@ -4989,12 +5013,12 @@
             }).join('');
             const nSug = pedSugN(D);
             const semPed = !PED_BASE_IDS.some(id => (tot[id] || 0) > 0);
-            return pedCab('Pedido · passo 4 de ' + pedNPassos(), 'Sobras de hoje', nSug ? nSug + (nSug === 1 ? ' sugestão' : ' sugestões') : '', true)
-                + '<p class="ped-ayuda">Conta o pão que sobrou ao chegares à padaria, depois de contares o pão a mais. Os que acabam sugerem subir; os que sobram muito, descer. Toca numa sugestão para a aplicar à base (toca outra vez para desfazer). O número grande é o pedido de hoje (toca para corrigir).</p>'
+            return pedCab('Pedido · passo 3 de ' + pedNPassos(), 'Sobras de hoje', nSug ? nSug + (nSug === 1 ? ' sugestão' : ' sugestões') : '', true)
+                + '<p class="ped-ayuda">Conta o pão que sobrou ao chegares à padaria. Os que acabam sugerem subir; os que sobram muito, descer. Toca numa sugestão para a aplicar à base (toca outra vez para desfazer). O número grande é o pedido de hoje (toca para corrigir).</p>'
+                + (pedVesp(D) ? '' : '<div class="ped-dia">📌 As sugestões mexem na base de <b>' + esc(DIARIO_DIAS[pedDiaSem(D)]) + '</b>, que vale para as semanas seguintes.' + ((pedAlvos(D).length && pedDiaSem(pedAlvos(D)[0]) !== pedDiaSem(D)) ? ' O pedido ' + (pedAlvos(D)[0] === pedProxDia(D) ? 'de amanhã' : 'de ' + DIARIO_DIAS[pedDiaSem(pedAlvos(D)[0])].split('-')[0]) + ' (passo 5) usa a base de <b>' + esc(DIARIO_DIAS[pedDiaSem(pedAlvos(D)[0])]) + '</b>.' : '') + '</div>')
                 + (semPed ? '<div class="ped-aviso">Ainda não há pedido de hoje na app. Escreve o pedido de hoje em cada pão (o da Guia) para as sugestões funcionarem.' + (pedVesp(D) ? '' : ' Fica como base de ' + esc(DIARIO_DIAS[pedDiaSem(D)]) + '.') + '</div>' : '')
                 + (pedVesp(D) ? '<div class="ped-dia vesp">📌 Hoje foi véspera de dia sem trabalho: as sobras ficam registadas, mas não mudam a base.</div>' : '')
                 + pedSobFixHtml(D)
-                + pedMixConfHtml(D)
                 + '<div class="ped-cols"><span>Pedido</span><span>Sobrou</span></div>' + filas
                 + (ocultos.length ? `<div style="text-align:center;"><button type="button" class="ped-link" onclick="pedMostraTodos = !pedMostraTodos; renderPedido();">${pedMostraTodos ? 'Esconder os pães sem pedido' : 'Mostrar mais ' + ocultos.length + (ocultos.length === 1 ? ' pão' : ' pães') + ' sem pedido'}</button></div>` : '')
                 + '<button type="button" class="ped-guardar" onclick="pedSobGuardar()">' + (pedAlvos(D).length ? 'Guardar e preparar o pedido de amanhã' : 'Guardar sobras') + '</button>'
@@ -5290,6 +5314,7 @@
             const fech = pedFechado(D), vesp = pedVesp(D);
             const semBase = Object.keys(c.base).length === 0, dn = DIARIO_DIAS[c.w];
             const nPaes = PED_ORDEM.filter(id => c.tot[id] > 0).length;
+            const mv = pedBaseMovs(D);   // Beta 0.1.19
             const min = pedProxDia(pedHoje());
             const nav = `<div class="ped-nav"><button type="button" aria-label="Dia anterior" ${D <= min ? 'disabled' : ''} onclick="pedDataMover(-1)">◀</button><b>${esc(pedDiaTxt(D))}</b><button type="button" aria-label="Dia seguinte" ${D >= diarioSumarDias(min, 21) ? 'disabled' : ''} onclick="pedDataMover(1)">▶</button></div>`;
             if (fech) return pedCab2('Pedido · passo ' + pedPassoDe(D) + ' de ' + pedNPassos(), 'Pedido para ' + dn, 'Sem trabalho', true, 'Dia sem trabalho') + nav + pedFechoCard(D, c);
@@ -5312,31 +5337,90 @@
                 const soE = PED_SO_ENC.includes(id);
                 if (soE && !(tot > 0 || en || aj)) return '';
                 const lay = (c.lay && c.lay[id]) || 0;
-                const partes = soE ? [] : ['Base ' + b + (lay ? ' (' + (b - lay) + (lay > 0 ? ' + ' : ' − ') + Math.abs(lay) + ' do grupo)' : '')];
+                const mvT = soE ? '' : pedBaseMovTxt(mv, id, c.w, lay);   // Beta 0.1.19: «(era 24 · −2 sobras 21/10)»
+                const partes = soE ? [] : ['Base ' + b + (lay ? ' (' + (b - lay) + (lay > 0 ? ' + ' : ' − ') + Math.abs(lay) + ' do grupo)' : '') + (mvT ? ' ' + mvT : '')];
                 if (en) partes.push(en > 0 ? '+ encomenda ' + en : '− ' + Math.abs(en) + ' (não leva pão)');
                 if (aj) partes.push(aj > 0 ? '+ ' + (vesp ? 'prevenção ' : 'ajuste ') + aj : '− ' + (vesp ? 'prevenção ' : 'ajuste ') + Math.abs(aj));
                 if (soE && partes.length && partes[0].indexOf('+ ') === 0) partes[0] = partes[0].charAt(2).toUpperCase() + partes[0].slice(3);
-                const sub = soE ? (partes.length ? partes.join(' ') : 'Só por encomendas') : ((b === 0 && en === 0 && aj === 0) ? 'Sem base' : partes.join(' '));
+                const sub = soE ? (partes.length ? partes.join(' ') : 'Só por encomendas') : ((b === 0 && en === 0 && aj === 0 && !mvT) ? 'Sem base' : partes.join(' '));
                 const u = pedUltSobras(D, id);
-                let ult = 'Sem registo da semana anterior', pill = 'sem dados', pc = '';
+                let ult = 'Sem registo da semana anterior', pill = 'sem dados', pc = '', sobS = '';
                 if (u) {
                     const dd = pedDiaTxt(u.dt).replace(' · ', ' ');
-                    ult = dd + ' · ' + (u.nc ? 'não contou' : (u.s + u.c === 0 ? 'acabou' : 'sobraram ' + u.s + (u.nl > 0 ? ' (' + u.nl + ' de fixos que não levaram)' : ''))) + (u.vesp ? ' (véspera)' : '') + (u.nota ? ' · 📝 ' + u.nota : '');
+                    sobS = (u.nc ? 'não contou' : (u.s + u.c === 0 ? 'acabou' : 'sobraram ' + u.s + (u.nl > 0 ? ' (' + u.nl + ' de fixos que não levaram)' : ''))) + (u.vesp ? ' (véspera)' : '') + (u.nota ? ' · 📝 ' + u.nota : '');
+                    ult = dd + ' · ' + sobS;
                     pill = u.d > 0 ? '+' + u.d + ' aplicado' : (u.d < 0 ? '−' + Math.abs(u.d) + ' aplicado' : 'manter');
                     pc = u.d > 0 ? 'sobe' : (u.d < 0 ? 'desce' : '');
                 }
-                return `<div class="ped-row ${tot > 0 ? 'tem' : 'mudo'}"><div class="ped-l1"><input type="number" inputmode="numeric" min="0" max="9999" class="ped-chipn ped-chipin" value="${tot}" aria-label="Pedido ${esc(nome)}" onchange="pedPedTot('${id}',this.value)" onfocus="this.select()"><div style="flex:1 1 0; min-width:0;"><div class="ped-nome">${esc(nome)}</div><div class="ped-sub">${esc(sub + pedExtSub(D, id, tot))}</div></div><div class="ped-ctl"><button type="button" aria-label="Menos ${esc(nome)}" onclick="pedPedMais('${id}',-1)">−</button><button type="button" aria-label="Mais ${esc(nome)}" onclick="pedPedMais('${id}',1)">+</button></div></div>${u ? `<div class="ped-l2" style="justify-content:space-between;"><span>${esc(ult)}</span><span class="ped-pill ${pc}">${esc(pill)}</span></div>` : ''}</div>`;
+                // Beta 0.1.19: a semana passada de um vistazo, como nas notas do Keep: o que pediste (com e sem encomendas), o a mais que vendeste e o que sobrou
+                const pu = mv.u, segP = pu ? [pedUltPedTxt(pu, id), pedVendA(pu.dt, id) > 0 ? 'a mais ' + pedVendA(pu.dt, id) : ''].filter(Boolean).join(' · ') : '';
+                const mk2 = (txt, pl) => `<div class="ped-l2" style="justify-content:space-between;"><span>${esc(txt)}</span>${pl || ''}</div>`;
+                const pillH = u ? `<span class="ped-pill ${pc}">${esc(pill)}</span>` : '';
+                let l2 = '';
+                if (segP && u && pu.dt === u.dt) l2 = mk2(pedDiaCurto(pu.dt) + ' · ' + segP + ' · ' + sobS, pillH);
+                else { if (segP) l2 += mk2(pedDiaCurto(pu.dt) + ' · ' + segP, ''); if (u) l2 += mk2(ult, pillH); }
+                return `<div class="ped-row ${tot > 0 ? 'tem' : 'mudo'}"><div class="ped-l1"><input type="number" inputmode="numeric" min="0" max="9999" class="ped-chipn ped-chipin" value="${tot}" aria-label="Pedido ${esc(nome)}" onchange="pedPedTot('${id}',this.value)" onfocus="this.select()"><div style="flex:1 1 0; min-width:0;"><div class="ped-nome">${esc(nome)}</div><div class="ped-sub">${esc(sub + pedExtSub(D, id, tot))}</div></div><div class="ped-ctl"><button type="button" aria-label="Menos ${esc(nome)}" onclick="pedPedMais('${id}',-1)">−</button><button type="button" aria-label="Mais ${esc(nome)}" onclick="pedPedMais('${id}',1)">+</button></div></div>${l2}</div>`;
             }).join('');
-            return pedCab2('Pedido · passo ' + pedPassoDe(D) + ' de ' + pedNPassos(), amanha ? 'Pedido para amanhã' : 'Pedido para ' + dn, nPaes + (nPaes === 1 ? ' pão' : ' pães'), true, p && p.feito ? '✔ Marcado como pedido' + pedExtPill(D) : 'Ainda por marcar')
+            return pedCab2('Pedido · passo ' + pedPassoDe(D) + ' de ' + pedNPassos(), amanha ? 'Pedido para amanhã' : 'Pedido para ' + dn, nPaes + (nPaes === 1 ? ' tipo de pão' : ' tipos de pão'), true, p && p.feito ? '✔ Marcado como pedido' + pedExtPill(D) : 'Ainda por marcar')
                 + nav
                 + pedEnvCard(D, c)
                 + pedDiaCard(D, vesp)
+                + (semBase ? '' : pedBaseMovCard(D, mv))
                 + pedFixCard(D, c)
                 + pedLarAvisoHtml(D, c)
                 + (semBase ? `<div class="ped-aviso">Ainda não tens a base de ${esc(dn)}. ${vesp ? 'Como é véspera, o pedido deste dia não fica como base.' : 'Escreve os números como na tua nota do Keep: ao marcares o pedido pergunto-te se ficam guardados como base dos próximos dias iguais.'} <button type="button" class="ped-link" onclick="pedBW = ${c.w}; pedIr('bases')">Definir as bases</button></div>` : '')
                 + encs + filas
                 + '<div class="ped-duo"><button type="button" class="ped-sec" onclick="pedBW = ' + c.w + '; pedIr(\'bases\')">Base de ' + esc(dn.split('-')[0]) + '</button><button type="button" class="ped-pri" onclick="pedMarcar()">' + (pedExtTem(D) ? 'Marcar de novo (troca o enviado)' : 'Marcar como pedido') + '</button></div>'
                 + '<p class="ped-nota">As encomendas somam-se sozinhas à base. Mudar um número aqui vale só para este dia.</p>';
+        }
+
+        // ===== Beta 0.1.19 · «Pedido para amanhã» de um vistazo =====
+        // Último pedido marcado do mesmo dia da semana (até 4 semanas atrás); ao marcar guardam-se p.tot / p.base / p.en / p.aj.
+        function pedUltPed(D) {
+            for (let k = 1; k <= 4; k++) {
+                const dt = diarioSumarDias(D, -7 * k), pp = pedPedLer(dt);
+                if (pp && pp.feito) return { dt, p: pp };
+            }
+            return null;
+        }
+        // Mexidas da base do dia da semana de D desde o dia do último pedido desse dia (do registo estado.pedido_baselog; ficam de fora as de uma só data, a 1.ª base e os «desfeitos»)
+        function pedBaseMovs(D) {
+            const u = pedUltPed(D);
+            if (!u) return { u: null, lista: [] };
+            const w = pedDiaSem(D);
+            const lista = pedBaseLogArr().filter(e => e && e.w === w && !e.dt && e.org !== 'primeira' && e.org !== 'desfazer' && typeof e.d === 'string' && e.d >= u.dt && e.d <= D);
+            lista.sort((a, b) => String(a.t).localeCompare(String(b.t)));
+            return { u, lista };
+        }
+        function pedDM(iso) { return iso.slice(8, 10) + '/' + iso.slice(5, 7); }
+        function pedSgn(n) { return (n > 0 ? '+' : '−') + Math.abs(n); }
+        function pedBaseMovTxt(mv, id, w, lay) {   // «(era 24 · −2 sobras 21/10)»; vazio se a base não mexeu
+            const L = mv.lista.filter(e => e.p === id && !e.des);
+            if (!L.length) return '';
+            const atualW = pedBaseLer(w)[id] || 0, ultimo = L[L.length - 1].para, era = L[0].de;
+            if (era === atualW) return '';   // voltou ao mesmo valor
+            const ps = L.slice(-3).map(e => pedSgn(e.para - e.de) + ' ' + (BASE_ORG[e.org] || e.org) + ' ' + pedDM(e.d));
+            if (atualW !== ultimo) ps.push('depois à mão ' + pedSgn(atualW - ultimo));
+            return '(era ' + (era + (lay || 0)) + ' · ' + ps.join(' · ') + ')';
+        }
+        function pedUltPedTxt(u, id) {   // «pediste 29 = 24 base + 5 enc»: o total do último pedido desse dia, com e sem encomendas
+            const pp = u && u.p, t = pp && pp.tot ? (pp.tot[id] || 0) : 0;
+            if (!t) return '';
+            if (!pp.base) return 'pediste ' + t;   // pedidos marcados antes da Beta 0.1.7 só guardaram o total
+            const ps = [['base', pedObj(pp.base)[id] || 0], ['enc', pedObj(pp.en)[id] || 0], ['ajuste', pedObj(pp.aj)[id] || 0]].filter(x => x[1] !== 0);
+            if (!ps.length) return 'pediste ' + t;
+            if (ps.length === 1 && ps[0][0] === 'base') return 'pediste ' + t + (pp.en && typeof pp.en === 'object' ? ' · só base' : '');
+            return 'pediste ' + t + ' = ' + ps.map((x, i) => (x[1] < 0 ? (i ? ' − ' : '−') : (i ? ' + ' : '')) + Math.abs(x[1]) + ' ' + x[0]).join('');
+        }
+        function pedBaseMovCard(D, mv) {
+            if (!mv.u) return '';
+            const w = pedDiaSem(D), dn = DIARIO_DIAS[w], ativos = mv.lista.filter(e => !e.des), quando = esc(pedDiaCurto(mv.u.dt));
+            if (!ativos.length) return `<div class="ped-dia">📜 A base de ${esc(dn)} não mexeu desde o último pedido (${quando}).</div>`;
+            const nP = PED_ORDEM.filter(id => ativos.some(e => e.p === id)).length;
+            const dt = e => { const d = new Date(e.t); return isNaN(d) ? '' : String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+            const linhas = mv.lista.slice().reverse().map(e => `<div class="bm-log${e.des ? ' des' : ''}"><div><b class="bm-t">${esc(PED_SIGLA[e.p] || e.p)} ${e.de} → ${e.para}</b> <span style="color:#64748b; font-size:12.5px;">${esc(dt(e))} · ${esc(BASE_ORG[e.org] || e.org)}</span>`
+                + `${!e.des ? ` <button type="button" class="ped-link" onclick="pedBaseDesfazer('${esc(e.id)}')">↩ Desfazer</button>` : ' <small style="display:inline;">desfeito</small>'}</div><small>${esc(e.mot)}</small></div>`).join('');
+            return `<details class="ped-det" id="ped-base-mov" style="margin: 10px 0;"><summary style="cursor:pointer; font-weight:600; font-size:14px;">📜 A base de ${esc(dn)} mexeu em ${nP} ${nP === 1 ? 'pão' : 'pães'} desde o último pedido (${quando})</summary>${linhas}</details>`;
         }
 
         // ---- bases por dia da semana
