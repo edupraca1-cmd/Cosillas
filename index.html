@@ -1038,7 +1038,7 @@
             </div>
         </div>
         <label class="mais-opcao"><input type="checkbox" id="mais-deslizar" onchange="deslizarAlternar(this.checked)"> ↔️ Deslizar para mudar de pestanha</label>
-        <p class="app-version" id="app-version">Beta 0.1.22</p>
+        <p class="app-version" id="app-version">Beta 0.1.23</p>
     </div>
 
     <!-- SUBMÓDULOS -->
@@ -7145,13 +7145,13 @@
             function rangoDias(a, b) {
                 st.recortado = false;
                 // Com limite (saldo de férias): conta a partir do primeiro dia tocado e pára quando o saldo acabar
-                if (modo === 'rango' && opts.consume && opts.limite) {
-                    const paso = a <= b ? 1 : -1, lim = Math.max(0, opts.limite());
-                    const r = []; let usados = 0;
+                if (modo === 'rango' && opts.consume && (opts.limite || opts.cabe)) {
+                    const paso = a <= b ? 1 : -1, lim = opts.cabe ? 0 : Math.max(0, opts.limite());
+                    const r = []; let usados = 0; const gasta = [];
                     for (let d = a, n = 0; n < 400; d = diarioSumarDias(d, paso), n++) {
                         if (opts.consume(d)) {
-                            if (usados >= lim && r.length) { st.recortado = true; break; }
-                            usados++;
+                            if ((opts.cabe ? !opts.cabe(gasta.concat(d)) : usados >= lim) && r.length) { st.recortado = true; break; }   // Beta 0.1.23: «cabe» decide por ano
+                            usados++; gasta.push(d);
                         }
                         r.push(d);
                         if (d === b) break;
@@ -8248,23 +8248,46 @@
         const DIARIO_FERIAS_ANO = 22, DIARIO_CONV_MAX = 2;   // 22 dias úteis por ano · 22 − 20 = 2 dias que se podem trocar por faltas (CT art. 257.º)
         function diarioHojeISO() { return formatearFechaLocal(new Date()); }
         // Os dias marcados nesse ano gastam primeiro os transitados (se a data cabe no prazo) e depois os do ano. Gozado = até hoje (inclusive); marcado = daí para a frente.
-        function diarioFeriasCalc(c, hoje) {
+        // Beta 0.1.23: projecção ano a ano. O ano do contador usa `ferias_saldo_base` (+ transitados guardados); cada ano seguinte abre com 22 e leva,
+        // como transitados até 30/04, o que sobrar do ano anterior. Os dias de um ano gastam primeiro os transitados (se a data cabe no prazo) e depois o ano.
+        function diarioFeriasAnos(c, extra, hoje) {
             c = c || diarioCfg(); hoje = hoje || diarioHojeISO();
-            const Y = String(c.ferias_ano), T = c.ferias_transit;
-            const dias = c.ferias_dias.filter(d => String(d).slice(0, 4) === Y).slice().sort();
-            const usT = [], usA = [];
-            dias.forEach(d => { if (T && d <= T.prazo && usT.length < T.n) usT.push(d); else usA.push(d); });
-            const goz = l => l.filter(d => d <= hoje).length;
-            const a = { base: c.ferias_saldo_base, goz: goz(usA), mar: usA.length - goz(usA) };
-            a.porGozar = a.base - a.goz; a.livres = a.base - a.goz - a.mar;
-            let t = null;
-            if (T) {
-                t = { ano: T.ano, prazo: T.prazo, n: T.n, goz: goz(usT), mar: usT.length - goz(usT) };
-                t.porGozar = T.n - t.goz; t.livres = T.n - t.goz - t.mar; t.expirou = hoje > T.prazo; t.perdidos = 0;
-                if (t.expirou) { t.perdidos = Math.max(0, T.n - usT.length); t.porGozar = 0; t.livres = 0; }
+            const Y0 = c.ferias_ano;
+            const todos = Array.from(new Set(c.ferias_dias.concat(extra || []))).sort();
+            let ultimo = Y0 + 1;
+            todos.forEach(d => { const y = Number(String(d).slice(0, 4)); if (y > ultimo && y <= Y0 + 6) ultimo = y; });
+            const anos = []; let sobraAnt = 0;
+            for (let Y = Y0; Y <= ultimo; Y++) {
+                const T = Y === Y0 ? c.ferias_transit : (sobraAnt > 0 ? { ano: Y - 1, n: sobraAnt, prazo: Y + '-04-30' } : null);
+                const base = Y === Y0 ? c.ferias_saldo_base : DIARIO_FERIAS_ANO;
+                const usT = [], usA = [];
+                todos.filter(d => String(d).slice(0, 4) === String(Y)).forEach(d => { if (T && d <= T.prazo && usT.length < T.n) usT.push(d); else usA.push(d); });
+                const goz = l => l.filter(d => d <= hoje).length;
+                const a = { base, goz: goz(usA), mar: usA.length - goz(usA) };
+                a.porGozar = base - a.goz; a.livres = base - a.goz - a.mar;
+                let t = null;
+                if (T) {
+                    t = { ano: T.ano, prazo: T.prazo, n: T.n, goz: goz(usT), mar: usT.length - goz(usT) };
+                    t.porGozar = T.n - t.goz; t.livres = T.n - t.goz - t.mar; t.expirou = hoje > T.prazo; t.perdidos = 0;
+                    if (t.expirou) { t.perdidos = Math.max(0, T.n - usT.length); t.porGozar = 0; t.livres = 0; }
+                }
+                anos.push({ ano: Y, a, t, usT: usT.length, usA: usA.length, over: Math.max(0, usA.length - base),
+                            porGozar: a.porGozar + (t ? t.porGozar : 0), livres: a.livres + (t ? t.livres : 0) });
+                sobraAnt = Math.max(0, base - usA.length);
             }
-            return { ano: c.ferias_ano, a, t, porGozar: a.porGozar + (t ? t.porGozar : 0), livres: a.livres + (t ? t.livres : 0) };
+            return anos;
         }
+        function diarioFeriasCalc(c, hoje) {
+            c = c || diarioCfg();
+            const anos = diarioFeriasAnos(c, null, hoje), r = anos[0], q = anos[1];
+            return { ano: r.ano, a: r.a, t: r.t, porGozar: r.porGozar, livres: r.livres,
+                     prox: { ano: q.ano, tN: q.t ? q.t.n : 0, marcados: q.usT + q.usA, livres: Math.max(0, q.livres) } };
+        }
+        // Um dia gasta saldo se é útil, ainda não é férias nem doença e é do ano do contador ou de um ano seguinte
+        function diarioFeriasConsome(d) { return !diarioFeriasNoCuenta(d) && !esDiaDeFerias(d) && !esDiaDeDoenca(d) && Number(String(d).slice(0, 4)) >= diarioCfg().ferias_ano; }
+        function diarioFeriasExcesso(c, extra) { return diarioFeriasAnos(c, extra).reduce((n, y) => n + y.over, 0); }
+        // Cabe se marcar estes dias não aumenta o excesso de nenhum ano (um excesso que já existia não bloqueia anos que estão bem)
+        function diarioFeriasCabe(extra) { const c = diarioCfg(); return diarioFeriasExcesso(c, extra) <= diarioFeriasExcesso(c, []); }
         function diarioFeriasPorGozar() { return diarioFeriasCalc().porGozar; }   // ainda por gozar (inclui os marcados mais à frente)
         function diarioFeriasLivres() { return diarioFeriasCalc().livres; }       // por gozar e ainda sem data
         // Fim de ano: o que sobra do ano que acaba passa a «transitados» (prazo 30/04 do ano seguinte) e o ano novo abre com 22
@@ -8348,6 +8371,8 @@
                     ${blocoT}
                     <div class="dr-fila"><span>🏖 Férias ${K.ano} · por gozar</span><b id="dr-saldo-ferias">${saldo} dias</b></div>
                     <div class="dr-sub" id="dr-ferias-sub">${K.a.goz} gozado(s) · ${K.a.mar} marcado(s) mais à frente · <b id="dr-livres-ferias">${K.a.livres} dias</b> livres para marcar</div>
+                    <div class="dr-fila" style="margin-top:6px;"><span>📅 Férias ${K.prox.ano} · livres para marcar</span><b id="dr-prox-livres">${dd(K.prox.livres)}</b></div>
+                    <div class="dr-sub" id="dr-prox-sub">${DIARIO_FERIAS_ANO} do ano novo${K.prox.tN ? ' + ' + K.prox.tN + ' transitados de ' + K.ano + ' (só para datas até 30/04/' + K.prox.ano + ')' : ''} · ${K.prox.marcados} já marcado(s)</div>
                     ${av}
                     <div class="dr-botones">
                         <button type="button" onclick="diarioEditarSaldoFerias()">Ajustar saldo</button>
@@ -8662,7 +8687,7 @@
             } else {
                 if (c.doenca_dias[dia]) { alert('Este dia está marcado como doença. Para o trocar por férias usa «Substituir por férias» no ecrã do dia.'); return; }
                 if (diarioJornadasDia(dia).length && !(await confirmarApp('Este dia tem jornada registada. Marcar mesmo assim como férias?', 'Marcar'))) return;
-                if (String(dia).slice(0, 4) === String(c.ferias_ano) && diarioFeriasLivres() <= 0 && !(await confirmarApp('Já não tem dias de férias livres para marcar. Marcar mesmo assim?', 'Marcar'))) return;
+                if (!diarioFeriasCabe([dia]) && !(await confirmarApp('Já não tem dias de férias livres para marcar. Marcar mesmo assim?', 'Marcar'))) return;
                 c.ferias_dias.push(dia);
                 c.ferias_dias.sort();
             }
@@ -8700,8 +8725,8 @@
                 marca: esDiaDeFerias,
                 noCuenta: diarioFeriasNoCuenta,
                 contar: d => !diarioFeriasNoCuenta(d),                                  // o resumo só conta dias úteis
-                consume: d => !diarioFeriasNoCuenta(d) && !esDiaDeFerias(d) && !esDiaDeDoenca(d) && String(d).slice(0, 4) === String(diarioCfg().ferias_ano),   // dias que gastam saldo (só os do ano do contador)
-                limite: diarioFeriasLivres,                                             // o deslize pára quando já não há dias livres para marcar
+                consume: diarioFeriasConsome,                                           // dias que gastam saldo (do ano do contador em diante)
+                cabe: diarioFeriasCabe,                                                 // o deslize pára quando já não cabem mais dias (limite por ano)
                 onPintar: diarioInfoFerias
             });
             selectorDiasFerias.setSeleccion([diarioSel]);
@@ -8713,15 +8738,19 @@
             const el = document.getElementById('ferias-info');
             if (!el) return;
             if (!lista || !lista.length) { el.textContent = ''; return; }
-            const p = diarioFeriasPlan(lista);
-            const saldo = diarioFeriasLivres(), cons = p.novos.filter(d => String(d).slice(0, 4) === String(diarioCfg().ferias_ano)).length;
-            if (cons && saldo <= 0) { el.textContent = 'Já não tem dias de férias livres para marcar (use «Ajustar saldo» se precisar).'; return; }
-            const partes = [`Marcar: ${p.novos.length}`, `saldo depois: ${saldo - cons}`];
+            const p = diarioFeriasPlan(lista), c = diarioCfg();
+            const gasta = p.novos.filter(d => Number(String(d).slice(0, 4)) >= c.ferias_ano);   // Beta 0.1.23: só gastam saldo os dias do ano do contador em diante
+            if (gasta.length && !diarioFeriasCabe(gasta)) { el.textContent = 'Já não tem dias de férias livres para marcar nesse período (use «Ajustar saldo» se precisar).'; return; }
+            const depois = diarioFeriasAnos(c, gasta), anos = Array.from(new Set(gasta.map(d => Number(String(d).slice(0, 4))))).sort();
+            const livresDe = y => Math.max(0, (depois.find(x => x.ano === y) || depois[0]).livres);
+            const saldoTxt = !anos.length || (anos.length === 1 && anos[0] === c.ferias_ano) ? `saldo depois: ${depois[0].livres}`
+                : anos.length === 1 ? `saldo depois em ${anos[0]}: ${livresDe(anos[0])}` : 'saldo depois: ' + anos.map(y => `${y}: ${livresDe(y)}`).join(' · ');
+            const partes = [`Marcar: ${p.novos.length}`, saldoTxt];
             if (p.ja.length) partes.push(`já são férias: ${p.ja.length}`);
             if (p.doe) partes.push(`doença: ${p.doe}`);
             const nc = p.dom + p.sab + p.fer;
             if (nc) partes.push(`não contam: ${nc}`);
-            el.textContent = partes.join(' · ') + (recortado ? ` — limite do saldo atingido (${saldo} dia${saldo === 1 ? '' : 's'} livre${saldo === 1 ? '' : 's'})` : '');
+            el.textContent = partes.join(' · ') + (recortado ? ` — limite do saldo atingido (${gasta.length} dia${gasta.length === 1 ? '' : 's'} livre${gasta.length === 1 ? '' : 's'})` : '');
         }
         function diarioCerrarIntervaloFerias() { document.getElementById('modal-ferias').classList.remove('active'); }
 
@@ -8732,9 +8761,11 @@
             if (diarioDate(hasta) - diarioDate(desde) > 90 * 86400000) return alert('O intervalo não pode ter mais de 90 dias.');
             const c = diarioCfg();
             const p = diarioFeriasPlan(sel);
-            const saldo = diarioFeriasLivres();
-            const sim = diarioFeriasCalc(Object.assign({}, c, { ferias_dias: c.ferias_dias.concat(p.novos) }));   // Beta 0.1.22: os dias de outro ano e os dos transitados não gastam o contador do ano
-            if (sim.a.livres < 0) return alert(saldo <= 0 ? 'Já não tem dias de férias livres para marcar. Use «Ajustar saldo» se precisar de marcar mais.' : `Só tem ${saldo} dia(s) de férias livres para marcar. Escolha menos dias.`);
+            const gasta = p.novos.filter(d => Number(String(d).slice(0, 4)) >= c.ferias_ano);   // Beta 0.1.23: limite por ano (o ano do contador e os seguintes)
+            if (!diarioFeriasCabe(gasta)) {
+                let n = 0; while (n < gasta.length && diarioFeriasCabe(gasta.slice(0, n + 1))) n++;
+                return alert(n <= 0 ? 'Já não tem dias de férias livres para marcar nesse período. Use «Ajustar saldo» se precisar de marcar mais.' : `Só tem ${n} dia(s) de férias livres para marcar nesse período. Escolha menos dias.`);
+            }
             if (p.novos.length) {
                 p.novos.forEach(d => c.ferias_dias.push(d));
                 c.ferias_dias.sort();
@@ -8858,7 +8889,7 @@
             if (diarioFeriasNoCuenta(dia)) return alert('Sábados, domingos e feriados nacionais não contam como dias de férias: este dia não pode ser trocado por férias.');
             const usadas = diarioDoencaAno(dia.slice(0, 4)).conv;
             if (usadas >= DIARIO_CONV_MAX && !(await confirmarApp(`Já substituíste ${usadas} de ${DIARIO_CONV_MAX} dias por férias neste ano. A lei só deixa trocar ${DIARIO_CONV_MAX} (têm de ficar 20 dias úteis de férias gozados). Registar mesmo assim?`, 'Registar'))) return;
-            if (String(dia).slice(0, 4) === String(c.ferias_ano) && diarioFeriasLivres() <= 0 && !(await confirmarApp('Já não tem dias de férias livres para marcar. Substituir mesmo assim?', 'Substituir'))) return;
+            if (!diarioFeriasCabe([dia]) && !(await confirmarApp('Já não tem dias de férias livres para marcar. Substituir mesmo assim?', 'Substituir'))) return;
             x.conv = true;
             if (!c.ferias_dias.includes(dia)) { c.ferias_dias.push(dia); c.ferias_dias.sort(); }
             guardarEstado();
