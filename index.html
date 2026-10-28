@@ -1038,7 +1038,7 @@
             </div>
         </div>
         <label class="mais-opcao"><input type="checkbox" id="mais-deslizar" onchange="deslizarAlternar(this.checked)"> ↔️ Deslizar para mudar de pestanha</label>
-        <p class="app-version" id="app-version">Beta 0.1.20</p>
+        <p class="app-version" id="app-version">Beta 0.1.22</p>
     </div>
 
     <!-- SUBMÓDULOS -->
@@ -1157,7 +1157,7 @@
             <div class="folha-fila"><span>− Importe diário</span><span class="fv" id="folha-sm"></span></div>
             <div class="folha-sub" id="folha-sm-sub"></div>
             <div class="folha-fila"><label for="folha-devolucao">− Devolução da Volta</label><input type="number" id="folha-devolucao" inputmode="decimal" step="0.01" min="0" placeholder="0,00" oninput="folhaDevolucaoCampo(this.value)"></div>
-            <div class="folha-sub">Pão que sobrou. Calcula-se sozinha com as Sobras de hoje (Pedido › passo 3): sobrou + comi, ao preço normal. Se mudares as sobras, o valor substitui-se (não soma). Também pode escrevê-lo à mão.</div>
+            <div class="folha-sub">Pão que sobrou. Calcula-se sozinha com as Sobras de hoje (Pedido › passo 3): o pão que sobrou, ao preço normal (o que comeste não conta: não volta à padaria). Se mudares as sobras, o valor substitui-se (não soma). Também pode escrevê-lo à mão.</div>
         </div>
         <div class="folha-total" id="folha-total"><span>💶 Dinheiro a entregar</span><span class="ft-v" id="folha-dinheiro"></span></div>
         <div class="jornada-card">
@@ -1641,6 +1641,25 @@
                 <button class="btn-close" type="button" onclick="diarioCerrarIntervaloFerias()">Cancelar</button>
                 <button class="btn-danger" type="button" onclick="diarioDesmarcarIntervaloFerias()">Desmarcar</button>
                 <button class="btn-success" type="button" onclick="diarioAplicarIntervaloFerias()">Marcar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-doenca" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; font-size:17px;">🤒 Marcar dias de doença</h3>
+            <div id="selector-dias-doenca" style="margin-bottom: 6px;"></div>
+            <div class="sd-leyenda"><i></i>Dia já marcado como doença</div>
+            <div style="margin:8px 0 2px 0; font-size:14px;">
+                <label style="display:flex; gap:8px; align-items:flex-start; margin:4px 0;"><input type="radio" name="doenca-j" value="1"> <span>Com justificação <small style="color:#64748b;">(baixa ou certificado de incapacidade)</small></span></label>
+                <label style="display:flex; gap:8px; align-items:flex-start; margin:4px 0;"><input type="radio" name="doenca-j" value="0" checked> <span>Sem justificação <small style="color:#64748b;">(só declaração de comparência, ou nada)</small></span></label>
+            </div>
+            <div id="doenca-info" class="dr-sub" style="min-height:18px; margin-top:6px;"></div>
+            <p style="font-size:12px; color:#64748b; margin:6px 0 0 0;">Domingos e feriados nacionais não contam. Os dias sem justificação podem ser trocados por férias (máximo 2 por ano) no ecrã do dia. Não gasta o contador de férias.</p>
+            <div class="modal-actions">
+                <button class="btn-close" type="button" onclick="diarioCerrarDoenca()">Cancelar</button>
+                <button class="btn-danger" type="button" onclick="diarioDesmarcarDoenca()">Desmarcar</button>
+                <button class="btn-success" type="button" onclick="diarioAplicarDoenca()">Marcar</button>
             </div>
         </div>
     </div>
@@ -4894,13 +4913,14 @@
             else { const n = {}; ids.forEach(id => { n[id] = fq[id]; }); r.nl[f.cid] = n; }
             r.feito = false; guardarEstado(); renderPedido();
         }
-        // Beta 0.1.5 · Devolução da Volta = Σ (sobrou + comi) × preço normal das Sobras de hoje. Substitui o valor do dia (nunca soma nem acumula); sem sobras escritas não mexe
+        // Beta 0.1.5 · Devolução da Volta = Σ sobrou × preço normal das Sobras de hoje. Substitui o valor do dia (nunca soma nem acumula); sem sobras escritas não mexe
+        // Beta 0.1.21 · o «comi» já não conta: esse pão não volta à padaria (continua a contar para as sugestões da base); o do São Miguel também nunca entrou
         function pedDevolSync() {
             try {
-                const D = pedHoje(), r = pedSobLer(D), ids = Array.from(new Set(Object.keys(r.s).concat(Object.keys(r.c))));
+                const D = pedHoje(), r = pedSobLer(D), ids = Object.keys(r.s);
                 if (!ids.length) return;
                 let t = 0;
-                ids.forEach(id => { t += (pedN9(r.s[id]) + pedN9(r.c[id])) * (FOLHAS_PRECO[id] || 0); });
+                ids.forEach(id => { t += pedN9(r.s[id]) * (FOLHAS_PRECO[id] || 0); });
                 const v = folhaR2(t);
                 let o = folhaLS('devolucaoDia', {}); if (!o || typeof o !== 'object' || Array.isArray(o)) o = {};
                 if (v > 0) o[D] = v; else delete o[D];
@@ -4926,7 +4946,7 @@
         function pedSobCom(id, dir) {
             const r = pedSobEsc(pedHoje()), n = Math.max(0, Math.min(99, (r.c[id] || 0) + dir));
             if (n > 0) r.c[id] = n; else delete r.c[id];
-            r.feito = false; guardarEstado(); pedDevolSync(); renderPedido();
+            r.feito = false; guardarEstado(); renderPedido();   // Beta 0.1.21: o «comi» não mexe na Devolução (nem apaga o que escreveste à mão)
         }
         function pedSobNC(id) {
             const r = pedSobEsc(pedHoje());
@@ -8120,8 +8140,17 @@
             if (typeof c.ferias_saldo_base !== 'number') c.ferias_saldo_base = 18;   // 18 dias por gozar (indicado em 11/10/2026)
             if (!Array.isArray(c.ferias_dias)) c.ferias_dias = [];
             if (!c.ferias_ultima || typeof c.ferias_ultima !== 'object' || !Array.isArray(c.ferias_ultima.dias)) c.ferias_ultima = null;   // última marcação em bloco (para desfazer)
+            if (!c.doenca_dias || typeof c.doenca_dias !== 'object' || Array.isArray(c.doenca_dias)) c.doenca_dias = {};   // Beta 0.1.22: { 'AAAA-MM-DD': { j: justificada, conv: substituída por férias } }
+            if (typeof c.ferias_ano !== 'number') {   // Beta 0.1.22: o contador passa a ser por ano; migração: os dias de outros anos deixam de gastar este contador (o saldo mostrado não muda)
+                c.ferias_ano = new Date().getFullYear();
+                const fora = c.ferias_dias.filter(d => String(d).slice(0, 4) !== String(c.ferias_ano)).length;
+                if (fora) c.ferias_saldo_base = Math.max(0, c.ferias_saldo_base - fora);
+            }
+            if (!c.ferias_transit || typeof c.ferias_transit !== 'object' || typeof c.ferias_transit.n !== 'number' || typeof c.ferias_transit.prazo !== 'string') c.ferias_transit = null;   // { ano, n, prazo }: o que sobrou do ano anterior (até 30/04, por acordo com a empresa)
+            if (!c.ferias_aviso || typeof c.ferias_aviso !== 'object') c.ferias_aviso = null;   // aviso único de «ano novo»
             if (!c.feriado_manual || typeof c.feriado_manual !== 'object') c.feriado_manual = {};
             if (!c.feriado_pago || typeof c.feriado_pago !== 'object') c.feriado_pago = {};
+            diarioFeriasRolar(c);   // Beta 0.1.22: 1 de janeiro → contador novo
             return c;
         }
 
@@ -8194,15 +8223,16 @@
         function diarioFeriasNoCuenta(dia) { return diarioDate(dia).getDay() === 0 || diarioDate(dia).getDay() === 6 || !!diarioNombreFeriadoNacional(dia); }
         // Classifica os dias de um intervalo: a marcar / já marcados / que não contam
         function diarioFeriasPlan(lista) {
-            const p = { novos: [], ja: [], dom: 0, sab: 0, fer: 0 };
+            const p = { novos: [], ja: [], dom: 0, sab: 0, fer: 0, doe: 0 };
             lista.forEach(d => {
                 if (esDiaDeFerias(d)) p.ja.push(d);
                 else if (diarioDate(d).getDay() === 0) p.dom++;
                 else if (diarioDate(d).getDay() === 6) p.sab++;
                 else if (diarioNombreFeriadoNacional(d)) p.fer++;
+                else if (esDiaDeDoenca(d)) p.doe++;   // Beta 0.1.22: um dia de doença não vira férias sem «Substituir por férias»
                 else p.novos.push(d);
             });
-            p.saltados = p.dom + p.sab + p.fer + p.ja.length;
+            p.saltados = p.dom + p.sab + p.fer + p.doe + p.ja.length;
             return p;
         }
         function diarioFeriasDetalleSaltados(p) {
@@ -8210,10 +8240,56 @@
             if (p.dom) x.push(p.dom + (p.dom === 1 ? ' domingo' : ' domingos'));
             if (p.sab) x.push(p.sab + (p.sab === 1 ? ' sábado' : ' sábados'));
             if (p.fer) x.push(p.fer + (p.fer === 1 ? ' feriado nacional' : ' feriados nacionais'));
+            if (p.doe) x.push(p.doe + (p.doe === 1 ? ' dia de doença' : ' dias de doença'));
             if (p.ja.length) x.push(p.ja.length + (p.ja.length === 1 ? ' já marcado' : ' já marcados'));
             return x.join(', ');
         }
-        function diarioFeriasPorGozar() { const c = diarioCfg(); return c.ferias_saldo_base - c.ferias_dias.length; }
+        // ===== Beta 0.1.22 · Férias por ano: 22 dias a 1 de janeiro; o que sobra passa a «transitados» (até 30/04 do ano seguinte, por acordo com a empresa); marcados × gozados =====
+        const DIARIO_FERIAS_ANO = 22, DIARIO_CONV_MAX = 2;   // 22 dias úteis por ano · 22 − 20 = 2 dias que se podem trocar por faltas (CT art. 257.º)
+        function diarioHojeISO() { return formatearFechaLocal(new Date()); }
+        // Os dias marcados nesse ano gastam primeiro os transitados (se a data cabe no prazo) e depois os do ano. Gozado = até hoje (inclusive); marcado = daí para a frente.
+        function diarioFeriasCalc(c, hoje) {
+            c = c || diarioCfg(); hoje = hoje || diarioHojeISO();
+            const Y = String(c.ferias_ano), T = c.ferias_transit;
+            const dias = c.ferias_dias.filter(d => String(d).slice(0, 4) === Y).slice().sort();
+            const usT = [], usA = [];
+            dias.forEach(d => { if (T && d <= T.prazo && usT.length < T.n) usT.push(d); else usA.push(d); });
+            const goz = l => l.filter(d => d <= hoje).length;
+            const a = { base: c.ferias_saldo_base, goz: goz(usA), mar: usA.length - goz(usA) };
+            a.porGozar = a.base - a.goz; a.livres = a.base - a.goz - a.mar;
+            let t = null;
+            if (T) {
+                t = { ano: T.ano, prazo: T.prazo, n: T.n, goz: goz(usT), mar: usT.length - goz(usT) };
+                t.porGozar = T.n - t.goz; t.livres = T.n - t.goz - t.mar; t.expirou = hoje > T.prazo; t.perdidos = 0;
+                if (t.expirou) { t.perdidos = Math.max(0, T.n - usT.length); t.porGozar = 0; t.livres = 0; }
+            }
+            return { ano: c.ferias_ano, a, t, porGozar: a.porGozar + (t ? t.porGozar : 0), livres: a.livres + (t ? t.livres : 0) };
+        }
+        function diarioFeriasPorGozar() { return diarioFeriasCalc().porGozar; }   // ainda por gozar (inclui os marcados mais à frente)
+        function diarioFeriasLivres() { return diarioFeriasCalc().livres; }       // por gozar e ainda sem data
+        // Fim de ano: o que sobra do ano que acaba passa a «transitados» (prazo 30/04 do ano seguinte) e o ano novo abre com 22
+        function diarioFeriasRolar(c) {
+            const hoyAno = new Date().getFullYear();
+            let n = 0;
+            while (c.ferias_ano < hoyAno && n++ < 20) {
+                const Y = c.ferias_ano, r = diarioFeriasCalc(c, Y + '-12-31');
+                const sobra = Math.max(0, r.a.livres), perdidos = r.t ? Math.max(0, r.t.perdidos || 0) : 0;
+                c.ferias_transit = sobra > 0 ? { ano: Y, n: sobra, prazo: (Y + 1) + '-04-30' } : null;
+                c.ferias_aviso = { de: Y, sobra, perdidos };
+                c.ferias_ano = Y + 1;
+                c.ferias_saldo_base = DIARIO_FERIAS_ANO;
+            }
+        }
+        function diarioFeriasAvisoOk() { diarioCfg().ferias_aviso = null; guardarEstado(); renderDiarioCabecera(); }
+        // ===== Beta 0.1.22 · Doença =====
+        function esDiaDeDoenca(dia) { return !!diarioCfg().doenca_dias[dia]; }
+        function diarioDoencaNoCuenta(dia) { return diarioDate(dia).getDay() === 0 || !!diarioNombreFeriadoNacional(dia); }   // domingos e feriados nacionais não contam
+        function diarioDoencaAno(y) {
+            const o = diarioCfg().doenca_dias, r = { n: 0, j: 0, nj: 0, conv: 0 };
+            Object.keys(o).filter(d => d.slice(0, 4) === String(y)).forEach(d => { r.n++; if (o[d].j) r.j++; else r.nj++; if (o[d].conv) r.conv++; });
+            return r;
+        }
+        function diarioDoencaSoltarConv(dias) { const o = diarioCfg().doenca_dias; (dias || []).forEach(d => { if (o[d] && o[d].conv) o[d].conv = false; }); }   // o dia deixou de ser férias: a substituição desfaz-se
 
         // ===== Diário: ecrã (calendário, dia, férias e feriados) =====
         const DIARIO_TIPOS = {
@@ -8250,8 +8326,13 @@
             if (estado.jornada_activa) fechas.add(estado.jornada_activa.fecha);
             const feriados = [...fechas].filter(f => f && f.startsWith(anio) && diarioFeriadoTrabalhado(f)).sort();
             const porPagar = feriados.filter(f => !diarioFeriadoPago(f)).length;
-            const saldo = diarioFeriasPorGozar();
+            const K = diarioFeriasCalc(c), saldo = K.a.porGozar, doeA = diarioDoencaAno(K.ano);
             const ultimas = diarioUltimasFeriasActivas();
+            const dd = n => n + (n === 1 ? ' dia' : ' dias'), prazoTxt = K.t ? diarioFechaCorta(K.t.prazo) : '';
+            const blocoT = K.t ? `<div class="dr-fila"><span>↪ Transitados de ${K.t.ano} · até ${prazoTxt}</span><b id="dr-saldo-transit">${dd(K.t.porGozar)}</b></div>
+                    <div class="dr-sub" id="dr-transit-sub">${K.t.goz} gozado(s) · ${K.t.mar} marcado(s) mais à frente · ${K.t.livres} livre(s) · o prazo depende de acordo com a empresa <button type="button" class="dr-chip" style="padding:3px 9px;" onclick="diarioEditarTransit()">Ajustar</button></div>
+                    ${K.t.expirou && K.t.perdidos > 0 ? `<div class="dr-sub" style="color:#b91c1c; font-weight:bold;">⚠️ O prazo de ${prazoTxt} passou: ${dd(K.t.perdidos)} por gozar. Fala com a empresa.</div>` : ''}` : '';
+            const av = c.ferias_aviso && (c.ferias_aviso.sobra > 0 || c.ferias_aviso.perdidos > 0) ? `<div class="dr-sub" id="dr-ferias-aviso" style="background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; padding:6px 8px; color:#78350f;">🗓 Ano novo: o contador de ${c.ferias_aviso.de + 1} abriu com ${DIARIO_FERIAS_ANO} dias.${c.ferias_aviso.sobra > 0 ? ` Sobraram ${dd(c.ferias_aviso.sobra)} de ${c.ferias_aviso.de}: ficaram em «Transitados» até 30/04/${c.ferias_aviso.de + 1} (precisa de acordo com a empresa; é boa ideia ficar por escrito).` : ''}${c.ferias_aviso.perdidos > 0 ? ` ${dd(c.ferias_aviso.perdidos)} transitados de ${c.ferias_aviso.de - 1} passaram do prazo.` : ''} <button type="button" class="dr-chip" style="padding:3px 9px;" onclick="diarioFeriasAvisoOk()">OK</button></div>` : '';
 
             const lista = feriados.length ? feriados.map(f => {
                 const pago = diarioFeriadoPago(f);
@@ -8264,13 +8345,20 @@
 
             document.getElementById('diario-cabecera').innerHTML = `
                 <div class="dr-card">
-                    <div class="dr-fila"><span>🏖 Férias por gozar</span><b id="dr-saldo-ferias">${saldo} dias</b></div>
-                    <div class="dr-sub">${c.ferias_dias.length} dia(s) já marcado(s) como gozado(s)</div>
+                    ${blocoT}
+                    <div class="dr-fila"><span>🏖 Férias ${K.ano} · por gozar</span><b id="dr-saldo-ferias">${saldo} dias</b></div>
+                    <div class="dr-sub" id="dr-ferias-sub">${K.a.goz} gozado(s) · ${K.a.mar} marcado(s) mais à frente · <b id="dr-livres-ferias">${K.a.livres} dias</b> livres para marcar</div>
+                    ${av}
                     <div class="dr-botones">
                         <button type="button" onclick="diarioEditarSaldoFerias()">Ajustar saldo</button>
                         <button type="button" onclick="diarioAbrirIntervaloFerias()">Marcar / desmarcar dias</button>
                     </div>
                     ${ultimas.length ? `<div class="dr-botones"><button type="button" onclick="diarioDesfazerUltimasFerias()">↩ Desfazer última marcação (${ultimas.length} dia${ultimas.length === 1 ? '' : 's'})</button></div>` : ''}
+                </div>
+                <div class="dr-card">
+                    <div class="dr-fila"><span>🤒 Doença ${K.ano}</span><b id="dr-doenca-n">${dd(doeA.n)}</b></div>
+                    <div class="dr-sub" id="dr-doenca-sub">${doeA.j} justificado(s) · ${doeA.nj} sem justificação · ${doeA.conv} substituído(s) por férias (limite legal: ${DIARIO_CONV_MAX} por ano)</div>
+                    <div class="dr-botones"><button type="button" onclick="diarioAbrirDoenca()">Marcar / desmarcar doença</button></div>
                 </div>
                 <div class="dr-card">
                     <details>
@@ -8326,6 +8414,7 @@
                 const marcas = [];
                 if (diarioEsFeriado(dia)) marcas.push('<span class="dr-f">F</span>');
                 if (esDiaDeFerias(dia)) marcas.push('🏖');
+                if (esDiaDeDoenca(dia)) marcas.push('🤒');
                 if (conActividad.has(dia)) marcas.push('<span class="dr-pto">●</span>');
                 const cls = ['dr-dia', dia === diarioSel ? 'sel' : '', dia === hoy ? 'hoy' : '', diarioDate(dia).getDay() === 0 ? 'dom' : ''].join(' ');
                 html += `<button type="button" class="${cls}" data-dia="${dia}"><span class="dr-n">${d}</span><span class="dr-m">${marcas.join('')}</span></button>`;
@@ -8507,8 +8596,14 @@
                     <button type="button" class="dr-chip ${pago ? 'pago' : 'porpagar'}" onclick="diarioTogglePago('${dia}')">${pago ? '✓ Pago' : 'Por pagar'}</button></div>`;
             }
             const finde = !ferias && (diarioDate(dia).getDay() === 0 || diarioDate(dia).getDay() === 6);
-            estadoDia += `<div class="dr-fila"><span>🏖 ${ferias ? 'Dia de férias' : (finde ? 'Fim de semana (não conta como férias)' : 'Não é dia de férias')}</span>
+            estadoDia += `<div class="dr-fila"><span>🏖 ${ferias ? (dia > diarioHojeISO() ? 'Dia de férias · marcado (por gozar)' : 'Dia de férias') : (finde ? 'Fim de semana (não conta como férias)' : 'Não é dia de férias')}</span>
                 ${finde ? '' : `<button type="button" class="dr-chip" onclick="diarioToggleFerias('${dia}')">${ferias ? 'Remover' : 'Marcar como férias'}</button>`}</div>`;
+            { const dx = diarioCfg().doenca_dias[dia];   // Beta 0.1.22
+              if (dx) {
+                  estadoDia += `<div class="dr-fila"><span>🤒 Dia de doença · ${dx.j ? 'justificado' : 'sem justificação'}${dx.conv ? ' · substituído por férias' : ''}</span><button type="button" class="dr-chip" onclick="diarioDoencaRemover('${dia}')">Remover doença</button></div>
+                    <div class="dr-botones" style="margin:4px 0 8px;"><button type="button" onclick="diarioDoencaToggleJ('${dia}')">${dx.j ? 'Passar a sem justificação' : 'Passar a justificado'}</button>${(!dx.j || dx.conv) ? `<button type="button" onclick="diarioDoencaConv('${dia}')">${dx.conv ? '↩ Desfazer a substituição' : 'Substituir por férias'}</button>` : ''}</div>`;
+              } else if (!diarioDoencaNoCuenta(dia)) estadoDia += `<div class="dr-fila"><span>🤒 Não é dia de doença</span><button type="button" class="dr-chip" onclick="diarioAbrirDoenca('${dia}')">Marcar doença</button></div>`;
+            }
 
             const chips = [];
             chips.push(`📦 ${res.entregas} entrega(s)`);
@@ -8563,9 +8658,11 @@
             const c = diarioCfg();
             if (esDiaDeFerias(dia)) {
                 c.ferias_dias = c.ferias_dias.filter(d => d !== dia);
+                diarioDoencaSoltarConv([dia]);
             } else {
+                if (c.doenca_dias[dia]) { alert('Este dia está marcado como doença. Para o trocar por férias usa «Substituir por férias» no ecrã do dia.'); return; }
                 if (diarioJornadasDia(dia).length && !(await confirmarApp('Este dia tem jornada registada. Marcar mesmo assim como férias?', 'Marcar'))) return;
-                if (diarioFeriasPorGozar() <= 0 && !(await confirmarApp('Já não tem dias de férias por gozar. Marcar mesmo assim?', 'Marcar'))) return;
+                if (String(dia).slice(0, 4) === String(c.ferias_ano) && diarioFeriasLivres() <= 0 && !(await confirmarApp('Já não tem dias de férias livres para marcar. Marcar mesmo assim?', 'Marcar'))) return;
                 c.ferias_dias.push(dia);
                 c.ferias_dias.sort();
             }
@@ -8575,12 +8672,24 @@
         }
 
         async function diarioEditarSaldoFerias() {
-            const c = diarioCfg();
-            const r = await preguntarApp('Dias de férias por gozar neste momento:', String(diarioFeriasPorGozar()), 'numero');
+            const c = diarioCfg(), K = diarioFeriasCalc(c);
+            const r = await preguntarApp('Dias de férias de ' + K.ano + ' por gozar neste momento:', String(K.a.porGozar), 'numero');
             if (r === null) return;
             const n = parseInt(String(r).replace(',', '.'), 10);
             if (!isFinite(n) || n < 0 || n > 366) return alert('Indique um número de dias válido.');
-            c.ferias_saldo_base = n + c.ferias_dias.length;
+            c.ferias_saldo_base = n + K.a.goz;   // Beta 0.1.22: só contam os dias já gozados; os marcados mais à frente continuam por gozar
+            guardarEstado();
+            renderDiarioCabecera();
+        }
+        async function diarioEditarTransit() {   // Beta 0.1.22: ajustar os dias transitados do ano anterior
+            const c = diarioCfg(), K = diarioFeriasCalc(c);
+            if (!K.t) return;
+            const r = await preguntarApp('Dias transitados de ' + K.t.ano + ' por gozar neste momento:', String(K.t.porGozar), 'numero');
+            if (r === null) return;
+            const n = parseInt(String(r).replace(',', '.'), 10);
+            if (!isFinite(n) || n < 0 || n > 366) return alert('Indique um número de dias válido.');
+            const novo = n + K.t.goz;
+            c.ferias_transit = novo > 0 ? { ano: c.ferias_transit.ano, n: novo, prazo: c.ferias_transit.prazo } : null;
             guardarEstado();
             renderDiarioCabecera();
         }
@@ -8591,8 +8700,8 @@
                 marca: esDiaDeFerias,
                 noCuenta: diarioFeriasNoCuenta,
                 contar: d => !diarioFeriasNoCuenta(d),                                  // o resumo só conta dias úteis
-                consume: d => !diarioFeriasNoCuenta(d) && !esDiaDeFerias(d),            // dias que gastam saldo
-                limite: diarioFeriasPorGozar,                                           // o deslize pára quando o saldo acaba
+                consume: d => !diarioFeriasNoCuenta(d) && !esDiaDeFerias(d) && !esDiaDeDoenca(d) && String(d).slice(0, 4) === String(diarioCfg().ferias_ano),   // dias que gastam saldo (só os do ano do contador)
+                limite: diarioFeriasLivres,                                             // o deslize pára quando já não há dias livres para marcar
                 onPintar: diarioInfoFerias
             });
             selectorDiasFerias.setSeleccion([diarioSel]);
@@ -8605,13 +8714,14 @@
             if (!el) return;
             if (!lista || !lista.length) { el.textContent = ''; return; }
             const p = diarioFeriasPlan(lista);
-            const saldo = diarioFeriasPorGozar();
-            if (p.novos.length && saldo <= 0) { el.textContent = 'Já não tem dias de férias por gozar (use «Ajustar saldo» se precisar).'; return; }
-            const partes = [`Marcar: ${p.novos.length}`, `saldo depois: ${saldo - p.novos.length}`];
+            const saldo = diarioFeriasLivres(), cons = p.novos.filter(d => String(d).slice(0, 4) === String(diarioCfg().ferias_ano)).length;
+            if (cons && saldo <= 0) { el.textContent = 'Já não tem dias de férias livres para marcar (use «Ajustar saldo» se precisar).'; return; }
+            const partes = [`Marcar: ${p.novos.length}`, `saldo depois: ${saldo - cons}`];
             if (p.ja.length) partes.push(`já são férias: ${p.ja.length}`);
+            if (p.doe) partes.push(`doença: ${p.doe}`);
             const nc = p.dom + p.sab + p.fer;
             if (nc) partes.push(`não contam: ${nc}`);
-            el.textContent = partes.join(' · ') + (recortado ? ` — limite do saldo atingido (${saldo} dia${saldo === 1 ? '' : 's'} por gozar)` : '');
+            el.textContent = partes.join(' · ') + (recortado ? ` — limite do saldo atingido (${saldo} dia${saldo === 1 ? '' : 's'} livre${saldo === 1 ? '' : 's'})` : '');
         }
         function diarioCerrarIntervaloFerias() { document.getElementById('modal-ferias').classList.remove('active'); }
 
@@ -8622,8 +8732,9 @@
             if (diarioDate(hasta) - diarioDate(desde) > 90 * 86400000) return alert('O intervalo não pode ter mais de 90 dias.');
             const c = diarioCfg();
             const p = diarioFeriasPlan(sel);
-            const saldo = diarioFeriasPorGozar();
-            if (p.novos.length > Math.max(0, saldo)) return alert(saldo <= 0 ? 'Já não tem dias de férias por gozar. Use «Ajustar saldo» se precisar de marcar mais.' : `Só tem ${saldo} dia(s) de férias por gozar. Escolha menos dias.`);
+            const saldo = diarioFeriasLivres();
+            const sim = diarioFeriasCalc(Object.assign({}, c, { ferias_dias: c.ferias_dias.concat(p.novos) }));   // Beta 0.1.22: os dias de outro ano e os dos transitados não gastam o contador do ano
+            if (sim.a.livres < 0) return alert(saldo <= 0 ? 'Já não tem dias de férias livres para marcar. Use «Ajustar saldo» se precisar de marcar mais.' : `Só tem ${saldo} dia(s) de férias livres para marcar. Escolha menos dias.`);
             if (p.novos.length) {
                 p.novos.forEach(d => c.ferias_dias.push(d));
                 c.ferias_dias.sort();
@@ -8648,10 +8759,115 @@
             if (!(await confirmarApp(`Desmarcar ${quitar.length} dia(s) de férias (${rango})? Os dias voltam ao saldo de férias.`, 'Desmarcar'))) return;
             const set = new Set(quitar);
             c.ferias_dias = c.ferias_dias.filter(d => !set.has(d));
+            diarioDoencaSoltarConv(quitar);
             guardarEstado();
             diarioCerrarIntervaloFerias();
             renderDiario();
             actualizarPuntoJornada();
+        }
+
+        // ===== Beta 0.1.22 · Doença: marcar / desmarcar dias, justificada ou não, e «Substituir por férias» =====
+        let selectorDiasDoenca = null;
+        function diarioAbrirDoenca(dia) {
+            if (!selectorDiasDoenca) selectorDiasDoenca = crearSelectorDias(document.getElementById('selector-dias-doenca'), {
+                modo: 'rango',
+                marca: esDiaDeDoenca,
+                noCuenta: diarioDoencaNoCuenta,
+                contar: d => !diarioDoencaNoCuenta(d),
+                onPintar: diarioInfoDoenca
+            });
+            const d0 = dia || diarioSel, x = diarioCfg().doenca_dias[d0];
+            if (x) { const r = document.querySelector('input[name="doenca-j"][value="' + (x.j ? '1' : '0') + '"]'); if (r) r.checked = true; }
+            selectorDiasDoenca.setSeleccion([d0]);
+            document.getElementById('modal-doenca').classList.add('active');
+        }
+        function diarioCerrarDoenca() { document.getElementById('modal-doenca').classList.remove('active'); }
+        function diarioInfoDoenca(lista) {
+            const el = document.getElementById('doenca-info');
+            if (!el) return;
+            if (!lista || !lista.length) { el.textContent = ''; return; }
+            const uteis = lista.filter(d => !diarioDoencaNoCuenta(d)), ja = uteis.filter(esDiaDeDoenca).length;
+            const partes = [`Marcar: ${uteis.length - ja}`];
+            if (ja) partes.push(`já são doença: ${ja}`);
+            if (lista.length - uteis.length) partes.push(`não contam: ${lista.length - uteis.length}`);
+            el.textContent = partes.join(' · ');
+        }
+        async function diarioAplicarDoenca() {
+            const sel = selectorDiasDoenca ? selectorDiasDoenca.getSeleccion() : [];
+            if (!sel.length) return alert('Selecione os dias de doença no calendário.');
+            if (diarioDate(sel[sel.length - 1]) - diarioDate(sel[0]) > 90 * 86400000) return alert('O intervalo não pode ter mais de 90 dias.');
+            const c = diarioCfg(), j = ((document.querySelector('input[name="doenca-j"]:checked') || {}).value === '1');
+            const dias = sel.filter(d => !diarioDoencaNoCuenta(d));
+            if (!dias.length) return alert('Nesse intervalo só há domingos e feriados nacionais: não contam como dias de doença.');
+            const emFerias = dias.filter(d => esDiaDeFerias(d) && !(c.doenca_dias[d] && c.doenca_dias[d].conv));
+            if (emFerias.length && !(await confirmarApp(`${emFerias.length} dia(s) já estão marcados como férias. Passar a doença? (voltam ao saldo de férias)`, 'Passar a doença'))) return;
+            if (emFerias.length) { const set = new Set(emFerias); c.ferias_dias = c.ferias_dias.filter(d => !set.has(d)); }
+            let novos = 0;
+            dias.forEach(d => {
+                const x = c.doenca_dias[d];
+                if (!x) { c.doenca_dias[d] = { j }; novos++; return; }
+                x.j = j;
+                if (j && x.conv) { x.conv = false; c.ferias_dias = c.ferias_dias.filter(z => z !== d); }   // com justificação já não é preciso gastar férias
+            });
+            guardarEstado();
+            diarioCerrarDoenca();
+            alert(`${novos} dia(s) marcado(s) como doença (${j ? 'com justificação' : 'sem justificação'}).` + (dias.length - novos ? ` ${dias.length - novos} já eram doença: estado atualizado.` : ''));
+            renderDiario();
+            actualizarPuntoJornada();
+        }
+        async function diarioDesmarcarDoenca() {
+            const sel = selectorDiasDoenca ? selectorDiasDoenca.getSeleccion() : [];
+            if (!sel.length) return alert('Selecione no calendário os dias que quer desmarcar.');
+            const c = diarioCfg(), quitar = sel.filter(d => c.doenca_dias[d]);
+            if (!quitar.length) return alert('Nenhum dos dias selecionados está marcado como doença.');
+            const conv = quitar.filter(d => c.doenca_dias[d].conv);
+            const rango = sel.length === 1 ? diarioFechaCorta(sel[0]) : `${diarioFechaCorta(sel[0])} → ${diarioFechaCorta(sel[sel.length - 1])}`;
+            if (!(await confirmarApp(`Desmarcar ${quitar.length} dia(s) de doença (${rango})?` + (conv.length ? ` ${conv.length} estavam substituídos por férias: esses dias também saem das férias.` : ''), 'Desmarcar'))) return;
+            const set = new Set(conv);
+            quitar.forEach(d => { delete c.doenca_dias[d]; });
+            if (conv.length) c.ferias_dias = c.ferias_dias.filter(d => !set.has(d));
+            guardarEstado();
+            diarioCerrarDoenca();
+            renderDiario();
+            actualizarPuntoJornada();
+        }
+        function diarioDoencaToggleJ(dia) {
+            const c = diarioCfg(), x = c.doenca_dias[dia];
+            if (!x) return;
+            x.j = !x.j;
+            if (x.j && x.conv) { x.conv = false; c.ferias_dias = c.ferias_dias.filter(d => d !== dia); }
+            guardarEstado();
+            renderDiario();
+        }
+        async function diarioDoencaRemover(dia) {
+            const c = diarioCfg(), x = c.doenca_dias[dia];
+            if (!x) return;
+            if (x.conv && !(await confirmarApp('Este dia estava substituído por férias: ao tirar a doença também sai das férias. Continuar?', 'Remover'))) return;
+            delete c.doenca_dias[dia];
+            if (x.conv) c.ferias_dias = c.ferias_dias.filter(d => d !== dia);
+            guardarEstado();
+            renderDiario();
+            actualizarPuntoJornada();
+        }
+        // «Substituir por férias» (CT art. 257.º): um dia de doença SEM justificação passa a gastar 1 dia de férias; a lei só deixa trocar até 2 por ano
+        async function diarioDoencaConv(dia) {
+            const c = diarioCfg(), x = c.doenca_dias[dia];
+            if (!x) return;
+            if (x.conv) { x.conv = false; c.ferias_dias = c.ferias_dias.filter(d => d !== dia); guardarEstado(); renderDiario(); actualizarPuntoJornada(); return; }
+            if (x.j) return;
+            if (diarioFeriasNoCuenta(dia)) return alert('Sábados, domingos e feriados nacionais não contam como dias de férias: este dia não pode ser trocado por férias.');
+            const usadas = diarioDoencaAno(dia.slice(0, 4)).conv;
+            if (usadas >= DIARIO_CONV_MAX && !(await confirmarApp(`Já substituíste ${usadas} de ${DIARIO_CONV_MAX} dias por férias neste ano. A lei só deixa trocar ${DIARIO_CONV_MAX} (têm de ficar 20 dias úteis de férias gozados). Registar mesmo assim?`, 'Registar'))) return;
+            if (String(dia).slice(0, 4) === String(c.ferias_ano) && diarioFeriasLivres() <= 0 && !(await confirmarApp('Já não tem dias de férias livres para marcar. Substituir mesmo assim?', 'Substituir'))) return;
+            x.conv = true;
+            if (!c.ferias_dias.includes(dia)) { c.ferias_dias.push(dia); c.ferias_dias.sort(); }
+            guardarEstado();
+            renderDiario();
+            actualizarPuntoJornada();
+        }
+        function diarioDoencaLinhaDoc(y) {   // linha do resumo anual
+            const d = diarioDoencaAno(y);
+            return d.n ? `<div style="font-size:12px; line-height:1.6;">Dias de doença em ${y}: <b>${d.n}</b> · com justificação: <b>${d.j}</b> · sem justificação: <b>${d.nj}</b> · substituídos por férias: <b>${d.conv}</b></div>` : '';
         }
 
         // Desfaz a última marcação em bloco (só os dias que ainda estão marcados)
@@ -8663,6 +8879,7 @@
             const c = diarioCfg();
             const set = new Set(dias);
             c.ferias_dias = c.ferias_dias.filter(d => !set.has(d));
+            diarioDoencaSoltarConv(dias);
             c.ferias_ultima = null;
             guardarEstado();
             renderDiario();
@@ -8721,6 +8938,7 @@
                 partes.push(t);
             }
             if (esDiaDeFerias(dia)) partes.push('Férias');
+            if (esDiaDeDoenca(dia)) { const dx = diarioCfg().doenca_dias[dia]; partes.push('Doença (' + (dx.j ? 'justificada' : 'sem justificação') + (dx.conv ? ', substituída por férias' : '') + ')'); }
             return partes.join(' · ');
         }
 
@@ -8761,7 +8979,7 @@
             const porDia = {};
             evsMes.forEach(e => { (porDia[e.dia] = porDia[e.dia] || []).push(e); });
 
-            let filas = '', minMes = 0, diasTrab = 0, ferTrab = 0, ferPagos = 0, diasFerias = 0, semMin = 0, semIni = null, minDom = 0;
+            let filas = '', minMes = 0, diasTrab = 0, ferTrab = 0, ferPagos = 0, diasFerias = 0, diasDoenca = 0, semMin = 0, semIni = null, minDom = 0;
             const cerrarSemana = (ultimoDia) => {
                 if (!semIni) return;
                 const completa = diarioMinSemana(semIni);
@@ -8775,7 +8993,7 @@
                 const jornadas = diarioJornadasDia(dia);
                 const estadoTxt = diarioEstadoDiaTexto(dia);
                 if (diarioDate(dia).getDay() === 1 && semIni) cerrarSemana();
-                if (jornadas.length || evs.length || diarioFeriadoTrabalhado(dia) || esDiaDeFerias(dia)) {
+                if (jornadas.length || evs.length || diarioFeriadoTrabalhado(dia) || esDiaDeFerias(dia) || esDiaDeDoenca(dia)) {
                     const esDom = diarioEsDomingo(dia);
                     if (!semIni && !esDom) semIni = dia;
                     const min = jornadas.reduce((s, j) => s + calcularMinutosTrabajados(j), 0);
@@ -8784,6 +9002,7 @@
                     if (jornadas.length) diasTrab++;
                     if (diarioFeriadoTrabalhado(dia)) { ferTrab++; if (diarioFeriadoPago(dia)) ferPagos++; }
                     if (esDiaDeFerias(dia)) diasFerias++;
+                    if (esDiaDeDoenca(dia)) diasDoenca++;
                     const res = diarioResumen(evs);
                     const entradas = jornadas.map(j => diarioFmtHora(j.inicio)).join('<br>') || '—';
                     const saidas = jornadas.map(j => j.fim ? diarioFmtHora(j.fim) : 'em curso').join('<br>') || '—';
@@ -8814,7 +9033,7 @@
                 <h3 style="font-size:14px; margin:12px 0 4px;">Totais do mês</h3>
                 <div style="font-size:12px; line-height:1.6;">Dias trabalhados: <b>${diasTrab}</b> · Horas líquidas: <b>${diarioFmtHM(minMes)}</b> (segunda a sábado: ${diarioFmtHM(minMes - minDom)} · domingos: ${diarioFmtHM(minDom)}, fora das 40h semanais)<br>
                 Feriados trabalhados: <b>${ferTrab}</b> (pagos: <b>${ferPagos}</b> · por pagar: <b>${ferTrab - ferPagos}</b>)<br>
-                Dias de férias marcados neste mês: <b>${diasFerias}</b> · Férias por gozar (saldo atual): <b>${diarioFeriasPorGozar()}</b> dias</div>` + detalle + diarioDocPie();
+                Dias de férias marcados neste mês: <b>${diasFerias}</b>${diasDoenca ? ' · Dias de doença neste mês: <b>' + diasDoenca + '</b>' : ''} · Férias por gozar (saldo atual): <b>${diarioFeriasPorGozar()}</b> dias</div>` + detalle + diarioDocPie();
             diarioImprimir(html);
         }
 
@@ -8895,7 +9114,8 @@
                 </tr></thead><tbody>${filas}${total}</tbody></table>
                 <div style="font-size:12px; margin-top:6px; line-height:1.6;">Semanas trabalhadas (seg–sáb): <b>${semanas}</b> · Semanas acima das 40h: <b>${semanasExtra}</b> · Horas acima das 40h no ano: <b>${diarioFmtHM(T.extra)}</b></div>
                 <h3 style="font-size:14px; margin:14px 0 4px;">Férias</h3>
-                <div style="font-size:12px; line-height:1.6;">Dias de férias gozados em ${y}: <b>${gozadas.length}</b> · Férias por gozar (saldo atual da aplicação): <b>${diarioFeriasPorGozar()}</b> dias</div>
+                <div style="font-size:12px; line-height:1.6;">Dias de férias gozados em ${y}: <b>${gozadas.filter(d => d <= diarioHojeISO()).length}</b>${gozadas.some(d => d > diarioHojeISO()) ? ' · marcados mais à frente: <b>' + gozadas.filter(d => d > diarioHojeISO()).length + '</b>' : ''} · Férias por gozar (saldo atual da aplicação): <b>${diarioFeriasPorGozar()}</b> dias</div>
+                ${diarioDoencaLinhaDoc(y)}
                 ${listaFerias}
                 <h3 style="font-size:14px; margin:14px 0 4px;">Feriados trabalhados</h3>
                 <div style="font-size:12px; line-height:1.6;">Total: <b>${T.fer}</b> · pagos: <b>${T.ferPagos}</b> · por pagar: <b>${T.fer - T.ferPagos}</b></div>
@@ -9106,7 +9326,7 @@
                 if (_ini && !estado.jornada_activa) { registrarEntradaJornada(); return; }   // «Desfazer tudo e iniciar»
                 if (_sem) return;                                                             // «Desfazer tudo»: continua a espreitar sem voltar a perguntar
                 if (estado.jornada_activa) return;
-                if (typeof esDiaDeFerias === 'function' && esDiaDeFerias(formatearFechaLocal(new Date()))) return;
+                if (typeof esDiaDeFerias === 'function' && (esDiaDeFerias(formatearFechaLocal(new Date())) || esDiaDeDoenca(formatearFechaLocal(new Date())))) return;
                 if (document.querySelector('.modal.active')) {      // outra janela aberta (ex.: resumo inicial): tenta mais tarde
                     if (++_inicioJornadaTentativas < 15) setTimeout(inicioJornadaPerguntar, 1000);
                     return;
