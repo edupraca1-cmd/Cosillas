@@ -296,6 +296,7 @@
         .reparto-cliente { font-weight: bold; font-size: 15px; color: #0f172a; }
         .reparto-pedido { margin-top: 3px; font-size: 14px; color: #475569; }
         .reparto-aldea { font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
+        .badge-pad { display: inline-block; margin-top: 6px; padding: 4px 7px; border-radius: 5px; background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; font-size: 11px; font-weight: 700; }
         .badge-pedir-dia-anterior { display: inline-block; margin-top: 6px; padding: 4px 7px; border-radius: 5px; background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; font-size: 11px; font-weight: 700; }
         .btn-editar-encomenda {
             width: 38px; height: 38px; flex-shrink: 0;
@@ -1037,7 +1038,7 @@
             </div>
         </div>
         <label class="mais-opcao"><input type="checkbox" id="mais-deslizar" onchange="deslizarAlternar(this.checked)"> ↔️ Deslizar para mudar de pestanha</label>
-        <p class="app-version" id="app-version">Beta 0.1.19</p>
+        <p class="app-version" id="app-version">Beta 0.1.20</p>
     </div>
 
     <!-- SUBMÓDULOS -->
@@ -1325,6 +1326,10 @@
                 <input type="checkbox" id="enc-pedir-dia-anterior">
                 <label for="enc-pedir-dia-anterior">📌 Pedir na véspera</label>
             </div>
+            <div class="form-inline" id="enc-pad-fila" style="display:none; color:#9a3412; background:#fff7ed; border:1px solid #fdba74; border-radius:8px; padding:10px;">
+                <input type="checkbox" id="enc-pad">
+                <label for="enc-pad">🧺 A padaria acrescenta (pediram-no fora do horário)<small style="display:block; font-weight:400; margin-top:2px;">Não entra no teu pedido nem mexe na base: só te lembra de separar o pão para a Laranjeira nesse dia.</small></label>
+            </div>
             <div class="form-group">
                 <label>1. Dias da encomenda:</label>
                 <button type="button" id="btn-dias-enc" class="dias-resumen" onclick="alternarCalendarioEnc()" aria-expanded="false" aria-controls="selector-dias-enc">
@@ -1335,7 +1340,7 @@
             </div>
             <div class="form-group">
                 <label for="enc-nombre">2. Nome do Cliente:</label>
-                <input type="text" id="enc-nombre" placeholder="Ex: Manuel, Maria..." autocomplete="off" oninput="buscarClienteAutocompletar()">
+                <input type="text" id="enc-nombre" placeholder="Ex: Manuel, Maria..." autocomplete="off" oninput="buscarClienteAutocompletar(); encPadSync('enc')">
                 <ul id="sugerencias" class="sugerencias-lista" style="display: none;"></ul>
             </div>
             <div class="form-group">
@@ -1387,7 +1392,7 @@
                 <h4>👤 Cliente</h4>
                 <div class="form-group">
                     <label for="editar-enc-nombre">Nome do cliente</label>
-                    <input type="text" id="editar-enc-nombre" autocomplete="off">
+                    <input type="text" id="editar-enc-nombre" autocomplete="off" oninput="encPadSync('editar-enc')">
                 </div>
                 <div class="form-group">
                     <label for="editar-enc-aldea">Aldeia</label>
@@ -1408,6 +1413,10 @@
                 <div class="form-inline" style="color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px;">
                     <input type="checkbox" id="editar-enc-pedir-vespera">
                     <label for="editar-enc-pedir-vespera">📌 Pedir na véspera</label>
+                </div>
+                <div class="form-inline" id="editar-enc-pad-fila" style="display:none; color:#9a3412; background:#fff7ed; border:1px solid #fdba74; border-radius:8px; padding:10px; margin-top:10px;">
+                    <input type="checkbox" id="editar-enc-pad">
+                    <label for="editar-enc-pad">🧺 A padaria acrescenta (pediram-no fora do horário)<small style="display:block; font-weight:400; margin-top:2px;">Não entra no teu pedido nem mexe na base: só te lembra de separar o pão para a Laranjeira nesse dia.</small></label>
                 </div>
             </div>
 
@@ -3775,7 +3784,7 @@
                 passos.push({ n: 6, t: 'Pedido para ' + diaT2.split('-')[0], desc: 'À sexta faz-se também o pedido do dia de trabalho seguinte.', pill: d6 ? 'Feito · ' + diaT2 + pedExtPill(T2) : 'Por fazer · ' + diaT2, done: d6, ir: 'pedido', data: T2 });
             }
             const atual = (passos.find(q => !q.done) || { n: passos.length + 1 }).n;
-            let av = '';
+            let av = pedPadHub(hj, alvos);   // Beta 0.1.20: Laranjeira · pão que a padaria acrescenta
             if (pedFechado(hj)) av += '<div class="ped-dia fecho">🚫 Hoje está marcado como dia sem trabalho.</div>';
             else if (pedVesp(hj)) av += '<div class="ped-dia vesp">📌 Hoje é véspera de dia sem trabalho: as sobras de hoje não mudam a base.</div>';
             if (!alvos.length && !pedFechado(hj)) av += '<div class="ped-dia">📌 Ao sábado não se faz pedido: o de segunda faz-se à sexta.</div>';
@@ -3824,6 +3833,7 @@
             }).join('');
             return pedCab('Pão a mais · cesto cinzento', 'Ao carregar a carrinha', (sr > 0 ? pedTiposTxt(d.r, 2) : 'Sem pão a mais'), true)
                 + pedAbas('manha')
+                + pedPadHoje()
                 + '<p class="ped-ayuda">Conta o pão que te dão no cesto cinzento antes de saíres. A lista é sempre a mesma; as quantidades voltam a 0 todos os dias.</p>'
                 + '<div class="ped-cols"><span>Pão</span><span>Recebi</span></div>' + filas
                 + `<button type="button" class="ped-guardar" onclick="pedManhaGuardar()">${sr > 0 ? 'Guardar e sair para a rota' : 'Hoje não há pão a mais'}</button>`
@@ -4319,18 +4329,59 @@
             return out;
         }
         // o que o cliente deixou em D−7 e já está dentro da base = deixado − parte do cesto cinzento
+        // ===== Beta 0.1.20 · pão que a padaria acrescenta à Laranjeira (e.pad): fora do pedido, só para separar =====
+        function pedPads(iso) {
+            const ent = pedObj(estado.entregados_ids);
+            return (estado.encomiendas || []).filter(e => e && e.fecha === iso && e.pad && !e.esAviso).map(e => {
+                const pr = pedParse(e.pedido);
+                return { id: String(e.id), nome: e.nombre || '', aldea: e.aldea || '', texto: e.pedido || '', q: pr.q, desc: pr.desc, tem: Object.keys(pr.q).some(id => pr.q[id] > 0), feita: !!ent[e.id] };
+            });
+        }
+        function pedPadCli(c, X) {   // o pão que a padaria acrescentou nesse dia a este cliente, por pão
+            const r = {};
+            pedPads(X).forEach(x => {
+                const cli = pedLarCli(x.nome, x.aldea);
+                if (!cli || String(cli.id) !== String(c.id)) return;
+                Object.keys(x.q).forEach(id => { if (x.q[id] > 0) r[id] = (r[id] || 0) + x.q[id]; });
+            });
+            return r;
+        }
+        function pedPadLinhas(L) {
+            return L.map(x => `<div>${esc(x.nome)}: <b>${x.tem ? esc(pedSigTxt(x.q)) : esc(x.texto)}</b>${x.feita ? ' ✔ entregue' : ''}${x.desc && x.desc.length ? ' · <b>não percebi:</b> ' + esc(x.desc.join(', ')) : ''}</div>`).join('');
+        }
+        function pedPadCard(D) {   // passo 5: a padaria soma-o sozinha, não está neste pedido
+            const L = pedPads(D);
+            if (!L.length) return '';
+            return `<div class="ped-aviso lar"><b>🧺 Laranjeira · a padaria acrescenta</b>${pedPadLinhas(L)}<div>Não está neste pedido: a padaria soma-o sozinha. Só tens de o separar a ${esc(pedDiaCurto(D))}.</div></div>`;
+        }
+        function pedPadHoje() {   // hoje: o que separar para a Laranjeira (ainda por entregar)
+            const hj = pedHoje(), L = pedPads(hj).filter(x => !x.feita);
+            if (!L.length) return '';
+            return `<div class="ped-aviso lar"><b>🧺 Separar para a Laranjeira (hoje)</b>${pedPadLinhas(L)}<div>Vem da padaria, fora do teu pedido: separa-o ao carregar.</div></div>`;
+        }
+        function pedPadHub(hj, alvos) {   // hub: o de hoje e o que a padaria acrescenta nos próximos dias de trabalho
+            let h = pedPadHoje();
+            (alvos || []).forEach(Tx => {
+                const L = pedPads(Tx);
+                if (L.length) h += `<div class="ped-dia">🧺 ${esc(pedDiaCurto(Tx))}: a padaria acrescenta à Laranjeira ${L.map(x => '<b>' + (x.tem ? esc(pedSigTxt(x.q)) : esc(x.texto)) + '</b>').join(' + ')} (fora do teu pedido).</div>`;
+            });
+            return h;
+        }
         function pedIncl7(c, iso) {
-            const X = diarioSumarDias(iso, -7), u = pedListaEm(c, X), inc = {}, left = {}, cinz = {};
-            if (!u) return { X, tem: false, inc, left, cinz };
+            const X = diarioSumarDias(iso, -7), u = pedListaEm(c, X), inc = {}, left = {}, cinz = {}, pad = {};
+            if (!u) return { X, tem: false, inc, left, cinz, pad };
+            const pd = pedPadCli(c, X);   // Beta 0.1.20: o pão que a padaria acrescentou nesse dia também não é da base
             Object.keys(u.itens).forEach(id => {
                 const l = pedN9(u.itens[id]);
                 if (l <= 0) return;
                 left[id] = l;
                 const cz = pedCinz(X, id)[String(c.id)] || 0;
                 if (cz > 0) cinz[id] = cz;
-                if (l - cz > 0) inc[id] = l - cz;
+                const pa = Math.max(0, Math.min(pd[id] || 0, l - cz));
+                if (pa > 0) pad[id] = pa;
+                if (l - cz - pa > 0) inc[id] = l - cz - pa;
             });
-            return { X, tem: true, inc, left, cinz };
+            return { X, tem: true, inc, left, cinz, pad };
         }
         function pedSmBase(X, id) {   // São Miguel (importe diário): pão da BASE que lá se deixou em X (deixado − cesto cinzento)
             let t = 0;
@@ -4343,10 +4394,10 @@
         }
         function pedEncs(iso) {
             const aus = pedAusentes(iso), pd = pedPedLer(iso), li = pedObj(pd && pd.li), pool = {};
-            return (estado.encomiendas || []).filter(e => e.fecha === iso && !e.esAviso).map(e => {
+            return (estado.encomiendas || []).filter(e => e.fecha === iso && !e.esAviso && !e.pad).map(e => {   // Beta 0.1.20: e.pad (a padaria acrescenta) não entra no pedido
                 const pr = pedParse(e.pedido), fix = pedFixDaEnc(e.nombre, e.aldea, iso), ausente = !!(fix && aus[fix.cid]);
                 const lar = /laranjeira/.test(pedNorm(e.nombre));
-                let ef, lh = null, lsem = false, lX = '', corr = false;
+                let ef, lh = null, lsem = false, lX = '', corr = false, lpad = false;
                 const lq = {};   // Beta 0.1.7: o que a lista dizia (antes de corrigires à mão)
                 const fq = fix ? pedFixQ(fix, iso) : null, cliE = regBuscar(e.nombre, e.aldea)[0] || null;   // v23.18: o habitual desse dia (Fiados ou manual) e o cliente (Férias/Fechado)
                 if (fix && !ausente) ef = pedEf(pr.q, fq);
@@ -4355,7 +4406,7 @@
                     let info;
                     if (k) { if (!pool[k]) pool[k] = pedIncl7(cli, iso); info = pool[k]; }
                     else info = { X: diarioSumarDias(iso, -7), tem: false, inc: {} };
-                    lsem = !info.tem; lX = info.X;
+                    lsem = !info.tem; lX = info.X; lpad = Object.keys(info.pad || {}).length > 0;
                     const ov = pedObj(li[String(e.id)]);
                     lh = {};
                     Object.keys(pr.q).forEach(id => {
@@ -4365,7 +4416,7 @@
                     Object.keys(pr.q).forEach(id => { if (pr.q[id] > 0 && info.inc[id]) info.inc[id] = Math.max(0, info.inc[id] - pr.q[id]); });   // duas encomendas no mesmo dia: o já deixado gasta-se uma vez
                 } else ef = Object.assign({}, pr.q);
                 const dif = Object.keys(pr.q).some(id => ef[id] !== pr.q[id]);
-                return { id: String(e.id), nome: e.nombre || '', aldea: e.aldea || '', texto: e.pedido || '', q: pr.q, ef, dif, fix, fq, aus: ausente, ausM: fix ? (aus[fix.cid] || '') : '', fech: pedFechadoDia(cliE, iso), desc: pr.desc, tem: Object.keys(pr.q).length > 0, lar, vesp: !!e.pedirDiaAnterior, ult: pedUltimaLista(e.nombre, e.aldea, iso), fj: !!e.fj, lh, lsem, lX, corr, lq };
+                return { id: String(e.id), nome: e.nombre || '', aldea: e.aldea || '', texto: e.pedido || '', q: pr.q, ef, dif, fix, fq, aus: ausente, ausM: fix ? (aus[fix.cid] || '') : '', fech: pedFechadoDia(cliE, iso), desc: pr.desc, tem: Object.keys(pr.q).length > 0, lar, vesp: !!e.pedirDiaAnterior, ult: pedUltimaLista(e.nombre, e.aldea, iso), fj: !!e.fj, lh, lsem, lX, corr, lq, lpad };
             });
         }
         function pedIncluida(p, e) {
@@ -4417,7 +4468,7 @@
                     : `<span class="ped-lar-av"><b>Escreve o que deixaste.</b> Não há lista guardada em ${dX}, por isso a app não sabe o que ficou na Laranjeira. Usa o − / + da coluna «Deixaste»; enquanto estiver a 0, soma tudo.</span>`;
                 dica = ' A app só sabe o que deixas se registares a Lista de pães do cliente (ficha › Lista de pães).';
             } else nota = e.corr ? `<b>Deixaste (corrigido por ti):</b> ${sig(e.lh)} · a lista de ${dX} dizia ${sig(e.lq || {})}. A base não muda.`
-                : '«Deixaste» = o que ficou na Laranjeira há 7 dias (' + dX + '), sem o pão do cesto cinzento. Corrige aqui se não for assim; a base não muda.';
+                : '«Deixaste» = o que ficou na Laranjeira há 7 dias (' + dX + '), sem o pão do cesto cinzento' + (e.lpad ? ' nem o que a padaria acrescentou' : '') + '. Corrige aqui se não for assim; a base não muda.';
             return `<div class="ped-lar"><div class="ped-lar-h"><span>Pão</span><span>Pedem</span><span>Deixaste</span><span style="text-align:right">Soma</span></div>${linhas}<div class="ped-dia-s">${nota}${dica}${e.corr ? ` <button type="button" class="ped-link" onclick="pedLarRepor('${esc(e.id)}')">repor</button>` : ''}</div></div>`;
         }
         function pedLarAj(encId, id, dir) {
@@ -5368,6 +5419,7 @@
                 + (semBase ? '' : pedBaseMovCard(D, mv))
                 + pedFixCard(D, c)
                 + pedLarAvisoHtml(D, c)
+                + pedPadCard(D)
                 + (semBase ? `<div class="ped-aviso">Ainda não tens a base de ${esc(dn)}. ${vesp ? 'Como é véspera, o pedido deste dia não fica como base.' : 'Escreve os números como na tua nota do Keep: ao marcares o pedido pergunto-te se ficam guardados como base dos próximos dias iguais.'} <button type="button" class="ped-link" onclick="pedBW = ${c.w}; pedIr('bases')">Definir as bases</button></div>` : '')
                 + encs + filas
                 + '<div class="ped-duo"><button type="button" class="ped-sec" onclick="pedBW = ' + c.w + '; pedIr(\'bases\')">Base de ' + esc(dn.split('-')[0]) + '</button><button type="button" class="ped-pri" onclick="pedMarcar()">' + (pedExtTem(D) ? 'Marcar de novo (troca o enviado)' : 'Marcar como pedido') + '</button></div>'
@@ -7238,6 +7290,7 @@
             document.getElementById('sugerencias').style.display = 'none';
             document.getElementById('enc-es-aviso').checked = false;
             document.getElementById('enc-pedir-dia-anterior').checked = false;
+            document.getElementById('enc-pad').checked = false; encPadSync('enc', true);   // Beta 0.1.20
             alternarModoAvisoFormulario();
             document.getElementById('modal-apuntar').classList.add('active');
         }
@@ -7324,6 +7377,7 @@
                 li.innerHTML = `${m.nombre} <span style="color:#94a3b8; font-size:12px;">· 📍 ${m.aldea}</span>`;
                 li.onclick = () => {
                     document.getElementById('enc-nombre').value = m.nombre;
+                    encPadSync('enc');
                     selectAldea.value = m.aldea;
                     aldeaAutoRellenada = true;
                     proponerFechaPorAldea();
@@ -7384,6 +7438,20 @@
             clearTimeout(el._t); el._t = setTimeout(() => { el.style.display = 'none'; }, 3200);
         }
 
+        // ===== Beta 0.1.20 · Laranjeira: «A padaria acrescenta (fora do horário)» =====
+        // A Laranjeira encomenda na visita (isso soma ao pedido como sempre) e, depois do horário, pede mais diretamente à padaria, que o acrescenta ao pedido desse dia.
+        // Essa parte (e.pad) nunca entra no pedido, na base nem em «Pedir à padaria»: só se mostra em «Separar» no dia da entrega e deixa de contar como base na semana seguinte.
+        function encEhLar(nome) { return /laranjeira/.test(pedNorm(nome || '')); }
+        function encPadSync(pref, init) {   // pref: 'enc' (nova) ou 'editar-enc'; init: acabou de abrir (não mexe na caixa)
+            const nm = document.getElementById(pref + '-nombre'), fila = document.getElementById(pref + '-pad-fila'), cb = document.getElementById(pref + '-pad');
+            if (!nm || !fila || !cb) return;
+            if (init) delete fila.dataset.v;
+            const lar = encEhLar(nm.value), vis = lar || (!!init && cb.checked);
+            if (vis && !fila.dataset.v) { fila.dataset.v = '1'; if (!init && pref === 'enc') cb.checked = !estado.jornada_activa; }   // nova: ligada por omissão se a jornada já acabou (como o fj)
+            if (!vis) { delete fila.dataset.v; cb.checked = false; }
+            fila.style.display = vis ? '' : 'none';
+        }
+
         function guardarEncomienda() {
             let aldea = document.getElementById('enc-aldea').value;
             let nombre = document.getElementById('enc-nombre').value.trim();
@@ -7406,6 +7474,7 @@
             const fechas = selectorDiasEnc ? selectorDiasEnc.getSeleccion() : [];
             if (!fechas.length) { alert("Selecione pelo menos um dia no calendário."); alternarCalendarioEnc(true); return; }
 
+            const padOn = !esAviso && encEhLar(nombre) && !!document.getElementById('enc-pad').checked;   // Beta 0.1.20
             const grp = fechas.length > 1 ? 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) : '';   // Beta 0.1.7: encomendas feitas juntas (várias datas) formam um grupo
             fechas.forEach(f => {
                 const nova = {
@@ -7415,6 +7484,7 @@
                     fj: estado.jornada_activa ? undefined : true   // v23.17: criada sem jornada em curso (em pausa conta como jornada): não soma ao pedido
                 };
                 if (grp) nova.grp = grp;
+                if (padOn) nova.pad = true;
                 estado.encomiendas.push(nova);
             });
 
@@ -7425,7 +7495,8 @@
             renderReparto();
             const idsNovas = estado.encomiendas.slice(-fechas.length).map(e => String(e.id));
             Promise.resolve(pedBaseAposEnc(idsNovas)).then(() => pedNLPropor(idsNovas));   // Beta 0.1: o que passa da base pergunta se a sobe · Beta 0.1.5: «Não quer» pergunta «Não leva pão»
-            if (fechas.length === 1 && fechas[0] !== formatearFechaLocal(fechaConsulta)) avisoRapido('✔ Encomenda guardada para ' + DIARIO_DIAS[diarioDate(fechas[0]).getDay()] + ', ' + fechas[0].slice(8, 10) + '/' + fechas[0].slice(5, 7));
+            if (padOn) avisoRapido('🧺 Guardado: a padaria acrescenta · não entra no teu pedido');
+            else if (fechas.length === 1 && fechas[0] !== formatearFechaLocal(fechaConsulta)) avisoRapido('✔ Encomenda guardada para ' + DIARIO_DIAS[diarioDate(fechas[0]).getDay()] + ', ' + fechas[0].slice(8, 10) + '/' + fechas[0].slice(5, 7));
         }
 
         // ===== Beta 0.1.7 · N11 · encomendas de várias datas: alterar / eliminar só esta, esta e as seguintes, ou todas =====
@@ -7481,6 +7552,7 @@
             document.getElementById('editar-enc-pedido').value = enc.pedido || '';
             document.getElementById('editar-enc-es-aviso').checked = !!enc.esAviso;
             document.getElementById('editar-enc-pedir-vespera').checked = !!enc.pedirDiaAnterior;
+            document.getElementById('editar-enc-pad').checked = !!enc.pad; encPadSync('editar-enc', true);   // Beta 0.1.20
 
             const select = document.getElementById('editar-enc-aldea');
             select.innerHTML = document.getElementById('enc-aldea').innerHTML;
@@ -7566,12 +7638,14 @@
             }
 
             const outros = encGrpIds(id).filter(i => i !== String(enc.id)).map(i => (estado.encomiendas || []).find(e => String(e.id) === i)).filter(Boolean);   // Beta 0.1.7: outras datas marcadas do grupo
-            const pedidoAntes = enc.pedido, avisoAntes = !!enc.esAviso, vesperaAntes = !!enc.pedirDiaAnterior;
+            const pedidoAntes = enc.pedido, avisoAntes = !!enc.esAviso, vesperaAntes = !!enc.pedirDiaAnterior, padAntes = !!enc.pad;
             enc.pedido = pedidoNuevo;
             enc.esAviso = document.getElementById('editar-enc-es-aviso').checked;
             enc.pedirDiaAnterior = document.getElementById('editar-enc-pedir-vespera').checked;
-            const cPed = pedidoAntes !== pedidoNuevo, cAv = avisoAntes !== !!enc.esAviso, cVe = vesperaAntes !== !!enc.pedirDiaAnterior;
-            outros.forEach(m => { if (cPed) m.pedido = pedidoNuevo; if (cAv) m.esAviso = enc.esAviso; if (cVe) m.pedirDiaAnterior = enc.pedirDiaAnterior; });
+            const padNovo = !enc.esAviso && encEhLar(nombreNuevo) && !!document.getElementById('editar-enc-pad').checked;   // Beta 0.1.20
+            if (padNovo) enc.pad = true; else delete enc.pad;
+            const cPed = pedidoAntes !== pedidoNuevo, cAv = avisoAntes !== !!enc.esAviso, cVe = vesperaAntes !== !!enc.pedirDiaAnterior, cPad = padAntes !== padNovo;
+            outros.forEach(m => { if (cPed) m.pedido = pedidoNuevo; if (cAv) m.esAviso = enc.esAviso; if (cVe) m.pedirDiaAnterior = enc.pedirDiaAnterior; if (cPad) { if (padNovo) m.pad = true; else delete m.pad; } });
             const todos = [String(enc.id)].concat(outros.map(m => String(m.id)));
 
             guardarEstado();
@@ -7580,7 +7654,7 @@
             const nlMudou = pedidoAntes !== pedidoNuevo || cambioCliente;   // Beta 0.1.5: «Não leva pão» ligado ao texto antigo desfaz-se e, se o novo também diz «Não quer», pergunta outra vez
             if (nlMudou) pedNLLimpar(enc);
             if (cPed) outros.forEach(m => pedNLLimpar(m));
-            const pBase = (cPed || cAv || cVe) ? pedBaseAposEnc(todos) : null;   // uma só pergunta para todas as datas alteradas
+            const pBase = (cPed || cAv || cVe || cPad) ? pedBaseAposEnc(todos) : null;   // uma só pergunta para todas as datas alteradas
             if (nlMudou) Promise.resolve(pBase).then(() => pedNLPropor(todos));   // Beta 0.1.2: sobe ou repõe a base se o pedido, o aviso ou a véspera mudaram   // Beta 0.1: só se o pedido mudou
         }
 
@@ -7883,6 +7957,7 @@
                             ${ult ? `<div class="reparto-ultima">🧾 Deixaste da última vez (${esc(pedDiaCurto(ult.data))}): ${esc(ult.txt)}</div>` : ''}
                             <div class="reparto-aldea">📍 ${enc.aldea}${planRota.textoParada(itemRota(enc)) ? ' · ' + planRota.textoParada(itemRota(enc)) : ''}</div>
                             ${enc.pedirDiaAnterior ? '<div class="badge-pedir-dia-anterior">📌 Pedir na véspera</div>' : ''}
+                            ${enc.pad ? '<div class="badge-pad">🧺 A padaria acrescenta · separar</div>' : ''}
                         </div>
                     </div>
                 `;
