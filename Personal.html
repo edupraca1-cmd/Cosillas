@@ -502,6 +502,9 @@
         /* ===== 0.6: margen de la tarjeta ===== */
         .modal-gasto .pt-margen { margin: 10px 0 2px; }
         .modal-gasto .pt-margen input[type="number"] { width: 84px; text-align: center; padding: 7px 6px; }
+
+        /* ===== 0.7: avisos de Pendiente con botones ===== */
+        div.pend { flex-wrap: wrap; cursor: default; }
     </style>
 </head>
 <body>
@@ -623,7 +626,7 @@
         <!-- ===== INICIO: cifras, gráfico y lo pendiente ===== -->
         <div id="tab-inicio" class="tab-content active">
             <div class="app-title">📊 Mi Control Financiero</div>
-            <div class="app-version" id="app-version">Versión 0.6 · 27 oct 2026</div>
+            <div class="app-version" id="app-version">Versión 0.7 · 28 oct 2026</div>
         <div class="metrics">
             <div class="metric-card saldo">
                 <div class="metric-title">SALDO EN BANCO (€)</div>
@@ -4236,7 +4239,9 @@
             // Tarjeta
             const deuda = numO(appData.tarjeta && appData.tarjeta.deuda, 0);
             let tjInfo = '';
-            if (deuda > 0.005) {
+            const avTj = deuda > 0.005 ? avisoPlanTarjeta() : null;   // 0.7: ¿conviene ajustar los pagos de la tarjeta?
+            if (avTj) lista.push(avTj);
+            else if (deuda > 0.005) {
                 const tj = simularTarjeta();
                 if (tj.avisos.length) add('aviso', '💳', `Tarjeta: ${tj.avisos.length === 1 ? 'una cuota no llega' : tj.avisos.length + ' cuotas no llegan'} al pago mínimo.`, 'Ver', "irA('tab-tarjeta')");
                 else if (tj.finIdx < 0) add('aviso', '💳', `Tarjeta: con los pagos que tienes puestos, al final te quedarían ${fmtEur(tj.resto)} por pagar.`, 'Ver', "irA('tab-tarjeta')");
@@ -5477,6 +5482,105 @@
             const t = appData.tarjeta;
             const lim = Math.max(0, numO(t.limite, 0)), deuda = Math.max(0, numO(t.deuda, 0));
             return `No cabe en la tarjeta: con esta compra deberías ${fmtEur(deuda + imp)} y tu límite es ${fmtEur(lim)}. Te quedan ${fmtEur(Math.max(0, lim - deuda))}.\n\nSi el banco te la aceptó, revisa en la tarjeta la deuda actual o el límite.`;
+        }
+
+        // =====================================================
+        // ===== 0.7: ¿AJUSTO LOS PAGOS DE LA TARJETA? =========
+        // =====================================================
+        // Cierre de cada ciclo en el peor caso con los pagos que de verdad se cobrarían (lo puesto, o el mínimo si no llega)
+        // y con el plan «lo antes posible» recalculado hoy.
+        function revisarPlanTarjeta() {
+            const t = appData.tarjeta;
+            if (!t || !(numO(t.deuda, 0) > 0.005)) return null;
+            const hoy = indiceCicloDeFecha(new Date());
+            if (hoy < 0) return null;
+            const conf = simularTarjeta();
+            if (conf.sinCiclos || !conf.filas.length) return null;
+            const pl = planTarjetaEstrategia('rapido');
+            if (pl.desde < 0 || !pl.cap) return null;
+            const n = appData.ciclos.length;
+            const ppConf = pagosConComision(conf);
+            let c1 = 0, c2 = 0;
+            const cierreConf = [], cierrePlan = [];
+            for (let j = 0; j < n; j++) {
+                const x = pl.cap[j];
+                if (j >= pl.desde) { c1 += ppConf[j] || 0; c2 += pl.pagos[j] || 0; }
+                cierreConf.push(j >= pl.desde ? x.sinTj - c1 : x.W);
+                cierrePlan.push(j >= pl.desde ? x.sinTj - c2 : x.W);
+            }
+            return { hoy: hoy, desde: Math.max(hoy, pl.desde), conf: conf, pl: pl, ppConf: ppConf, cierreConf: cierreConf, cierrePlan: cierrePlan, R: margenTarjeta() };
+        }
+
+        // Qué aviso toca (o null): 'rojo' > 'margen' > 'mejor'
+        function evaluarPlanTarjeta() {
+            const rv = revisarPlanTarjeta();
+            if (!rv) return null;
+            const { hoy, desde, conf, pl, ppConf, cierreConf, cierrePlan, R } = rv;
+            const n = cierreConf.length;
+            const finConf = conf.finIdx < 0 ? Infinity : conf.finIdx;
+            const finPlan = pl.res.finIdx < 0 ? Infinity : pl.res.finIdx;
+            const base = { finConf: finConf, finPlan: finPlan, ahorro: redondear(conf.intereses - pl.res.intereses), R: R };
+            // 1) Algún mes en rojo con tus pagos
+            let jr = -1;
+            for (let j = desde; j < n; j++) if (cierreConf[j] < -0.5 && (jr < 0 || cierreConf[j] < cierreConf[jr])) jr = j;
+            if (jr >= 0) return Object.assign(base, { tipo: 'rojo', j: jr, conf: cierreConf[jr], plan: cierrePlan[jr] });
+            // 2) Tus pagos te hacen bajar del margen más de lo necesario (10 € o más)
+            let jm = -1, peor = 0;
+            for (let j = desde; j < n; j++) {
+                if (cierreConf[j] >= R - 0.5) continue;
+                const falta = Math.min(R, cierrePlan[j]) - cierreConf[j];
+                if (falta >= 10 && falta > peor) { peor = falta; jm = j; }
+            }
+            if (jm >= 0) return Object.assign(base, { tipo: 'margen', j: jm, conf: cierreConf[jm], plan: Math.min(R, cierrePlan[jm]) });
+            // 3) Vas mejor de lo previsto: el plan termina antes, o el próximo pago que cambia sube 10 € o más
+            let js = -1;
+            for (let j = desde; j < n; j++) {   // en este ciclo también se puede pagar de más (a mano)
+                const a = ppConf[j] || 0, b = pl.pagos[j] || 0;
+                if (Math.abs(b - a) < 0.01) continue;
+                if (b - a >= 10) js = j;
+                break;
+            }
+            if (finPlan < finConf || js >= 0) return Object.assign(base, { tipo: 'mejor', j: js, hoy: hoy, tienes: js >= 0 ? (ppConf[js] || 0) : 0, puedes: js >= 0 ? (pl.pagos[js] || 0) : 0 });
+            return null;
+        }
+
+        // Aviso para Pendiente (respeta «Ahora no» hasta el siguiente ciclo; el rojo no se aparca)
+        function avisoPlanTarjeta() {
+            const e = evaluarPlanTarjeta();
+            if (!e) return null;
+            const hoy = indiceCicloDeFecha(new Date());
+            const clave = hoy >= 0 ? claveCicloFinanzas(String(appData.ciclos[hoy].nombre || '')) : null;
+            const pp = appData.tarjeta.avisoPlanPospuesto;
+            if (e.tipo !== 'rojo' && pp && pp.tipo === e.tipo && pp.clave === clave) return null;
+            const mes = i => i >= 0 && i < appData.ciclos.length ? esc(etiquetaMes(appData.ciclos[i])) : 'más adelante';
+            const botonVer = `<button type="button" class="btn-panel" onclick="verPlanTarjetaAviso('${e.tipo}')">Ver plan</button>`;
+            const botonNo = `<button type="button" class="btn-mini" onclick="posponerAvisoPlanTj('${e.tipo}')">Ahora no</button>`;
+            const fin = e.finPlan < e.finConf ? ` y terminarías en ${mes(e.finPlan)}${e.finConf < Infinity ? ` en vez de ${mes(e.finConf)}` : ''}` : '';
+            if (e.tipo === 'rojo') {
+                if (e.plan >= -0.5) return { tipo: 'mal', ico: '⛔', txt: `Tarjeta: con tus pagos, ${mes(e.j)} quedaría en ${fmtEur(e.conf)} en el peor caso. Ajustando los pagos quedaría en ${fmtEur(e.plan)}${fin}.`, botones: botonVer };
+                const mejora = e.plan > e.conf + 0.5;
+                return { tipo: 'mal', ico: '⛔', txt: `${mes(e.j)} quedaría en ${fmtEur(e.conf)} en el peor caso${mejora ? ` (ajustando la tarjeta, ${fmtEur(e.plan)})` : ''}, aunque pagues solo el mínimo de la tarjeta. Recorta en otros gastos o deja para más adelante las compras que puedas.`,
+                    botones: mejora ? botonVer : `<button type="button" class="btn-panel" onclick="irA('tab-ciclos'); verCiclo(${e.j})">Ver</button>` };
+            }
+            if (e.tipo === 'margen') return { tipo: 'aviso', ico: '⚠️', txt: `Tarjeta: con tus pagos, ${mes(e.j)} bajaría a ${fmtEur(e.conf)} en el peor caso (tu margen es de ${e.R} €). Ajustando los pagos quedaría en ${fmtEur(e.plan)}${fin}.`, botones: botonNo + botonVer };
+            const que = e.j >= 0 ? `puedes pagar ${fmtEur(e.puedes)} a la tarjeta ${e.j === e.hoy ? 'este ciclo' : 'en ' + mes(e.j)} (tienes ${fmtEur(e.tienes)})` : 'puedes ajustar los pagos de la tarjeta';
+            const ganas = fin || (e.ahorro >= 0.5 ? ` y te ahorras ≈ ${fmtEur(e.ahorro)} de intereses` : '');
+            return { tipo: 'consejo', ico: '💡', txt: `Vas mejor de lo previsto: ${que}${ganas}.`, botones: botonNo + botonVer };
+        }
+
+        function verPlanTarjetaAviso(tipo) {
+            const notas = { mejor: 'Vas mejor de lo previsto.', margen: 'Con tus pagos bajarías de tu margen.', rojo: 'Con tus pagos quedarías en rojo.' };
+            abrirPlanTarjeta(notas[tipo] || '');
+            if (!planesTj) return;
+            planTjElegido = 'rapido';
+            pintarPlanTarjeta();
+        }
+
+        function posponerAvisoPlanTj(tipo) {
+            const hoy = indiceCicloDeFecha(new Date());
+            appData.tarjeta.avisoPlanPospuesto = { tipo: tipo, clave: hoy >= 0 ? claveCicloFinanzas(String(appData.ciclos[hoy].nombre || '')) : null };
+            guardar();
+            pedirPendientes();
         }
 
         // =====================================================
