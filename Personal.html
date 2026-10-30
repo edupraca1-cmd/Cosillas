@@ -505,6 +505,41 @@
 
         /* ===== 0.7: avisos de Pendiente con botones ===== */
         div.pend { flex-wrap: wrap; cursor: default; }
+
+        /* ===== 0.8 ===== */
+        .modal-gasto label.g-fuera { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; line-height: 1.35; }
+        .modal-gasto label.g-fuera input { width: 20px; height: 20px; margin: 0; padding: 0; flex-shrink: 0; accent-color: var(--primary); }
+        .g-chip.cerrado { opacity: .72; }
+        .g-chip.g-mas { border-style: dashed; }
+        .g-chips-fijos { display: contents; }
+        .diario { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin: 0 0 14px; }
+        .diario:empty { display: none; }
+        .dia-cab { font-size: 12px; font-weight: 800; letter-spacing: .03em; color: #475569; text-transform: uppercase; }
+        .dia-cifra { margin: 4px 0 6px; font-size: 13px; color: #475569; line-height: 1.4; }
+        .dia-cifra b { font-size: 22px; color: var(--text-main); }
+        .dia-cifra.mal b { color: #b91c1c; }
+        .dia-linea { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; padding: 4px 0; border-top: 1px dashed var(--border); color: #334155; }
+        .dia-linea.rapido { color: #b45309; }
+        .dia-nota { font-size: 11.5px; color: #64748b; margin-top: 6px; line-height: 1.4; }
+        .hucha, .meta, .ct-item { padding: 9px 0; border-top: 1px dashed var(--border); }
+        .hucha-fila, .meta-fila, .ct-fila { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13.5px; }
+        .hucha-sub, .meta-sub, .ct-sub { font-size: 12px; color: #64748b; margin-top: 4px; line-height: 1.4; }
+        .meta-sub b { color: var(--text-main); }
+        .meta-acc { display: flex; gap: 6px; justify-content: flex-end; margin-top: 6px; }
+        .meta-pista { font-size: 11px; color: #94a3b8; align-self: center; }
+        .ct-form #ct-nombre, .ct-form #ct-tipo { grid-column: 1 / -1; }
+        .panel-body input[type="month"] { width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; background: #fff; color: var(--text-main); font-family: inherit; min-height: 42px; }
+        .metas-sug, .ct-sug { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .ci-resumen { font-size: 13px; line-height: 1.5; margin-top: 6px; color: #334155; }
+        #ci-cuerpo { max-height: 58vh; overflow-y: auto; }
+        .ci-tabla { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+        .ci-tabla th, .ci-tabla td { padding: 5px 4px; border-bottom: 1px dashed var(--border); text-align: right; }
+        .ci-tabla th { font-size: 11px; color: #64748b; text-transform: uppercase; }
+        .ci-tabla th:first-child, .ci-tabla td:first-child { text-align: left; }
+        .ci-tabla td.ok { color: #047857; }
+        .ci-tabla td.mal { color: #b91c1c; }
+        .ci-tabla small { color: #94a3b8; font-weight: 600; }
+        .cycle-acciones { gap: 8px; }
     </style>
 </head>
 <body>
@@ -626,7 +661,7 @@
         <!-- ===== INICIO: cifras, gráfico y lo pendiente ===== -->
         <div id="tab-inicio" class="tab-content active">
             <div class="app-title">📊 Mi Control Financiero</div>
-            <div class="app-version" id="app-version">Versión 0.7 · 28 oct 2026</div>
+            <div class="app-version" id="app-version">Versión 0.8 · 30 oct 2026</div>
         <div class="metrics">
             <div class="metric-card saldo">
                 <div class="metric-title">SALDO EN BANCO (€)</div>
@@ -653,6 +688,8 @@
                 <div class="metric-alt" id="disp-final-alt"></div>
             </div>
         </div>
+
+        <div class="diario" id="diario"></div>
 
         <div class="chart-container">
             <div class="chart-top">
@@ -785,9 +822,12 @@
         <div id="tab-planes" class="tab-content">
             <div class="sub-nav" id="sub-nav">
                 <button type="button" data-p="panel-sim" onclick="verPlan('panel-sim')">🧮 Simulador</button>
+                <button type="button" data-p="panel-metas" onclick="verPlan('panel-metas')">🎯 Metas</button>
+                <button type="button" data-p="panel-huchas" onclick="verPlan('panel-huchas')">🐷 Huchas</button>
                 <button type="button" data-p="panel-per" onclick="verPlan('panel-per')">📅 Periódicos</button>
                 <button type="button" data-p="panel-var" onclick="verPlan('panel-var')">📈 Variables</button>
                 <button type="button" data-p="panel-fechas" onclick="verPlan('panel-fechas')">🔔 Fechas</button>
+                <button type="button" data-p="panel-contratos" onclick="verPlan('panel-contratos')">📄 Contratos</button>
                 <button type="button" data-p="panel-gas" onclick="verPlan('panel-gas')">🔥 Bombonas</button>
                 <button type="button" data-p="panel-arch" onclick="verPlan('panel-arch')">🗂️ Archivo</button>
                 <button type="button" data-p="panel-copias" onclick="verPlan('panel-copias')">💾 Copias</button>
@@ -817,6 +857,39 @@
                 <button class="btn-panel btn-sim-add" id="sim-anadir" onclick="anadirSimulacionAlPlan()" disabled>➕ Añadir a mis ciclos</button>
             </div>
         </section>
+        <!-- ===== Metas ===== -->
+        <section class="panel" id="panel-metas">
+            <div class="panel-cab">
+                <span>🎯 Metas</span>
+                <span class="summary-right"><span class="panel-resumen" id="metas-resumen"></span></span>
+            </div>
+            <div class="panel-body">
+                <div id="metas-lista"></div>
+                <div class="panel-h">Añadir una meta</div>
+                <div class="per-form metas-form">
+                    <input type="text" id="meta-nombre" placeholder="Qué es (ej. Cocina)" autocomplete="off" aria-label="Qué es">
+                    <input type="number" id="meta-importe" inputmode="decimal" step="1" min="0" placeholder="Cuánto (€)" aria-label="Cuánto">
+                    <input type="month" id="meta-mes" aria-label="Para cuándo (opcional)">
+                    <span class="meta-pista">Para cuándo (si tienes fecha)</span>
+                </div>
+                <button class="btn-panel btn-sim-add" onclick="anadirMeta()">＋ Añadir meta</button>
+                <div id="metas-sugerencias"></div>
+                <div class="panel-nota">Van por orden: la de arriba se cumple antes. Para cada una, la app busca el primer ciclo en que tendrías ese dinero sin que ningún mes de tus ciclos quede en rojo, en el peor caso y contando lo que ya tienes planeado (y las metas de arriba). Más allá de tus ciclos es una estimación. La limpieza de terrenos y otros gastos lejanos los ves en 🐷 Huchas.</div>
+            </div>
+        </section>
+
+        <!-- ===== Huchas ===== -->
+        <section class="panel" id="panel-huchas">
+            <div class="panel-cab">
+                <span>🐷 Huchas para los gastos grandes</span>
+                <span class="summary-right"><span class="panel-resumen" id="huchas-resumen"></span></span>
+            </div>
+            <div class="panel-body">
+                <div id="huchas-cuerpo"></div>
+                <div class="panel-nota">Las huchas no mueven dinero: te dicen qué parte de tu saldo ya está pensada para estos gastos, para que no la gastes en otra cosa. Salen de tus «📅 Periódicos» que se repiten cada 6 meses o más.</div>
+            </div>
+        </section>
+
         <!-- ===== Gastos periódicos ===== -->
         <section class="panel" id="panel-per">
             <div class="panel-cab">
@@ -885,6 +958,35 @@
                 </div>
                 <div id="fp-lista"></div>
                 <div class="panel-nota">La app apunta el día cada vez que marcas un concepto como pagado o apuntas su gasto. Cuando 3 ciclos coinciden (con pocos días de diferencia), te pregunta en Inicio si quieres fijar ese día, y desde entonces te avisa antes. Si un día deja de cuadrar, vuelve a preguntarte. Las facturas antiguas que añadas en «Variables» con su fecha también cuentan. Lo que se paga una vez al año (IUC, seguro…) te lo avisa «Periódicos».</div>
+            </div>
+        </section>
+
+        <!-- ===== Contratos ===== -->
+        <section class="panel" id="panel-contratos">
+            <div class="panel-cab">
+                <span>📄 Contratos</span>
+                <span class="summary-right"><span class="panel-resumen" id="contratos-resumen"></span></span>
+            </div>
+            <div class="panel-body">
+                <div id="contratos-lista"></div>
+                <div id="contratos-sugerencias"></div>
+                <div class="panel-h">Añadir un contrato</div>
+                <div class="per-form ct-form">
+                    <input type="text" id="ct-nombre" placeholder="Qué es (ej. Internet)" autocomplete="off" aria-label="Qué es">
+                    <select id="ct-tipo" aria-label="Qué pasa ese día">
+                        <option value="renueva">Se renueva cada año</option>
+                        <option value="permanencia">Acaba la permanencia</option>
+                    </select>
+                    <input type="date" id="ct-fecha" aria-label="Fecha">
+                    <select id="ct-aviso" aria-label="Cuántos días antes avisarme">
+                        <option value="15">15 días antes</option>
+                        <option value="30" selected>30 días antes</option>
+                        <option value="45">45 días antes</option>
+                        <option value="60">60 días antes</option>
+                    </select>
+                </div>
+                <button class="btn-panel btn-sim-add" onclick="anadirContrato()">＋ Añadir contrato</button>
+                <div class="panel-nota">Antes de que se renueve un seguro o acabe la permanencia de internet o del móvil, la app te avisa en Inicio para que compares ofertas a tiempo. Al pulsar «Hecho», los que se renuevan cada año pasan al año siguiente.</div>
             </div>
         </section>
 
@@ -978,6 +1080,7 @@
                     <label>Concepto</label>
                     <div class="g-chips" id="g-chips"></div>
                     <select id="g-concepto" onchange="actualizarHintGasto(); pintarChipsGasto()" aria-label="Concepto"></select>
+                    <label class="g-fuera" id="g-fuera-fila" style="display:none"><input type="checkbox" id="g-fuera" onchange="cambiarFueraGasto()"><span id="g-fuera-txt">Es otra cosa: solo uso el dinero de este concepto</span></label>
                 </div>
             </div>
             <div id="g-bloque-ingreso" style="display:none">
@@ -995,7 +1098,7 @@
             </div>
 
             <label for="g-nota">Nota <small>(opcional)</small></label>
-            <input type="text" id="g-nota" placeholder="Ej. Mercadona" enterkeyhint="done" autocomplete="off" list="g-notas">
+            <input type="text" id="g-nota" placeholder="Ej. Mercadona" enterkeyhint="done" autocomplete="off" list="g-notas" oninput="sugerirConceptoPorNota()">
             <datalist id="g-notas"></datalist>
 
             <div class="g-botones">
@@ -1003,7 +1106,7 @@
                 <button class="btn-g-guardar" id="g-guardar" onclick="guardarGasto()">Guardar gasto</button>
             </div>
             <button class="btn-g-eliminar" id="g-eliminar" onclick="eliminarGastoEditado()" style="display:none;">🗑️ Eliminar este gasto</button>
-            <div class="g-nota-gas">⛽ La gasolina se apunta en ⛽ Gasolina (en la barra de abajo) y también descuenta del saldo.</div>
+            <div class="g-nota-gas">⛽ Los repostajes se apuntan en ⛽ Gasolina (en la barra de abajo). En «Gasolina» de aquí va solo lo que pagas con el dinero de la gasolina.</div>
         </div>
     </div>
 
@@ -1101,6 +1204,18 @@
                 <button class="btn-g-guardar" id="pt-aplicar" onclick="aplicarPlanTarjeta(planTjElegido)">Poner en mis ciclos</button>
             </div>
             <div class="g-nota-gas" id="pt-nota"></div>
+        </div>
+    </div>
+
+    <!-- ================= VENTANA: RESUMEN Y CIERRE DEL CICLO ================= -->
+    <div class="modal-fondo" id="modal-cierre" onclick="if (event.target === this) cerrarResumenCiclo()">
+        <div class="modal-gasto hoja">
+            <div class="m-cab">
+                <h3 id="ci-titulo">📊 Resumen del ciclo</h3>
+                <button type="button" class="m-cerrar" onclick="cerrarResumenCiclo()" aria-label="Cerrar">✕</button>
+            </div>
+            <div id="ci-cuerpo"></div>
+            <div class="g-botones" id="ci-botones"></div>
         </div>
     </div>
 
@@ -1766,10 +1881,11 @@
             const realGas = clave !== null ? gastoRealGasolinaCiclo(clave) : 0;
 
             // Gastos apuntados en el ciclo, sumados por concepto
-            const porConcepto = {};
+            const porConcepto = {}, porFuera = {};
             (ciclo.gastos || []).forEach(g => {
                 const k = normDesc(g.concepto);
                 porConcepto[k] = (porConcepto[k] || 0) + (Number(g.importe) || 0);
+                if (g.fuera && k) porFuera[k] = (porFuera[k] || 0) + (Number(g.importe) || 0);   // otra cosa pagada con su dinero
             });
 
             let real = 0, pendiente = 0;
@@ -1781,15 +1897,18 @@
                 }
                 const pres = Math.abs(num);
                 const k = normDesc(item.desc);
-                let gastado = 0;
+                let gastado = 0, fuera = 0;
                 if (k && porConcepto[k] !== undefined) {   // cuenta solo para el primer concepto con ese nombre
                     gastado += porConcepto[k];
+                    fuera = porFuera[k] || 0;
                     delete porConcepto[k];
                 }
                 if (item === itGas) gastado += realGas;
                 // Marcado sin gastos apuntados: se pagó el importe completo (como siempre).
                 // Con gastos apuntados: cuenta lo gastado de verdad, y marcarlo lo da por cerrado.
-                real -= gastado > 0 ? gastado : (item.checked ? pres : 0);
+                const propio = redondear(gastado - fuera);
+                // 0.8: si solo hay «otras cosas» pagadas con su dinero y lo marcas, el concepto se pagó entero (al menos su importe)
+                real -= gastado > 0 ? (item.checked && propio <= 0.005 ? Math.max(pres, gastado) : gastado) : (item.checked ? pres : 0);
                 // Proyección realista: en vez del tope se usa lo que sueles pagar (si hay historial)
                 let base = pres, estimado = null;
                 if (estimar && !item.checked) {
@@ -1800,7 +1919,7 @@
                     }
                 }
                 pendiente -= item.checked ? 0 : Math.max(base - gastado, 0);
-                return { ingreso: false, presupuesto: pres, gastado: gastado, esGas: item === itGas, estimado: estimado };
+                return { ingreso: false, presupuesto: pres, gastado: gastado, esGas: item === itGas, estimado: estimado, fuera: redondear(fuera), propio: propio };
             });
 
             // "Otro gasto" (sin concepto): sale del saldo sin tocar ningún presupuesto
@@ -1864,6 +1983,8 @@
                 if (!Array.isArray(c.gastos)) c.gastos = [];
             });
             if (!Array.isArray(data.periodicos)) data.periodicos = [];
+            if (!Array.isArray(data.metas)) data.metas = [];           // 0.8: metas con fecha
+            if (!Array.isArray(data.contratos)) data.contratos = [];   // 0.8: avisos de contratos
             // Fechas de pago (aprendidas o puestas a mano) y con cuántos días de antelación avisar
             if (!data.fechasPago || typeof data.fechasPago !== 'object' || Array.isArray(data.fechasPago)) data.fechasPago = {};
             data.avisoDias = Math.min(10, Math.max(0, Math.round(nDef(data.avisoDias, 3))));
@@ -2077,7 +2198,7 @@
                     <div class="cycle-card${cIdx === cicloVisibleIdx() ? ' visible' : ''}" id="card-${cIdx}" data-idx="${cIdx}">
                         <div class="breakdown-table">
                             ${filas}
-                            <div class="cycle-acciones"><button type="button" class="btn-mini" onclick="eliminarCiclo(event, ${cIdx})">📦 Archivar este ciclo</button></div>
+                            <div class="cycle-acciones"><button type="button" class="btn-mini" onclick="abrirResumenCiclo(${cIdx})">📊 Resumen</button><button type="button" class="btn-mini" onclick="eliminarCiclo(event, ${cIdx})">📦 Archivar este ciclo</button></div>
                         </div>
                     </div>
                 `;
@@ -2217,7 +2338,7 @@
             if (ligados.length && !confirm(`"${item.desc}" tiene ${ligados.length} gasto(s) apuntado(s) en este ciclo. Si lo eliminas, pasarán a "Otro gasto" (siguen descontando del saldo). ¿Continuar?`)) return;
             ciclo.items.splice(iIdx, 1);
             if (ligados.length && !ciclo.items.some(i => normDesc(i.desc) === k && !esIngreso(i))) {
-                ligados.forEach(g => { g.concepto = ''; });
+                ligados.forEach(g => { g.concepto = ''; delete g.fuera; });
             }
             renderizar();
             guardar();
@@ -2348,6 +2469,10 @@
                         el.className = 'gas-info mal';
                         el.innerHTML = `${ico} Gastado real: ${eur(gas)} <span class="nw">· te pasaste por ${eur(gas - pres)}</span>`;
                     }
+                    if (r.fuera > 0.005) {   // 0.8: lo que pagaste de otras cosas con el dinero de este concepto
+                        if (item.checked && r.propio <= 0.005) { el.className = 'gas-info'; el.innerHTML = `${ico} Pagado entero (${eur(Math.max(pres, gas))}) <span class="nw">· ${eur(r.fuera)} fueron para otras cosas</span>`; }
+                        else el.innerHTML += ` <span class="nw">· ${eur(r.fuera)} en otras cosas</span>`;
+                    }
                     if (stItem && stItem.media !== null) {
                         el.innerHTML += ` <span class="nw">· tu media ${eur(stItem.media)}</span>`;
                         if (gas > stItem.media + 0.005 && gas <= pres) el.innerHTML += ` <span class="nw aviso-media">· ⚠️ más que tu media</span>`;
@@ -2373,6 +2498,10 @@
             pintarFechas();
             pintarCreditos();
             pintarConsejo();
+            pintarDiario();
+            pintarHuchas();
+            pintarMetas();
+            pintarContratos();
             pedirPendientes();
         }
 
@@ -2952,7 +3081,7 @@
         // Gasto real de un concepto en un ciclo: gastos apuntados (y en gasolina, los repostajes)
         function realConceptoCiclo(ciclo, k) {
             let total = 0;
-            (ciclo.gastos || []).forEach(g => { if (normDesc(g.concepto) === k) total += Number(g.importe) || 0; });
+            (ciclo.gastos || []).forEach(g => { if (normDesc(g.concepto) === k && !g.fuera) total += Number(g.importe) || 0; });
             if (k === 'gasolina') {
                 const cl = claveCicloFinanzas(String(ciclo.nombre || ''));
                 if (cl !== null) total += gastoRealGasolinaCiclo(cl);
@@ -3681,6 +3810,7 @@
             document.getElementById('g-bloque-gasto').style.display = t === 'gasto' ? '' : 'none';
             document.getElementById('g-bloque-ingreso').style.display = t === 'ingreso' ? '' : 'none';
             document.querySelector('#modal-gasto .modal-gasto').classList.toggle('es-ingreso', t === 'ingreso');
+            pintarFueraGasto();
             textosVentanaGasto();
             actualizarHintGasto();
         }
@@ -3689,6 +3819,7 @@
             gastoPago = p;
             document.querySelectorAll('#g-pago button').forEach(b => b.classList.toggle('activo', b.dataset.v === p));
             document.getElementById('g-bloque-concepto').style.display = p === 'cuenta' ? '' : 'none';
+            pintarFueraGasto();
             textosVentanaGasto();
             actualizarHintGasto();
         }
@@ -3726,26 +3857,35 @@
             return u;
         }
 
-        // Los conceptos del ciclo, como botones con lo que te queda
+        // Los conceptos del ciclo, como botones con lo que te queda (los fijos, dentro de «Más»)
         function pintarChipsGasto() {
             const sel = document.getElementById('g-concepto');
             const cont = document.getElementById('g-chips');
             if (!sel || !cont) return;
-            if (sel.disabled) { cont.innerHTML = ''; return; }
+            if (sel.disabled) { cont.innerHTML = ''; pintarFueraGasto(); return; }
             const usos = usoConceptos();
-            const ops = Array.from(sel.options).map((o, i) => ({ v: o.value, txt: o.textContent, i: i }));
+            const ops = Array.from(sel.options).map((o, i) => ({ v: o.value, txt: o.textContent, i: i, fijo: o.dataset.fijo === '1' }));
             ops.sort((a, b) => ((a.v === '') - (b.v === '')) || ((usos[normDesc(b.v)] || 0) - (usos[normDesc(a.v)] || 0)) || (a.i - b.i));
-            cont.innerHTML = ops.map(o => {
+            const chip = o => {
                 const nombre = o.v === '' ? 'Otro' : o.v;
-                const resto = o.v === '' ? 'sin presupuesto' : (o.txt.split(' · ')[1] || '');
-                const pasado = resto.startsWith('pasado');
-                return `<button type="button" class="chip g-chip ${sel.value === o.v ? 'on' : ''} ${pasado ? 'pasado' : ''}" data-v="${esc(o.v)}" onclick="elegirConceptoGasto(this.dataset.v)"><b>${esc(nombre)}</b>${resto ? `<small>${esc(resto)}</small>` : ''}</button>`;
-            }).join('');
+                const resto = o.v === '' ? 'sin presupuesto' : (o.txt.split(' · ').slice(1).join(' · ') || '');
+                const pasado = resto.startsWith('pasado'), cerrado = resto.startsWith('cerrado');
+                return `<button type="button" class="chip g-chip ${sel.value === o.v ? 'on' : ''} ${pasado ? 'pasado' : ''} ${cerrado ? 'cerrado' : ''}" data-v="${esc(o.v)}" onclick="elegirConceptoGasto(this.dataset.v)"><b>${esc(nombre)}</b>${resto ? `<small>${esc(resto)}</small>` : ''}</button>`;
+            };
+            const principales = ops.filter(o => !o.fijo), fijos = ops.filter(o => o.fijo);
+            const abrir = chipsMasAbierto || fijos.some(o => o.v === sel.value);
+            cont.innerHTML = principales.map(chip).join('') + (fijos.length
+                ? `<button type="button" class="chip g-chip g-mas" onclick="chipsMasAbierto = !chipsMasAbierto; pintarChipsGasto()"><b>${abrir ? 'Menos ▴' : 'Más ▾'}</b><small>${fijos.length} fijos</small></button>` +
+                  (abrir ? `<div class="g-chips-fijos">${fijos.map(chip).join('')}</div>` : '')
+                : '');
             pintarNotasGasto();
+            pintarFueraGasto();
         }
 
-        function elegirConceptoGasto(v) {
+        function elegirConceptoGasto(v, porNota) {
             document.getElementById('g-concepto').value = v;
+            conceptoPorNota = porNota ? v : null;
+            if (!porNota) conceptoGastoAMano = true;   // si lo eliges tú, la nota ya no lo cambia
             actualizarHintGasto();
             pintarChipsGasto();
         }
@@ -3868,8 +4008,9 @@
             let saldo = numO(bb.bote.saldo, 0);
             const desde = numO(bb.bote.ts, 0);
             appData.ciclos.concat(appData.archivo || []).forEach(c => {
-                const gastosGas = (c.gastos || []).filter(g => normDesc(g.concepto) === 'gas');
+                const gastosGas = (c.gastos || []).filter(g => normDesc(g.concepto) === 'gas' && !g.fuera);
                 gastosGas.forEach(g => { if (Number(g.ts) > desde) saldo += Number(g.importe) || 0; });
+                (c.gastos || []).forEach(g => { if (g.fuera && normDesc(g.concepto) === 'gas' && Number(g.ts) > desde) saldo -= Number(g.importe) || 0; });
                 // «Gas» marcado como pagado (sin gastos apuntados) = el dinero que sacas para las bombonas
                 if (!gastosGas.length) c.items.forEach(it => {
                     if (!esIngreso(it) && it.checked && normDesc(it.desc) === 'gas' && Number(it.pagadoTs) > desde) saldo += Math.abs(parseFloat(it.valor) || 0);
@@ -4234,7 +4375,20 @@
 
             // Ciclos que ya terminaron y siguen sin archivar
             const term = ciclosTerminados().length;
-            if (term) add('aviso', '📦', term > 1 ? `Tienes ${term} ciclos terminados sin archivar.` : 'Tienes un ciclo terminado sin archivar.', 'Archivar', 'archivarTerminados()');
+            if (term) {
+                const i0 = ciclosTerminados()[0], mes0 = esc(etiquetaMes(appData.ciclos[i0]));
+                add('aviso', '📊', term > 1 ? `Tienes ${term} ciclos terminados: mira el resumen del de ${mes0}, ciérralo y archívalo.` : `Tu ciclo de ${mes0} terminó: mira el resumen, ciérralo y archívalo.`, 'Ver resumen', `abrirResumenCiclo(${i0})`);
+            }
+            // 0.8: el último día del ciclo, el resumen para cerrar lo que ya no vas a gastar
+            if (cicloHoy) {
+                const clH = claveCicloFinanzas(String(cicloHoy.nombre || ''));
+                const finH = clH !== null ? finCicloClave(clH).getTime() : 0;
+                if (finH > Date.now() && finH - Date.now() < DIA_MS) add('info', '📊', 'Hoy termina tu ciclo: mira cómo te ha ido y cierra lo que ya no vas a gastar.', 'Ver resumen', `abrirResumenCiclo(${idxHoy})`);
+            }
+
+            // 0.8: contratos que se renuevan o acaban la permanencia pronto
+            avisosContratos().forEach(c => lista.push({ tipo: 'aviso', ico: '📄', txt: textoContrato(c),
+                botones: `<button type="button" class="btn-mini" onclick="irA('tab-planes', 'panel-contratos')">Ver</button><button type="button" class="btn-panel" onclick="contratoHecho('${esc(c.id)}')">Hecho</button>` }));
 
             // Tarjeta
             const deuda = numO(appData.tarjeta && appData.tarjeta.deuda, 0);
@@ -4363,7 +4517,7 @@
         // si no hay ninguno, el día en que lo marcaste como pagado
         function eventosPago(ciclo, k) {
             const ev = [];
-            (ciclo.gastos || []).forEach(g => { if (normDesc(g.concepto) === k && Number(g.ts)) ev.push(Number(g.ts)); });
+            (ciclo.gastos || []).forEach(g => { if (normDesc(g.concepto) === k && !g.fuera && Number(g.ts)) ev.push(Number(g.ts)); });
             if (k === 'gasolina') {
                 const cl = claveCicloFinanzas(String(ciclo.nombre || ''));
                 if (cl !== null) gasData.registros.forEach(r => { if ((Number(r.coste) || 0) > 0 && claveDeTs(r.ts) === cl) ev.push(Number(r.ts)); });
@@ -5130,6 +5284,11 @@
                 if (resEl) resEl.innerText = '';
                 return;
             }
+            if (!k.limite) {   // hoy no cae en ninguno de tus ciclos
+                cuerpo.innerHTML = `<div class="panel-nota" style="margin-top:6px">Para aconsejarte hace falta el ciclo de hoy: crea tus próximos ciclos.</div>`;
+                if (resEl) resEl.innerText = '';
+                return;
+            }
             const idxHoy = indiceCicloDeFecha(new Date());
             const mes = i => i >= 0 && appData.ciclos[i] ? etiquetaMes(appData.ciclos[i]) : '';
             const nomDe = x => `${x.icono} ${esc(x.nombre)}`;
@@ -5584,6 +5743,503 @@
         }
 
         // =====================================================
+        // ===== 0.8: GASTOS DE OTRA COSA Y CONCEPTO POR NOTA ==
+        // =====================================================
+        var conceptoGastoAMano = false, conceptoPorNota = null, chipsMasAbierto = false, notaGasolinera = false, fueraGastoAMano = false;
+        const SUPERMERCADOS = ['mercadona', 'continente', 'pingo doce', 'lidl', 'aldi', 'intermarche', 'minipreco', 'auchan', 'spar', 'froiz', 'meu super', 'leclerc', 'coviran', 'amanhecer'];
+        const GASOLINERAS = ['galp', 'repsol', 'prio', 'cepsa', 'shell', 'bp ', 'alves bandeira', 'gasolineira', 'bomba de gasolina'];
+
+        // Conceptos fijos: cuotas de créditos, pagos de la tarjeta y gastos periódicos
+        function conceptoFijo(item) {
+            if (!item) return false;
+            const k = normDesc(item.desc);
+            if (esTarjeta(item)) return true;
+            if ((appData.creditos || []).some(cr => normDesc(cr.concepto) === k)) return true;
+            return (appData.periodicos || []).some(p => normDesc(p.nombre) === k);
+        }
+
+        function sinAcentos(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
+
+        // ¿Es otra cosa pagada con el dinero del concepto elegido? (con la Gasolina, siempre: los repostajes van en ⛽)
+        function pintarFueraGasto() {
+            const fila = document.getElementById('g-fuera-fila'), chk = document.getElementById('g-fuera');
+            if (!fila || !chk) return;
+            const v = document.getElementById('g-concepto').value;
+            const ver = gastoTipo === 'gasto' && (!!gastoEditando || gastoPago === 'cuenta') && !!v;
+            fila.style.display = ver ? 'flex' : 'none';
+            const esGasolina = normDesc(v) === 'gasolina';
+            if (ver && esGasolina) { chk.checked = true; chk.dataset.forzado = '1'; }
+            else if (chk.dataset.forzado === '1') { chk.checked = false; delete chk.dataset.forzado; }
+            chk.disabled = ver && esGasolina;
+            if (!ver) return;
+            document.getElementById('g-fuera-txt').innerText = esGasolina
+                ? 'Es otra cosa pagada con el dinero de la gasolina (los repostajes van en ⛽ Gasolina)'
+                : `Es otra cosa: solo uso el dinero de «${v}»`;
+            document.getElementById('g-nota').placeholder = chk.checked ? '¿Qué es? Ej. pantalón' : 'Ej. Mercadona';
+        }
+
+        function cambiarFueraGasto() {
+            const chk = document.getElementById('g-fuera');
+            if (chk) delete chk.dataset.forzado;
+            fueraGastoAMano = true;   // si la marcas o desmarcas tú, la nota ya no la cambia
+            pintarFueraGasto();
+            actualizarHintGasto();
+        }
+
+        function esFueraGasto() {
+            const chk = document.getElementById('g-fuera'), v = document.getElementById('g-concepto').value;
+            return !!v && (normDesc(v) === 'gasolina' || (!!chk && chk.checked));
+        }
+
+        // Al escribir la nota, la app elige el concepto: lo que apuntaste otras veces con esa nota,
+        // y si no, los supermercados van a Comida (y la farmacia a Salud o Farmacia, si tienes ese concepto)
+        function sugerirConceptoPorNota() {
+            notaGasolinera = false;
+            if (gastoEditando || gastoTipo !== 'gasto') return;
+            const nota = sinAcentos(document.getElementById('g-nota').value);
+            const sel = document.getElementById('g-concepto');
+            if (nota.length < 3 || sel.disabled) { actualizarHintGasto(); return; }
+            notaGasolinera = GASOLINERAS.some(w => (nota + ' ').includes(w));
+            if (conceptoGastoAMano || gastoPago !== 'cuenta') { actualizarHintGasto(); return; }
+            const opciones = Array.from(sel.options).map(o => o.value);
+            const existe = k => opciones.find(v => v && normDesc(v) === k) || null;
+            const cuenta = {};
+            appData.ciclos.concat(appData.archivo || []).forEach(c => (c.gastos || []).forEach(g => {
+                const n = sinAcentos(g.nota);
+                if (!n) return;
+                const exacta = n === nota;
+                if (!(exacta || n.startsWith(nota) || (n.length >= 4 && nota.startsWith(n)))) return;
+                const clave = normDesc(g.concepto) + '|' + (g.fuera ? 1 : 0);
+                cuenta[clave] = (cuenta[clave] || 0) + (exacta ? 3 : 1);
+            }));
+            let elegido = null, fuera = false;
+            const mejor = Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a])[0];
+            if (mejor) {
+                const partes = mejor.split('|');
+                if (partes[0] === '') elegido = '';
+                else if (existe(partes[0])) { elegido = existe(partes[0]); fuera = partes[1] === '1'; }
+            }
+            if (elegido === null && SUPERMERCADOS.some(w => nota.includes(w))) elegido = existe('comida');
+            if (elegido === null && /farmac/.test(nota)) elegido = existe('salud') || existe('farmacia');
+            if (elegido === null) { actualizarHintGasto(); return; }
+            const chk = document.getElementById('g-fuera');
+            if (chk && !fueraGastoAMano && normDesc(elegido) !== 'gasolina') { chk.checked = fuera; delete chk.dataset.forzado; }
+            if (elegido !== sel.value) elegirConceptoGasto(elegido, true);
+            else { pintarFueraGasto(); actualizarHintGasto(); }   // mismo concepto: solo cambia «Es otra cosa»
+        }
+
+        // =====================================================
+        // ===== 0.8: PARA GASTAR AL DÍA =======================
+        // =====================================================
+        // Lo del día a día: comida, gasolina, ocio y lo que apuntas a menudo (sin los fijos)
+        function conceptosDiarios(ciclo) {
+            const usos = usoConceptos();
+            return ciclo.items.map((it, i) => ({ it: it, i: i })).filter(x => {
+                const it = x.it, k = normDesc(it.desc);
+                if (esIngreso(it) || it.checked || !k || conceptoFijo(it)) return false;
+                return ['comida', 'gasolina', 'ocio'].includes(k) || (usos[k] || 0) >= 3;
+            });
+        }
+
+        function pintarDiario() {
+            const el = document.getElementById('diario');
+            if (!el) return;
+            const hoy = indiceCicloDeFecha(new Date());
+            if (hoy < 0 || !ultimaProyeccion) { el.innerHTML = ''; return; }
+            const ciclo = appData.ciclos[hoy];
+            const cl = claveCicloFinanzas(String(ciclo.nombre || ''));
+            const diarios = cl === null ? [] : conceptosDiarios(ciclo);
+            if (!diarios.length) { el.innerHTML = ''; return; }
+            const an = analizarCiclo(ciclo);   // con los topes (peor caso)
+            const ahora = new Date(), fin = finCicloClave(cl);
+            const ini = new Date(Math.floor(cl / 100), cl % 100, DIA_INICIO_CICLO);
+            const hoy0 = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+            const dias = Math.max(1, Math.round((new Date(fin.getFullYear(), fin.getMonth(), fin.getDate()) - hoy0) / DIA_MS) + 1);
+            const va = Math.min(1, Math.max(0, (ahora - ini) / (fin - ini)));
+            let restos = 0;
+            const lineas = diarios.map(x => {
+                const r = an.items[x.i];
+                const resto = Math.max(0, redondear(r.presupuesto - r.gastado));
+                restos += resto;
+                const pct = r.presupuesto > 0 ? r.gastado / r.presupuesto : 0;
+                const rapido = pct >= 0.5 && pct - va > 0.25;
+                const ritmo = r.presupuesto > 0 && r.gastado > 0.005 ? ` · llevas el ${Math.round(pct * 100)} %${rapido ? ' ⚠️' : ''}` : '';
+                return `<div class="dia-linea${rapido ? ' rapido' : ''}"><span>${esc(String(x.it.desc).trim())}</span><span>quedan <b>${fmtEur(resto)}</b>${ritmo}</span></div>`;
+            });
+            restos = redondear(restos);
+            const cierre = saldosPeorCaso()[hoy];
+            const falta = cierre < -0.005 ? redondear(-cierre) : 0;
+            const disp = Math.max(0, redondear(restos - falta));
+            const nombres = esc(listaY(diarios.map(x => String(x.it.desc).trim())));
+            el.innerHTML = `<div class="dia-cab">💶 Para gastar hasta el ${fechaCorta(fin)}</div>` +
+                (disp > 0.005
+                    ? `<div class="dia-cifra"><b>${fmtEur(disp / dias)}</b> al día <span>· ${fmtEur(disp)} en ${dias} día${dias === 1 ? '' : 's'} para ${nombres}</span></div>`
+                    : `<div class="dia-cifra mal"><b>0 €</b> <span>· no te queda nada para ${nombres} sin quedar en rojo${falta > restos ? ` (te faltan ${fmtEur(falta - restos)})` : ''}</span></div>`) +
+                lineas.join('') +
+                `<div class="dia-nota">Va el ${Math.round(va * 100)} % del ciclo.` + (falta > 0 ? ` Ya te descuento ${fmtEur(falta)} que te faltarían este ciclo en el peor caso.` : '') + `</div>`;
+        }
+
+        // =====================================================
+        // ===== 0.8: RESUMEN Y CIERRE DEL CICLO ===============
+        // =====================================================
+        var cicloResumenId = null;
+
+        function abrirResumenCiclo(cIdx) {
+            const c = appData.ciclos[cIdx];
+            if (!c) return;
+            cicloResumenId = String(c.id);
+            pintarResumenCiclo();
+            document.getElementById('modal-cierre').classList.add('abierto');
+        }
+
+        function cerrarResumenCiclo() {
+            document.getElementById('modal-cierre').classList.remove('abierto');
+            cicloResumenId = null;
+        }
+
+        function cicloResumenIdx() { return appData.ciclos.findIndex(c => String(c.id) === String(cicloResumenId)); }
+
+        // Conceptos sin cerrar en los que ya gastaste algo (los fijos no se cierran solos)
+        function abiertosConGasto(ciclo, an) {
+            return ciclo.items.map((it, i) => ({ it: it, r: an.items[i] }))
+                .filter(x => !x.r.ingreso && !x.it.checked && !conceptoFijo(x.it) && x.r.gastado > 0.005);
+        }
+
+        function pintarResumenCiclo() {
+            const cIdx = cicloResumenIdx();
+            if (cIdx < 0) { cerrarResumenCiclo(); return; }
+            const ciclo = appData.ciclos[cIdx], an = analizarCiclo(ciclo);
+            const cl = claveCicloFinanzas(String(ciclo.nombre || ''));
+            const terminado = cl !== null && finCicloClave(cl).getTime() < Date.now();
+            document.getElementById('ci-titulo').innerText = `📊 ${String(ciclo.nombre || '')}`;
+            let cobrado = 0, prevComp = 0, realComp = 0, pagado = 0;
+            const filas = [];
+            ciclo.items.forEach((it, i) => {
+                const r = an.items[i];
+                if (r.ingreso) { if (it.checked) cobrado += r.presupuesto; return; }
+                const pres = r.presupuesto;
+                let real, estado;
+                if (it.checked) { real = r.gastado > 0.005 ? (r.propio <= 0.005 ? Math.max(pres, r.gastado) : r.gastado) : pres; estado = 'cerrado'; }
+                else if (r.gastado > 0.005) { real = r.gastado; estado = 'abierto'; }
+                else if (pres > 0.005) { real = 0; estado = 'sin'; }
+                else return;
+                if (estado === 'cerrado' && pres <= 0.005 && real <= 0.005) return;   // marcado a cero (p. ej. sin ocio este ciclo)
+                if (estado !== 'sin') { prevComp += pres; realComp += real; pagado += real; }
+                const dif = redondear(pres - real);
+                const etq = estado === 'abierto' ? ' <small>abierto</small>' : estado === 'sin' ? ` <small>${terminado ? 'sin apuntar' : 'pendiente'}</small>` : '';
+                filas.push(`<tr><td>${esc(String(it.desc).trim())}${etq}</td><td>${pres.toFixed(2)}</td><td>${estado === 'sin' ? '—' : real.toFixed(2)}</td>` +
+                    `<td class="${estado === 'sin' ? '' : dif < -0.005 ? 'mal' : dif > 0.005 ? 'ok' : ''}">${estado === 'sin' ? '' : (dif > 0.005 ? '+' : '') + dif.toFixed(2)}</td></tr>`);
+            });
+            const otros = redondear(an.otros || 0);
+            pagado = redondear(pagado + otros);
+            const neto = redondear(cobrado - pagado);
+            const difTot = redondear(prevComp - realComp);
+            const ab = abiertosConGasto(ciclo, an);
+            const sobraAb = redondear(ab.reduce((a, x) => a + Math.max(0, x.r.presupuesto - x.r.gastado), 0));
+            const sin = sinMarcarDe(ciclo).map(i => String(i.desc).trim());
+            let html = `<div class="ci-resumen">Cobrado <b>${fmtEur(cobrado)}</b> · gastado <b>${fmtEur(pagado)}</b>${otros > 0.005 ? ` (${fmtEur(otros)} sin concepto)` : ''} · ${neto >= 0 ? 'te queda' : 'te falta'} <b>${fmtEur(Math.abs(neto))}</b>.</div>`;
+            if (prevComp > 0.005) html += `<div class="ci-resumen">En lo que ya has gastado o cerrado, ${difTot >= 0 ? `vas <b>${fmtEur(difTot)}</b> por debajo de lo previsto` : `te has pasado <b>${fmtEur(-difTot)}</b>`}.</div>`;
+            html += `<table class="ci-tabla"><tr><th>Concepto</th><th>Previsto</th><th>Real</th><th>Dif.</th></tr>${filas.join('')}</table>`;
+            if (ab.length) html += `<div class="linea">Abiertos con gasto: ${esc(listaY(ab.map(x => String(x.it.desc).trim())))}. Si ya no vas a gastar más en ellos, ciérralos: ${sobraAb > 0.005 ? `lo que sobra (<b>${fmtEur(sobraAb)}</b>) pasa a tu saldo y ` : ''}la app aprende lo que gastas de verdad.</div>`;
+            if (sin.length && terminado) html += `<div class="aviso-linea" style="display:block">Sin marcar ni apuntar: ${esc(listaY(sin))}. Si ya los pagaste, márcalos en el ciclo antes de archivarlo.</div>`;
+            const medias = (appData.variables || []).map(k => ({ k: k, st: statsConcepto(k) })).filter(x => x.st.n && ciclo.items.some(it => normDesc(it.desc) === x.k));
+            if (medias.length) html += `<div class="panel-nota">Lo que sueles gastar: ${medias.map(x => `${esc(nombreConcepto(x.k))} ${fmtEur(x.st.media)}`).join(' · ')}.</div>`;
+            document.getElementById('ci-cuerpo').innerHTML = html;
+            const verC = `<button class="btn-g-cancelar" onclick="const i = cicloResumenIdx(); cerrarResumenCiclo(); irA('tab-ciclos'); verCiclo(i)">Ver el ciclo</button>`;
+            document.getElementById('ci-botones').innerHTML = verC + (terminado
+                ? `<button class="btn-g-guardar" id="ci-accion" onclick="cerrarAbiertosCiclo(true)">${ab.length ? 'Cerrar y archivar' : '📦 Archivar'}</button>`
+                : `<button class="btn-g-guardar" id="ci-accion" onclick="cerrarAbiertosCiclo(false)" ${ab.length ? '' : 'disabled'}>${ab.length ? (ab.length === 1 ? 'Cerrar el abierto' : `Cerrar los ${ab.length} abiertos`) : 'Nada abierto'}</button>`);
+        }
+
+        function cerrarAbiertosCiclo(archivar) {
+            const cIdx = cicloResumenIdx();
+            if (cIdx < 0) return;
+            const ciclo = appData.ciclos[cIdx];
+            const ab = abiertosConGasto(ciclo, analizarCiclo(ciclo));
+            if (archivar) {
+                const sin = sinMarcarDe(ciclo).map(i => String(i.desc).trim());
+                if (sin.length && !confirm(`Hay ${sin.length} concepto(s) sin marcar ni apuntar (${sin.slice(0, 5).join(', ')}${sin.length > 5 ? '…' : ''}). Si archivas el ciclo así, cuentan como no pagados. ¿Archivar igualmente?`)) return;
+            }
+            ab.forEach(x => { x.it.checked = true; x.it.cerradoTs = Date.now(); });
+            if (archivar) {
+                moverAlArchivo(cIdx);
+                cerrarResumenCiclo();
+                guardar();
+                renderizar();
+                mostrarAviso(`Ciclo cerrado y archivado: ${ciclo.nombre}`);
+                return;
+            }
+            guardar();
+            renderizar();
+            pintarResumenCiclo();
+            mostrarAviso(ab.length ? `Cerrado: ${listaY(ab.map(x => String(x.it.desc).trim()))}` : 'No había nada abierto');
+        }
+
+        // =====================================================
+        // ===== 0.8: HUCHAS PARA LOS GASTOS GRANDES ===========
+        // =====================================================
+        function huchasLista() {
+            return (appData.periodicos || []).filter(p => numO(p.cadaMeses, 0) >= 6 && numO(p.importe, 0) > 0 && numO(p.proxima, 0) > 0);
+        }
+
+        // En una fecha: cuándo toca la próxima vez y cuánto deberías llevar apartado (lo proporcional al tiempo pasado)
+        function huchaEn(p, t) {
+            const cada = Math.max(1, Math.round(numO(p.cadaMeses, 12)));
+            let prox = numO(p.proxima, 0), g = 0;
+            while (prox < t && g++ < 300) prox = sumarMeses(prox, cada);
+            const prev = sumarMeses(prox, -cada);
+            const f = Math.min(1, Math.max(0, (t - prev) / Math.max(1, prox - prev)));
+            const imp = numO(p.importe, 0);
+            return { prox: prox, f: f, apartado: redondear(imp * f), porCiclo: redondear(imp / cada) };
+        }
+
+        function comprometidoEn(t) { return redondear(huchasLista().reduce((a, p) => a + huchaEn(p, t).apartado, 0)); }
+
+        function pintarHuchas() {
+            const cuerpo = document.getElementById('huchas-cuerpo');
+            if (!cuerpo || !ultimaProyeccion) return;
+            const res = document.getElementById('huchas-resumen');
+            const lista = huchasLista();
+            if (!lista.length) {
+                cuerpo.innerHTML = '<div class="panel-nota" style="margin-top:0">Aún no tienes gastos periódicos de 6 meses o más. Añádelos en «📅 Periódicos» (seguro, IUC, mantenimiento…).</div>';
+                if (res) res.innerText = '';
+                return;
+            }
+            const ahora = Date.now(), hoy = indiceCicloDeFecha(new Date()), n = appData.ciclos.length;
+            const porCiclo = redondear(lista.reduce((a, p) => a + huchaEn(p, ahora).porCiclo, 0));
+            const comp = comprometidoEn(ahora);
+            const W = saldosPeorCaso();
+            const cierreHoy = hoy >= 0 ? W[hoy] : null;
+            // ¿Cuándo te pones al día? El primer ciclo cuyo cierre (peor caso) cubre lo que deberías llevar apartado entonces
+            let alDia = -1;
+            for (let j = Math.max(0, hoy); j < n && alDia < 0; j++) {
+                const clj = claveCicloFinanzas(String(appData.ciclos[j].nombre || ''));
+                if (clj !== null && W[j] >= comprometidoEn(finCicloClave(clj).getTime()) - 0.005) alDia = j;
+            }
+            let estado = '';
+            if (cierreHoy !== null) {
+                if (cierreHoy >= comp - 0.005) estado = `<div class="ok-linea">✓ Al día: de los ${fmtEur(cierreHoy)} con los que cierras este ciclo (peor caso), ${fmtEur(comp)} son para estos gastos y ${fmtEur(cierreHoy - comp)} son libres de verdad.</div>`;
+                else estado = `<div class="aviso-linea" style="display:block">Ahora deberías llevar <b>${fmtEur(comp)}</b> apartados y cierras este ciclo con ${fmtEur(cierreHoy)} en el peor caso: te faltan <b>${fmtEur(comp - Math.max(0, cierreHoy))}</b>.` +
+                    (alDia >= 0 ? ` Con lo que te sobre cada ciclo te pondrás al día hacia <b>${esc(etiquetaMes(appData.ciclos[alDia]))}</b>.` : ` Dentro de tus ciclos (hasta ${esc(etiquetaMes(appData.ciclos[n - 1]))}) aún no te pondrías al día: estos gastos se irán pagando con lo que te sobre cuando lleguen.`) + `</div>`;
+            }
+            const filas = lista.map(p => ({ p: p, h: huchaEn(p, ahora) })).sort((a, b) => a.h.prox - b.h.prox).map(x =>
+                `<div class="hucha"><div class="hucha-fila"><b>${esc(x.p.nombre)}</b><span>${fmtEur(numO(x.p.importe, 0))} · ${fechaLarga(x.h.prox)}</span></div>` +
+                `<div class="presu-bar"><div style="width:${Math.round(x.h.f * 100)}%"></div></div>` +
+                `<div class="hucha-sub">Deberías llevar ${fmtEur(x.h.apartado)} · aparta ${fmtEur(x.h.porCiclo)} por ciclo</div></div>`);
+            cuerpo.innerHTML = `<div class="linea" style="margin-top:0">Para tenerlas siempre a punto, aparta unos <b>${fmtEur(porCiclo)}</b> por ciclo.</div>` + estado + filas.join('');
+            if (res) res.innerText = `${fmtEur(porCiclo)}/ciclo`;
+        }
+
+        // =====================================================
+        // ===== 0.8: METAS CON FECHA ==========================
+        // =====================================================
+        function calcularMetas() {
+            const metas = appData.metas || [];
+            const n = appData.ciclos.length, hoy = Math.max(0, indiceCicloDeFecha(new Date()));
+            if (!n) return [];
+            const W = saldosPeorCaso();
+            const disp = W.slice();
+            const k0 = Math.max(hoy, n - 7);
+            const ritmo = n - 1 > k0 ? (W[n - 1] - W[k0]) / (n - 1 - k0) : 0;   // lo que sube el saldo al final de tus ciclos
+            const clUlt = claveCicloFinanzas(String(appData.ciclos[n - 1].nombre || ''));
+            const finUlt = clUlt !== null ? finCicloClave(clUlt) : new Date();
+            let desde = hoy, fuera = false, reservado = 0;
+            return metas.map(m => {
+                const A = Math.max(0, numO(m.importe, 0));
+                const antes = disp.slice();
+                const r = { m: m, A: A, ci: -1, estim: null, iF: -1, aTiempo: null, faltan: 0 };
+                if (!fuera) {
+                    for (let i = desde; i < n && r.ci < 0; i++) {
+                        let mn = Infinity;
+                        for (let k = i; k < n; k++) mn = Math.min(mn, disp[k]);
+                        if (mn - A >= -0.005) r.ci = i;
+                    }
+                }
+                if (r.ci >= 0) { for (let k = r.ci; k < n; k++) disp[k] -= A; desde = r.ci; }
+                else {
+                    fuera = true;
+                    reservado += A;
+                    if (ritmo > 0.005) {
+                        const meses = Math.max(1, Math.ceil((reservado - disp[n - 1]) / ritmo));
+                        r.estim = new Date(finUlt.getFullYear(), finUlt.getMonth() + meses, 1, 12).getTime();
+                    }
+                }
+                if (m.mes) {
+                    const p = String(m.mes).split('-').map(Number);
+                    const clF = p[0] * 100 + (p[1] - 1);
+                    r.iF = appData.ciclos.findIndex(c => claveCicloFinanzas(String(c.nombre || '')) === clF);
+                    if (r.iF >= 0) {
+                        r.aTiempo = r.ci >= 0 && r.ci <= r.iF;
+                        if (!r.aTiempo) { let mn = Infinity; for (let k = r.iF; k < n; k++) mn = Math.min(mn, antes[k]); r.faltan = redondear(Math.max(0, A - Math.max(0, mn))); }
+                    } else if (clUlt !== null && clF > clUlt) r.aTiempo = r.ci >= 0 || (r.estim !== null && claveDeTs(r.estim) <= clF);
+                }
+                return r;
+            });
+        }
+
+        function pintarMetas() {
+            const cont = document.getElementById('metas-lista');
+            if (!cont || !ultimaProyeccion) return;
+            const metas = appData.metas || [];
+            const res = calcularMetas();
+            cont.innerHTML = metas.length ? res.map((r, i) => {
+                const m = r.m;
+                let cuando;
+                if (r.ci >= 0) cuando = `✓ La tienes en <b>${esc(etiquetaMes(appData.ciclos[r.ci]))}</b>`;
+                else if (r.estim) cuando = `⏳ Hacia <b>${mesAnio(r.estim)}</b> (estimado, más allá de tus ciclos)`;
+                else cuando = '⏳ Más allá de tus ciclos';
+                let objetivo = '';
+                if (m.mes) {
+                    const p = String(m.mes).split('-').map(Number), etq = `${MESES_CORTOS[p[1] - 1]} ${p[0]}`;
+                    if (r.aTiempo === true) objetivo = ` · para ${etq}: a tiempo`;
+                    else if (r.aTiempo === false) objetivo = ` · para ${etq}: ${r.faltan > 0.005 ? `te faltarían <b>${fmtEur(r.faltan)}</b>` : 'no llegas'}`;
+                }
+                return `<div class="meta"><div class="meta-fila"><b>${i + 1}. ${esc(m.nombre)}</b><span>${fmtEur(r.A)}</span></div>` +
+                    `<div class="meta-sub">${cuando}${objetivo}</div>` +
+                    `<div class="meta-acc">${i > 0 ? `<button type="button" class="btn-mini" onclick="subirMeta('${esc(m.id)}')">↑ Subir</button>` : ''}<button type="button" class="btn-mini" onclick="borrarMeta('${esc(m.id)}')">✕ Quitar</button></div></div>`;
+            }).join('') : '<div class="panel-nota" style="margin-top:0">Aún no tienes metas. Pon lo que quieres conseguir (un colchón, la cocina, un viaje…) y la app te dice cuándo llegas.</div>';
+            const sug = document.getElementById('metas-sugerencias');
+            if (sug) {
+                const tiene = k => metas.some(m => normDesc(m.nombre).includes(k));
+                const chips = [];
+                if (!tiene('colch')) chips.push(`<button type="button" class="chip" onclick="sugerirMeta('Colchón', 1000)">＋ Colchón de 1.000 €</button>`);
+                if (!tiene('cocina')) chips.push(`<button type="button" class="chip" onclick="sugerirMeta('Cocina')">＋ Cocina</button>`);
+                if (!tiene('viaje') && !tiene('madrid')) chips.push(`<button type="button" class="chip" onclick="sugerirMeta('Viaje a Madrid')">＋ Viaje a Madrid</button>`);
+                sug.innerHTML = chips.length ? `<div class="metas-sug">${chips.join('')}</div>` : '';
+            }
+            const rs = document.getElementById('metas-resumen');
+            if (rs) rs.innerText = metas.length ? `${metas.length} meta${metas.length > 1 ? 's' : ''}` : '';
+        }
+
+        function anadirMeta() {
+            const inN = document.getElementById('meta-nombre'), inI = document.getElementById('meta-importe'), inM = document.getElementById('meta-mes');
+            const nombre = inN.value.trim(), importe = redondear(parseFloat(String(inI.value).replace(',', '.')));
+            if (!nombre) { alert('Pon qué es la meta.'); inN.focus(); return; }
+            if (!(importe > 0)) { alert('Pon cuánto necesitas.'); inI.focus(); return; }
+            const m = { id: nuevoId(), nombre: nombre, importe: importe };
+            if (/^\d{4}-\d{2}$/.test(inM.value)) m.mes = inM.value;
+            appData.metas.push(m);
+            inN.value = ''; inI.value = ''; inM.value = '';
+            guardar();
+            renderizar();
+            const r = calcularMetas().find(x => x.m === m);
+            mostrarAviso(r && r.ci >= 0 ? `«${nombre}»: la tienes en ${etiquetaMes(appData.ciclos[r.ci])}` : `«${nombre}» añadida: más allá de tus ciclos`);
+        }
+
+        function sugerirMeta(nombre, importe) {
+            if (importe) {
+                appData.metas.push({ id: nuevoId(), nombre: nombre, importe: importe });
+                guardar();
+                renderizar();
+                return;
+            }
+            document.getElementById('meta-nombre').value = nombre;
+            document.getElementById('meta-importe').focus();
+        }
+
+        function borrarMeta(id) {
+            const m = (appData.metas || []).find(x => x.id === id);
+            if (!m || !confirm(`¿Quitar la meta «${m.nombre}»?`)) return;
+            appData.metas = appData.metas.filter(x => x.id !== id);
+            guardar();
+            renderizar();
+        }
+
+        function subirMeta(id) {
+            const i = (appData.metas || []).findIndex(x => x.id === id);
+            if (i <= 0) return;
+            const m = appData.metas.splice(i, 1)[0];
+            appData.metas.splice(i - 1, 0, m);
+            guardar();
+            renderizar();
+        }
+
+        // =====================================================
+        // ===== 0.8: AVISOS DE CONTRATOS ======================
+        // =====================================================
+        // La próxima vez (los que se renuevan cada año pasan solos al año siguiente una semana después)
+        function fechaContrato(c) {
+            let f = numO(c.fecha, 0), g = 0;
+            if (c.tipo === 'renueva') while (diasHasta(new Date(f)) < -7 && g++ < 60) f = sumarMeses(f, 12);
+            return f;
+        }
+
+        function avisosContratos() {
+            return (appData.contratos || []).filter(c => {
+                const f = fechaContrato(c), d = diasHasta(new Date(f));
+                if (c.tipo === 'renueva' ? numO(c.hechoHasta, 0) === f : c.hecho) return false;
+                return d <= numO(c.aviso, 30) && d >= -7;
+            });
+        }
+
+        function textoContrato(c) {
+            const f = fechaContrato(c), d = diasHasta(new Date(f)), fc = fechaCorta(f);
+            const cuando = d > 1 ? `el ${fc} (dentro de ${d} días)` : d === 1 ? `mañana, ${fc}` : d === 0 ? 'hoy' : `el ${fc}`;
+            if (c.tipo === 'permanencia') return d >= 0 ? `${esc(c.nombre)}: ${cuando} acaba la permanencia. Mira si te compensa cambiar de compañía.` : `${esc(c.nombre)}: la permanencia acabó ${cuando}. Ya puedes cambiar sin penalización.`;
+            return d >= 0 ? `${esc(c.nombre)}: se renueva ${cuando}. Compara ofertas antes.` : `${esc(c.nombre)}: se renovó ${cuando}.`;
+        }
+
+        function contratoHecho(id) {
+            const c = (appData.contratos || []).find(x => x.id === id);
+            if (!c) return;
+            if (c.tipo === 'renueva') c.hechoHasta = fechaContrato(c); else c.hecho = true;
+            guardar();
+            renderizar();
+            mostrarAviso(c.tipo === 'renueva' ? `${c.nombre}: te aviso otra vez antes de ${mesAnio(sumarMeses(fechaContrato(c), 12))}` : `${c.nombre}: hecho`);
+        }
+
+        function pintarContratos() {
+            const cont = document.getElementById('contratos-lista');
+            if (!cont) return;
+            const lista = (appData.contratos || []).slice().sort((a, b) => fechaContrato(a) - fechaContrato(b));
+            cont.innerHTML = lista.length ? lista.map(c => {
+                const f = fechaContrato(c);
+                const que = c.tipo === 'permanencia' ? (c.hecho ? 'permanencia ya acabada' : `acaba la permanencia el ${fechaLarga(f)}`) : `se renueva el ${fechaLarga(f)}`;
+                return `<div class="ct-item"><div class="ct-fila"><b>📄 ${esc(c.nombre)}</b><button type="button" class="btn-mini" onclick="borrarContrato('${esc(c.id)}')">✕</button></div>` +
+                    `<div class="ct-sub">${que} · aviso ${numO(c.aviso, 30)} días antes</div></div>`;
+            }).join('') : '<div class="panel-nota" style="margin-top:0">Aún no tienes contratos. Añade la renovación del seguro o cuándo acaba la permanencia de internet y te avisaré a tiempo.</div>';
+            const sug = document.getElementById('contratos-sugerencias');
+            if (sug) {
+                const tiene = nombre => (appData.contratos || []).some(c => normDesc(c.nombre) === normDesc(nombre));
+                const cand = (appData.periodicos || []).filter(p => /seguro/i.test(p.nombre) && numO(p.proxima, 0) > 0 && !tiene(p.nombre));
+                sug.innerHTML = cand.length ? `<div class="ct-sug">${cand.map(p => `<button type="button" class="chip" onclick="anadirContratoDePeriodico('${esc(p.id)}')">＋ Avisarme antes de renovar: ${esc(p.nombre)} (${fechaCorta(numO(p.proxima, 0))})</button>`).join('')}</div>` : '';
+            }
+            const rs = document.getElementById('contratos-resumen');
+            if (rs) { const av = avisosContratos().length; rs.innerText = lista.length ? `${lista.length}${av ? ` · ${av} aviso${av > 1 ? 's' : ''}` : ''}` : ''; }
+        }
+
+        function anadirContrato() {
+            const inN = document.getElementById('ct-nombre'), inF = document.getElementById('ct-fecha');
+            const nombre = inN.value.trim();
+            if (!nombre) { alert('Pon qué contrato es.'); inN.focus(); return; }
+            if (!inF.value) { alert('Pon la fecha.'); inF.focus(); return; }
+            const p = inF.value.split('-').map(Number);
+            appData.contratos.push({ id: nuevoId(), nombre: nombre, tipo: document.getElementById('ct-tipo').value === 'permanencia' ? 'permanencia' : 'renueva',
+                fecha: new Date(p[0], p[1] - 1, p[2], 12).getTime(), aviso: Math.max(1, parseInt(document.getElementById('ct-aviso').value, 10) || 30) });
+            inN.value = ''; inF.value = '';
+            guardar();
+            renderizar();
+            mostrarAviso(`«${nombre}» añadido: te aviso antes`);
+        }
+
+        function anadirContratoDePeriodico(id) {
+            const p = (appData.periodicos || []).find(x => x.id === id);
+            if (!p) return;
+            appData.contratos.push({ id: nuevoId(), nombre: p.nombre, tipo: 'renueva', fecha: numO(p.proxima, 0), aviso: 30 });
+            guardar();
+            renderizar();
+            mostrarAviso(`${p.nombre}: te aviso 30 días antes de renovar`);
+        }
+
+        function borrarContrato(id) {
+            const c = (appData.contratos || []).find(x => x.id === id);
+            if (!c || !confirm(`¿Quitar «${c.nombre}»?`)) return;
+            appData.contratos = appData.contratos.filter(x => x.id !== id);
+            guardar();
+            renderizar();
+        }
+
+        // =====================================================
         // ===== GASTOS AL MOMENTO =============================
         // =====================================================
         const ULTIMO_CONCEPTO_KEY = 'finanzas_ultimo_concepto';
@@ -5625,8 +6281,8 @@
             const filas = gastos.map(g => `
                 <div class="gasto-row" onclick="abrirGasto('${g.id}')">
                     <div class="g-izq">
-                        <div class="g-desc">${esc(g.concepto ? String(g.concepto).trim() : 'Otro gasto')}</div>
-                        <div class="g-sub">${fmtCorta(g.ts)}${g.nota ? ' · ' + esc(g.nota) : ''}</div>
+                        <div class="g-desc">${g.fuera && g.concepto ? esc(g.nota || 'Otra cosa') : esc(g.concepto ? String(g.concepto).trim() : 'Otro gasto')}</div>
+                        <div class="g-sub">${fmtCorta(g.ts)}${g.fuera && g.concepto ? ' · ↪ con el dinero de ' + esc(String(g.concepto).trim()) : (g.nota ? ' · ' + esc(g.nota) : '')}</div>
                     </div>
                     <div class="g-monto">−${(Number(g.importe) || 0).toFixed(2)} €</div>
                 </div>`).join('');
@@ -5651,6 +6307,14 @@
             let preferido = null;
             if (enc) preferido = enc.gasto.concepto || '';
             else { try { preferido = localStorage.getItem(ULTIMO_CONCEPTO_KEY); } catch (e) {} }
+            const chkFuera = document.getElementById('g-fuera');
+            chkFuera.checked = !!(enc && enc.gasto.fuera);
+            delete chkFuera.dataset.forzado;
+            conceptoGastoAMano = !!enc;
+            fueraGastoAMano = !!enc;
+            conceptoPorNota = null;
+            chipsMasAbierto = false;
+            notaGasolinera = false;
             rellenarConceptosGasto(preferido);
             prepararVentanaGasto(!!enc);
             document.getElementById('modal-gasto').classList.add('abierto');
@@ -5699,14 +6363,15 @@
             ciclo.items.forEach((item, iIdx) => {
                 const r = an.items[iIdx];
                 const k = normDesc(item.desc);
-                if (r.ingreso || !k || k === 'gasolina' || vistos.has(k)) return;
+                if (r.ingreso || !k || vistos.has(k)) return;
                 vistos.add(k);
-                // Los conceptos ya pagados (marcados) no se ofrecen, salvo el del gasto que se edita
-                if (item.checked && !(gastoEditando && k === kPref)) { ocultos++; return; }
-                const resto = r.presupuesto - r.gastado;
+                // 0.8: salen todos, también la gasolina y los ya marcados como pagados (con lo que les sobró)
+                // Marcado: lo que le sobró de verdad (si lo pagaste entero, nada)
+                const resto = item.checked && !(r.propio > 0.005) ? 0 : redondear(r.presupuesto - r.gastado);
                 restosGasto[k] = resto;
-                const txt = resto >= 0 ? `quedan ${resto.toFixed(2)} €` : `pasado ${(-resto).toFixed(2)} €`;
-                opciones += `<option value="${esc(item.desc.trim())}">${esc(item.desc.trim())} · ${txt}</option>`;
+                const txt = item.checked ? (resto > 0.005 ? `cerrado · sobran ${resto.toFixed(2)} €` : 'cerrado')
+                    : (resto >= 0 ? `quedan ${resto.toFixed(2)} €` : `pasado ${(-resto).toFixed(2)} €`);
+                opciones += `<option value="${esc(item.desc.trim())}" data-fijo="${conceptoFijo(item) ? 1 : 0}">${esc(item.desc.trim())} · ${txt}</option>`;
             });
             opciones += '<option value="">Otro gasto (sin presupuesto)</option>';
             sel.innerHTML = opciones;
@@ -5749,13 +6414,16 @@
                 return;
             }
             const despues = (restosGasto[normDesc(sel.value)] || 0) - imp;
+            const pre = (notaGasolinera && normDesc(sel.value) !== 'gasolina' ? '⛽ Si es un repostaje, apúntalo en ⛽ Gasolina. ' : '') +
+                (conceptoPorNota ? `Por la nota: ${sel.value}. ` : '') +
+                (esFueraGasto() ? `Sale del dinero de ${sel.value}, pero no cuenta como «${sel.value}» en tus medias. ` : '');
             if (imp > 0 && despues < 0) {
                 hint.className = 'g-hint mal';
-                hint.innerText = `Con este gasto te pasas del presupuesto por ${(-despues).toFixed(2)} €.`;
+                hint.innerText = pre + `Con este gasto te pasas del presupuesto por ${(-despues).toFixed(2)} €.`;
             } else if (imp > 0) {
-                hint.innerText = `Después de este gasto quedarán ${despues.toFixed(2)} €.`;
+                hint.innerText = pre + `Después de este gasto quedarán ${despues.toFixed(2)} €.`;
             } else {
-                hint.innerText = notaOcultos;
+                hint.innerText = (pre + notaOcultos).trim();
             }
         }
 
@@ -5817,13 +6485,15 @@
             if (previo) appData.ciclos[previo.cIdx].gastos.splice(previo.gIdx, 1);
             const destino = appData.ciclos[cIdx];
             if (!Array.isArray(destino.gastos)) destino.gastos = [];
-            destino.gastos.push({ id: previo ? previo.gasto.id : nuevoId(), ts: ts, importe: importe, concepto: concepto, nota: nota });
+            const nuevoG = { id: previo ? previo.gasto.id : nuevoId(), ts: ts, importe: importe, concepto: concepto, nota: nota };
+            if (concepto && esFueraGasto()) nuevoG.fuera = true;   // 0.8: otra cosa pagada con el dinero de ese concepto
+            destino.gastos.push(nuevoG);
 
             if (!previo) { try { localStorage.setItem(ULTIMO_CONCEPTO_KEY, concepto); } catch (e) {} }
             cerrarGasto();
             guardar();
             renderizar();
-            mostrarAviso(`${previo ? 'Gasto actualizado' : 'Gasto apuntado'}: ${importe.toFixed(2)} € · ${concepto || 'Otro gasto'}`);
+            mostrarAviso(`${previo ? 'Gasto actualizado' : 'Gasto apuntado'}: ${importe.toFixed(2)} € · ` + (nuevoG.fuera ? `${nota || 'Otra cosa'} (con el dinero de ${concepto})` : (concepto || 'Otro gasto')));
         }
 
         function eliminarGastoEditado() {
