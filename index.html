@@ -1149,7 +1149,7 @@
             </div>
         </div>
         <label class="mais-opcao"><input type="checkbox" id="mais-deslizar" onchange="deslizarAlternar(this.checked)"> ↔️ Deslizar para mudar de pestanha</label>
-        <p class="app-version" id="app-version">Beta 0.1.33</p>
+        <p class="app-version" id="app-version">Beta 0.1.34</p>
     </div>
 
     <!-- SUBMÓDULOS -->
@@ -5135,7 +5135,7 @@ var UJ = (function () {
         }
         function pedMais(tipo, id, delta) {
             const d = pedLer();
-            const atual = tipo === 'f' ? pedFicaram(d, id) : (d[tipo][id] || 0);
+            const atual = tipo === 'f' ? (d.f[id] !== undefined ? d.f[id] : 0) : (d[tipo][id] || 0);   // Beta 0.1.34: «Voltaram» parte de 0
             if (tipo === 'f') pedSetF(id, atual + delta); else pedSet(tipo, id, atual + delta);
             renderPedido();
         }
@@ -5165,7 +5165,8 @@ var UJ = (function () {
             const prox = todos[todos.indexOf(el) + 1];
             if (prox) prox.focus(); else el.blur();
         }
-        function pedFicaram(d, id) { return d.f[id] !== undefined ? d.f[id] : (d.p[id] || 0); }
+        var _pedFimUI = false;   // Beta 0.1.34: a desenhar o ecrã do Fim da rota: o que não escreveste em «Voltaram» conta como vendido
+        function pedFicaram(d, id) { return d.f[id] !== undefined ? d.f[id] : (_pedFimUI ? 0 : (d.p[id] || 0)); }
         function pedSetF(id, v) {
             const d = pedDia();
             d.f[id] = Math.min(pedN(v), d.p[id] || 0);
@@ -5176,7 +5177,7 @@ var UJ = (function () {
         function pedCorrigir(id) { pedEditPasei[id] = !pedEditPasei[id]; renderPedido(); }
         function pedFimGuardar() {
             const d = pedDia();
-            Object.keys(d.p).forEach(id => { if (d.p[id] > 0) d.f[id] = pedFicaram(d, id); });
+            Object.keys(d.p).forEach(id => { if (d.p[id] > 0) d.f[id] = (d.f[id] !== undefined ? d.f[id] : 0); });   // Beta 0.1.34: sem valor = vendido
             d.fim = true;
             guardarEstado();
             pedPant = 'hub';   // Beta 0.1.33: depois do fim da rota (passo 3) vêm as sobras (passo 4)
@@ -5188,7 +5189,7 @@ var UJ = (function () {
             return `<div class="ped-head"><div class="ped-hl">${volta ? `<button type="button" class="ped-back" aria-label="Voltar ao meu dia" onclick="pedIr('hub')">←</button>` : ''}<div><small>${esc(eyebrow)}</small><h2>${esc(titulo)}</h2><div class="ped-dt">${esc(pedFechaTxt())}</div></div></div>${chip ? `<span class="ped-chip">${esc(chip)}</span>` : ''}</div>`;
         }
         function pedAbas(ativa) {
-            const ab = [['manha', '1 · Manhã', 'Recebi'], ['rota', '2 · Rota', 'Passei'], ['fim', '3 · Fim', 'Ficaram']];   // Beta 0.1.33: o fim da rota volta a ser o passo 3
+            const ab = [['manha', '1 · Manhã', 'Recebi'], ['rota', '2 · Rota', 'Passei'], ['fim', '3 · Fim', 'Voltaram']];   // Beta 0.1.33: o fim da rota volta a ser o passo 3
             return '<div class="ped-tabs">' + ab.map(a => `<button type="button" class="${a[0] === ativa ? 'on' : ''}" onclick="pedIr('${a[0]}')"><b>${a[1]}</b><span>${a[2]}</span></button>`).join('') + '</div>';
         }
         function pedCtl(tipo, id, valor, nome, off) {
@@ -5517,7 +5518,8 @@ var UJ = (function () {
             try { h = pedMixConfInner(D); if (pedLer().fim) pedMixConfCarregar(D); } catch (e) {}
             return '<div id="ped-mix-conf">' + h + '</div>';
         }
-        function pedFim() {
+        function pedFim() { _pedFimUI = true; try { return pedFimBase(); } finally { _pedFimUI = false; } }   // Beta 0.1.34
+        function pedFimBase() {
 
             const d = pedLer(), recebidos = PED_PAES.filter(x => (d.r[x.id] || 0) > 0);
             const ids = recebidos.filter(x => (d.p[x.id] || 0) > 0 || pedEditPasei[x.id]);   // v23.10: só os que passaste ao branco
@@ -5527,7 +5529,8 @@ var UJ = (function () {
                 const f = pedFicaram(d, x.id), vendi = Math.max(0, p - f);
                 if (vendi > 0) vendidos.push(vendi + ' ' + x.nome);
                 const sem = p === 0;
-                const pill = sem ? '<span class="ped-pill">Não passaste ao branco</span>' : (vendi > 0 ? `<span class="ped-pill ok">Vendeste ${vendi} a mais</span>` : '<span class="ped-pill">Voltaram todos ao cinzento</span>');
+                const semValor = !sem && d.f[x.id] === undefined;   // Beta 0.1.34: ainda sem valor = vendido
+                const pill = sem ? '<span class="ped-pill">Não passaste ao branco</span>' : (vendi > 0 ? `<span class="ped-pill ok">${semValor ? 'Sem valor: vendeste os ' + vendi : 'Vendeste ' + vendi + ' a mais'}</span>` : '<span class="ped-pill">Voltaram todos ao cinzento</span>');
                 const corr = `<button type="button" class="ped-link" onclick="pedCorrigir('${x.id}')">${pedEditPasei[x.id] ? 'fechar' : 'corrigir'}</button>`;
                 const edit = pedEditPasei[x.id] ? `<div class="ped-l2" style="justify-content:space-between;"><span>Passei (corrigir)</span>${pedCtl('p', x.id, p, x.nome + ' passei')}</div>` : '';
                 return `<div class="ped-row ${sem ? 'mudo' : ''}"><div class="ped-l1">${pedCtl('f', x.id, sem ? 0 : f, x.nome, sem)}<div class="ped-nome">${esc(x.nome)}</div><div class="ped-chipn ${vendi > 0 ? 'ok' : ''}" title="Vendi a mais">${vendi}</div></div><div class="ped-l2"><span>Recebi ${r} · Passei ${p}</span>${corr}${pill}</div>${edit}</div>`;
@@ -5537,8 +5540,8 @@ var UJ = (function () {
             const tot = vendidos.length ? `<div class="ped-total"><b>Vendeste a mais:</b> ${esc(vendidos.join(' · '))}<br><small>Para somares à Guia de Transporte.</small></div>` : '';
             return pedCab('Pão a mais · cesto cinzento', 'No fim da rota', vendidos.length ? 'A mais: ' + pedTiposTxt(pedVendidoMapa(d), 2) : '', true)
                 + pedAbas('fim')
-                + '<p class="ped-ayuda">Conta quantos dos que passaste aos cestos brancos ainda ficaram e volta a pô-los no cesto cinzento. O que falta é o que vendeste a mais. Só aparecem os pães que passaste; se faltar algum, regista-o antes no passo 2.</p>'
-                + (ids.length ? '<div class="ped-cols fim"><span>Ficaram</span><span>Vendi a mais</span></div>' : '') + filas + tot + pedDestCard(d)
+                + '<p class="ped-ayuda">Escreve só quantos dos que passaste aos cestos brancos voltaram ao cesto cinzento. O que não escreveres conta como vendido (é o que vendeste a mais). Só aparecem os pães que passaste; se faltar algum, regista-o antes no passo 2.</p>'
+                + (ids.length ? '<div class="ped-cols fim"><span>Voltaram</span><span>Vendi a mais</span></div>' : '') + filas + tot + pedDestCard(d)
                 + '<button type="button" class="ped-guardar" onclick="pedFimGuardar()">Guardar</button>'
                 + '<p class="ped-nota">Só quantidades. O valor da Guia continua a ser escrito por ti.</p>';
         }
@@ -6414,12 +6417,18 @@ var UJ = (function () {
         // Beta 0.1.7 · uma só pergunta para todas as encomendas anuladas de uma vez; a base fechada de uma data (grupo) volta ao normal sozinha, sem perguntar
         async function pedBaseAposAnular(encs, modo) {
             try {
-                const hoje = pedHoje(), ent = modo === 'entregue', org = ent ? 'encentrega' : 'encanula', props = [], auto = [], sim = {}, nomes = [], datas = [];
+                const hoje = pedHoje(), ent = modo === 'entregue', org = ent ? 'encentrega' : 'encanula', props = [], auto = [], sim = {}, nomes = [], datas = [], volta = {};   // Beta 0.1.34: volta[data][pão] = [base fechada, base normal]
                 const gr5 = pedSoma5Grupos(encs, ent, hoje), sils = [];   // Beta 0.1.33
                 for (const e of (encs || [])) {
                     if (!e || !e.fecha || (!ent && e.fecha < hoje)) continue;
                     if (ent && /laranjeira/.test(pedNorm(e.nombre || ''))) continue;   // Beta 0.1.24: o que a Laranjeira deixa fica na base (o +1 não se repõe ao entregar)
                     const w = pedDiaSem(e.fecha), b0n = pedBaseLer(w), nome = e.nombre || 'cliente', dia = pedDiaCurto(e.fecha), dat = pedEncDatada(e);
+                    if (ent && dat && w !== 0 && e.fecha >= hoje) {   // Beta 0.1.34: entregue de grupo de datas (hoje ou futuras): só se informa a que valor volta a base desse dia
+                        try {
+                            const bd = pedBaseDia(e.fecha), bn = pedBaseLer(w);
+                            Object.keys(e.bm || {}).forEach(id => { if (pedN9(e.bm[id]) <= 0) return; const de = bd[id] || 0, para = bn[id] || 0; if (de !== para) { volta[e.fecha] = volta[e.fecha] || {}; volta[e.fecha][id] = [de, para]; } });
+                        } catch (err) {}
+                    }
                     if (w === 0 || (ent && dat)) continue;   // entregue: a base fechada de uma data caduca sozinha
                     const ch = dat ? e.fecha : 'w' + w, b0 = dat ? pedBaseDia(e.fecha) : b0n;
                     sim[ch] = sim[ch] || {};
@@ -6440,6 +6449,11 @@ var UJ = (function () {
                         sim[ch][id] = atual - baixa;
                     });
                     if (!dat && props.length > n0) { nomes.push(nome); datas.push(e.fecha); }
+                }
+                const vk = Object.keys(volta).sort();   // Beta 0.1.34
+                if (vk.length) {
+                    const lin = vk.map(k => (vk.length > 1 ? pedDiaCurto(k) + ' ' : '') + PED_ORDEM.filter(id => volta[k][id]).map(id => (PED_SIGLA[id] || id) + ' ' + volta[k][id][0] + ' → ' + volta[k][id][1]).join(' · ')).join(' | ');
+                    avisoRapido('↩ Base fechada ' + (vk.length === 1 ? 'de ' + pedDiaCurto(vk[0]) + ' ' : '') + 'volta ao normal: ' + lin);
                 }
                 if (sils.length) { baseAplicar(sils); renderPedido(); }   // Beta 0.1.33
                 if (auto.length) {
@@ -6583,8 +6597,24 @@ var UJ = (function () {
             const tipo = delta > 0 ? 'sobe' : delta < 0 ? 'desce' : (espera ? 'espera' : (cat === 'fixo' ? 'fixo' : 'mantem'));
             return { tipo, delta, ef, acabou, nl, dif: dif ? { e: dif.e, c: dif.c, vend } : null };
         }
+        function pedB0Viva(D, id) {   // Beta 0.1.34: referência do texto «→ base N»: enquanto nada foi aplicado, a base viva (pode ter mudado depois de guardar as sobras)
+            const b0 = pedB0(D, id), r = pedSobLer(D);
+            if ((r.d[id] || 0) !== 0 || r.b0[id] === undefined) return b0;
+            const base = pedBaseLer(pedDiaSem(D));
+            return (Object.keys(base).length && !pedVesp(D)) ? (base[id] || 0) : b0;
+        }
+        function pedPedidoVsBase(D, id) {   // Beta 0.1.34: «Pediste N · a base mudou para M depois do pedido»
+            try {
+                const p = pedPedLer(D), base = pedBaseLer(pedDiaSem(D));
+                if (!p || !p.base || p.base[id] === undefined || !Object.keys(base).length || pedVesp(D)) return '';
+                const snap = pedN9(p.base[id]), agora = pedBaseDia(D)[id] || 0;
+                if (snap === agora) return '';
+                const env = pedEnv(D), pediu = env && env[id] !== undefined ? pedN9(env[id]) : snap;
+                return '<div class="ped-l2"><span>🧾 Pediste ' + pediu + ' · a base mudou para ' + agora + ' depois do pedido: a sugestão parte da base</span></div>';
+            } catch (e) { return ''; }
+        }
         function pedSugTxt(D, id, g) {
-            const r = pedSobLer(D), b0 = pedB0(D, id);
+            const r = pedSobLer(D), b0 = pedB0Viva(D, id);
             if (g.tipo === 'por') return 'Por contar';
             if (g.tipo === 'nc') return 'Não conta para a tendência';
             if (g.tipo === 'sem') return 'Sem pedido hoje';
@@ -6930,12 +6960,13 @@ var UJ = (function () {
                 const acx = (s === 0 && r.ac[id] && typeof r.ac[id] === 'object') ? r.ac[id] : null;
                 const acT = acx ? `<div class="ped-l2"><span>🍞 Acabou${acx.h ? ' às ' + esc(acx.h) : ''}${acx.a ? ' · ' + esc(acx.a) : ''}</span></div>` : '';
                 const dc = pedChegDif(D, id), chT = dc ? `<div class="ped-l2"><span>📦 Pediste ${dc.e} · chegaram ${dc.c} · dia atípico: a sugestão parte do que vendeste</span></div>` : '';   // Beta 0.1.33
+                const pdT = (est.k === 'pend' && !est.ap) ? pedPedidoVsBase(D, id) : '';   // Beta 0.1.34
                 const smL = pedSmBase(D, id), smT = smL > 0 ? `<div class="ped-l2"><span>🏪 São Miguel: deixaste ${smL} da tua base · conta como sobra</span></div>` : '';
                 const nlN = pedNlTot(D, id), nlT = nlN > 0 ? `<div class="ped-l2"><span>📌 Fixos que não levaram ${nlN}${s !== undefined ? ' · contam como vendidos · sobras reais ' + Math.max(0, s - nlN) : ' · contam como vendidos quando contares as sobras'}</span></div>` : '';
                 const comi = PED_COME.includes(id) ? `<div class="ped-l2" style="justify-content:space-between;"><span>Comi hoje${s !== undefined && c > 0 ? ' · sobrou ' + s + ' · podia ter sobrado ' + (s + c) : ''}</span><div class="ped-ctl peq"><button type="button" aria-label="Menos comi ${esc(nome)}" onclick="pedSobCom('${id}',-1)">−</button><span>${c}</span><button type="button" aria-label="Mais comi ${esc(nome)}" onclick="pedSobCom('${id}',1)">+</button></div></div>` : '';
                 const nc = r.nc[id] ? `<div class="ped-l2"><label class="ped-chk"><input type="checkbox" checked aria-label="Não contar ${esc(nome)}" onchange="pedSobNC('${id}')">Não contar este dia</label></div>` : '';
                 const ncl = r.nc[id] ? '' : `<button type="button" class="ped-link" aria-label="Não contar ${esc(nome)}" onclick="pedSobNC('${id}')">não contar</button>`;
-                return `<div class="ped-row ${s !== undefined ? 'tem' : ''}"><div class="ped-l1"><input type="number" inputmode="numeric" min="0" max="9999" class="ped-chipn ped-chipin" value="${ped}" aria-label="Pedido ${esc(nome)}" onchange="pedSobPed('${id}',this.value)" onfocus="this.select()" enterkeyhint="next" onkeydown="pedTecla(event, this)"><div class="ped-nome">${esc(nome)}</div><div class="ped-ctl"><button type="button" aria-label="Menos ${esc(nome)}" onclick="pedSobMais('${id}',-1)">−</button><input type="number" inputmode="numeric" min="0" max="999" value="${s === undefined ? '' : s}" placeholder="–" aria-label="Sobrou ${esc(nome)}" onchange="pedSobInp('${id}',this.value)" onfocus="this.select()" enterkeyhint="next" onkeydown="pedTecla(event, this)"><button type="button" aria-label="Mais ${esc(nome)}" onclick="pedSobMais('${id}',1)">+</button></div></div><div class="ped-l2">${pill}${acab}${notaL}${ncl}${vend > 0 ? `<span>Vendeste ${vend} a mais</span>` : ''}</div>${acT}${chT}${smT}${nlT}${comi}${nc}${notaIn}</div>`;
+                return `<div class="ped-row ${s !== undefined ? 'tem' : ''}"><div class="ped-l1"><input type="number" inputmode="numeric" min="0" max="9999" class="ped-chipn ped-chipin" value="${ped}" aria-label="Pedido ${esc(nome)}" onchange="pedSobPed('${id}',this.value)" onfocus="this.select()" enterkeyhint="next" onkeydown="pedTecla(event, this)"><div class="ped-nome">${esc(nome)}</div><div class="ped-ctl"><button type="button" aria-label="Menos ${esc(nome)}" onclick="pedSobMais('${id}',-1)">−</button><input type="number" inputmode="numeric" min="0" max="999" value="${s === undefined ? '' : s}" placeholder="–" aria-label="Sobrou ${esc(nome)}" onchange="pedSobInp('${id}',this.value)" onfocus="this.select()" enterkeyhint="next" onkeydown="pedTecla(event, this)"><button type="button" aria-label="Mais ${esc(nome)}" onclick="pedSobMais('${id}',1)">+</button></div></div><div class="ped-l2">${pill}${acab}${notaL}${ncl}${vend > 0 ? `<span>Vendeste ${vend} a mais</span>` : ''}</div>${acT}${chT}${pdT}${smT}${nlT}${comi}${nc}${notaIn}</div>`;
             }).join('');
             const nSug = pedSugN(D);
             const semPed = !PED_AUTO_IDS.some(id => (tot[id] || 0) > 0);
