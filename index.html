@@ -1149,7 +1149,7 @@
             </div>
         </div>
         <label class="mais-opcao"><input type="checkbox" id="mais-deslizar" onchange="deslizarAlternar(this.checked)"> ↔️ Deslizar para mudar de pestanha</label>
-        <p class="app-version" id="app-version">Beta 0.1.34</p>
+        <p class="app-version" id="app-version">Beta 0.1.36</p>
     </div>
 
     <!-- SUBMÓDULOS -->
@@ -5562,7 +5562,13 @@ var UJ = (function () {
         const PED_AUTO_IDS = PED_BASE_IDS.filter(id => !PED_SEM_SOB.includes(id));   // os pães que as regras e as perguntas automáticas tratam
         const PED_M5 = ['ps', 'b', 'ba'];   // Beta 0.1.24: a base destes pães é sempre múltiplo de 5: os movimentos automáticos arredondam (x1, x2 para baixo · x3, x4 para cima)
         function pedR5(id, v) { return PED_M5.includes(id) ? Math.max(0, Math.round(v / 5) * 5) : v; }
-        const PED_LAR_MIN = { pm: 1, b: 5, ps: 5 };   // Beta 0.1.24: o mínimo que a Laranjeira leva sempre (conta sempre como já dentro da base)
+        const PED_LAR_MIN = { pm: 1, b: 5, ps: 5 };   // (antes da 0.1.35)
+        // Beta 0.1.35 · margens da Laranjeira: o pão dela que está sempre na base. O resto (BA, broas, bicos, PMC, PQ, PF, INT, CAP) só por encomenda.
+        const PED_LAR_MARG = { gm: 1, gc: 1, pc: 1, pm: 1, b: 5, ps: 5 }, PED_LAR_MARG_SAB = { gm: 1, gc: 1, pc: 1, pm: 2, b: 10, ps: 10 };
+        function pedLarMarg(iso, id) { const w = pedDiaSem(iso); if (w === 0) return 0; const m = ((w === 6 ? PED_LAR_MARG_SAB : PED_LAR_MARG)[id]) || 0; if (!m) return 0; const b = pedBaseDia(iso); if (!Object.keys(b).length) return m;
+            let sub = 0; (estado.encomiendas || []).forEach(e => { if (e && e.bm && /laranjeira/.test(pedNorm(e.nombre || '')) && (pedEncDatada(e) ? e.fecha === iso : pedDiaSem(e.fecha) === w)) sub += pedN9(e.bm[id]); });   // o que as encomendas da Laranjeira subiram não é margem
+            return Math.min(m, Math.max(0, (b[id] || 0) - sub)); }   // a margem só existe se esse pão está na base desse dia
+        function pedLarMargTxt(iso) { const m = pedDiaSem(iso) === 6 ? PED_LAR_MARG_SAB : PED_LAR_MARG; return PED_ORDEM.filter(id => m[id]).map(id => m[id] + ' ' + (PED_SIGLA[id] || id)).join(' · '); }   // Beta 0.1.24: o mínimo que a Laranjeira leva sempre (conta sempre como já dentro da base)
         const PED_COME = ['b', 'ba'];     // pães em que aparece «Comi hoje»
         let pedDataSel = null;            // passo 5: data do pedido (por omissão o próximo dia de trabalho)
         let pedMostraTodos = false;       // passo 4: mostra também os pães sem pedido
@@ -5860,6 +5866,24 @@ var UJ = (function () {
             });
             return { X, tem: true, inc, left, cinz, pad };
         }
+        function pedLarSob(X, id) {   // Beta 0.1.35: pão da BASE deixado na Laranjeira em X além do previsto (o que encomendaram ou a margem) = possível sobra
+            let t = 0;
+            const cls = regClientes().filter(pedEhLar);
+            if (!cls.length) return 0;
+            let encs = null;
+            cls.forEach(c => {
+                const u = pedListaEm(c, X); if (!u) return;
+                const l = pedN9(u.itens[id]); if (l <= 0) return;
+                const cz = pedCinz(X, id)[String(c.id)] || 0, pa = Math.max(0, Math.min(pedPadCli(c, X)[id] || 0, l - cz)), daBase = l - cz - pa;
+                if (daBase <= 0) return;
+                if (!encs) encs = pedEncs(X).filter(e => e.lar && e.tem);
+                let q = 0, mg = null;
+                encs.forEach(e => { if ((e.q[id] || 0) > 0) { q += e.q[id]; const h = e.lh ? (e.lh[id] || 0) : 0; mg = mg === null ? h : Math.max(mg, h); } });
+                if (mg === null) mg = pedLarMarg(X, id);
+                t += Math.max(0, daBase - Math.max(q, mg));
+            });
+            return t;
+        }
         function pedSmBase(X, id) {   // São Miguel (importe diário): pão da BASE que lá se deixou em X (deixado − cesto cinzento)
             let t = 0;
             pedClisLista(X).forEach(k => {
@@ -5870,7 +5894,7 @@ var UJ = (function () {
             return t;
         }
         function pedEncs(iso) {
-            const aus = pedAusentes(iso), pd = pedPedLer(iso), li = pedObj(pd && pd.li), pool = {};
+            const aus = pedAusentes(iso), pd = pedPedLer(iso), li = pedObj(pd && pd.li), lm = pedObj(pd && pd.lm), pool = {};   // Beta 0.1.35: lm = margem corrigida à mão
             return (estado.encomiendas || []).filter(e => e.fecha === iso && !e.esAviso && !e.pad).map(e => {   // Beta 0.1.20: e.pad (a padaria acrescenta) não entra no pedido
                 const pr = pedParse(e.pedido), fix = pedFixDaEnc(e.nombre, e.aldea, iso), ausente = !!(fix && aus[fix.cid]);
                 const flo = pedObj(pedObj(pd && pd.fl)[String(e.id)]), flm = (flo.m === 'so' || flo.m === 'todo') ? flo.m : '';   // Beta 0.1.24: «só este dia leva menos»
@@ -5880,18 +5904,16 @@ var UJ = (function () {
                 const fq = fix ? pedFixQ(fix, iso) : null, cliE = regBuscar(e.nombre, e.aldea)[0] || null;   // v23.18: o habitual desse dia (Fiados ou manual) e o cliente (Férias/Fechado)
                 if (fix && !ausente) { ef = pedEf(pr.q, fq); if (flm) { efb = Object.assign({}, ef); ef = pedEfFl(pr.q, fq, flm); } }
                 else if (lar && !fix) {
-                    const cli = pedLarCli(e.nombre, e.aldea), k = cli ? String(cli.id) : '';
-                    let info;
-                    if (k) { if (!pool[k]) pool[k] = pedIncl7(cli, iso); info = pool[k]; }
-                    else info = { X: diarioSumarDias(iso, -7), tem: false, inc: {} };
-                    lsem = !info.tem; lX = info.X; lpad = Object.keys(info.pad || {}).length > 0;
-                    const ov = pedObj(li[String(e.id)]);
+                    // Beta 0.1.35: a margem do dia (seg-sex / sábado) já está na base; só soma o que passa dela. A margem gasta-se uma vez se houver duas encomendas no mesmo dia.
+                    if (!pool.__marg) { pool.__marg = {}; PED_ORDEM.forEach(id => { pool.__marg[id] = pedLarMarg(iso, id); }); }
+                    const mg = pool.__marg, ov = pedObj(lm[String(e.id)]);
+                    lX = iso;
                     lh = {};
                     Object.keys(pr.q).forEach(id => {
-                        if (pr.q[id] > 0) { const mn = PED_LAR_MIN[id] || 0; lq[id] = Math.max(info.inc[id] || 0, mn); lh[id] = ov[id] !== undefined ? pedN9(ov[id]) : Math.max(info.inc[id] || 0, mn); if (ov[id] !== undefined) corr = true; }   // Beta 0.1.24: o mínimo da Laranjeira
+                        if (pr.q[id] > 0) { lq[id] = mg[id] || 0; lh[id] = ov[id] !== undefined ? pedN9(ov[id]) : (mg[id] || 0); if (ov[id] !== undefined) corr = true; }
                     });
                     ef = pedEf(pr.q, lh);
-                    Object.keys(pr.q).forEach(id => { if (pr.q[id] > 0 && info.inc[id]) info.inc[id] = Math.max(0, info.inc[id] - pr.q[id]); });   // duas encomendas no mesmo dia: o já deixado gasta-se uma vez
+                    Object.keys(pr.q).forEach(id => { if (pr.q[id] > 0 && mg[id]) mg[id] = Math.max(0, mg[id] - pr.q[id]); });
                 } else ef = Object.assign({}, pr.q);
                 const dif = Object.keys(pr.q).some(id => ef[id] !== pr.q[id]);
                 return { id: String(e.id), nome: e.nombre || '', aldea: e.aldea || '', texto: e.pedido || '', q: pr.q, ef, efb: efb || ef, flm, dif, fix, fq, aus: ausente, ausM: fix ? (aus[fix.cid] || '') : '', fech: pedFechadoDia(cliE, iso), desc: pr.desc, tem: Object.keys(pr.q).length > 0, lar, vesp: !!e.pedirDiaAnterior, ult: pedUltimaLista(e.nombre, e.aldea, iso), fj: !!e.fj, lh, lsem, lX, corr, lq, lpad };
@@ -5919,7 +5941,31 @@ var UJ = (function () {
             });
             return out;
         }
+        function pedLarPendDe(D) {   // Beta 0.1.36: lembretes da Laranjeira que valem para o pedido de D (mesmo dia da semana, desde a semana seguinte)
+            const L = Array.isArray(estado.lar_pend) ? estado.lar_pend : [];
+            const w = pedDiaSem(D), b = pedBaseLer(w);
+            return L.map((x, i) => Object.assign({ i }, x)).filter(x => x.w === w && D >= x.desde && (b[x.id] || 0) > 0);
+        }
+        function pedLarPendResolver(i, desc) {
+            const L = Array.isArray(estado.lar_pend) ? estado.lar_pend : [], x = L[i];
+            if (!x) return;
+            if (desc) {
+                const b = pedBaseLer(x.w), de = b[x.id] || 0, para = PED_M5.includes(x.id) ? pedR5(x.id, Math.max(0, de - x.n)) : Math.max(0, de - x.n);
+                if (para !== de) baseAplicar([{ w: x.w, id: x.id, de, para, delta: para - de, org: 'encentrega', d: pedDataSel || pedHoje(), mot: 'Laranjeira (' + pedDiaCurto(x.fecha) + '): desconto do pão a mais que tinha ficado na base.' }]);
+                const e = (estado.encomiendas || []).find(y => String(y.id) === x.eid);
+                if (e && e.bm) { const v = Math.max(0, pedN9(e.bm[x.id]) - x.n); if (v) e.bm[x.id] = v; else delete e.bm[x.id]; }
+                avisoRapido('✔ Base de ' + DIARIO_DIAS[x.w] + ': ' + (PED_SIGLA[x.id] || x.id) + ' ' + de + ' → ' + para);
+            }
+            L.splice(i, 1);
+            if (!L.length) delete estado.lar_pend;
+            guardarEstado(); renderPedido();
+        }
         function pedLarAvisoHtml(D, c) {
+            const pend = pedLarPendDe(D);   // Beta 0.1.36
+            if (!pend.length) return '';
+            const lnP = pend.map(x => `<div style="margin-top:6px"><b>${esc((PED_SIGLA[x.id] || x.id) + ' +' + x.n)}</b> da encomenda da ${esc(x.nome)} de ${esc(pedDiaCurto(x.fecha))}: não descontaste ao entregar e a base ainda o tem. <span style="white-space:nowrap"><button type="button" class="ped-link" onclick="pedLarPendResolver(${x.i}, true)">Descontar ${x.n}</button> · <button type="button" class="ped-link" onclick="pedLarPendResolver(${x.i}, false)">Manter</button></span></div>`).join('');
+            return `<div class="ped-aviso lar"><b>⚠️ Laranjeira · pão a mais na base</b>${lnP}</div>`;
+            // Beta 0.1.35: com margens fixas, o que ficou há 7 dias já não está na base (o aviso antigo fica abaixo, sem uso)
             const av = pedLarAvisos(D, c.encs);
             if (!av.length) return '';
             const linhas = av.map(a => {
@@ -5930,36 +5976,31 @@ var UJ = (function () {
             const tit = av.some(a => a.tipo === 'aviso') ? '⚠️ Atenção Laranjeira' : 'ℹ️ Laranjeira';
             return `<div class="ped-aviso lar"><b>${tit}</b>${linhas}</div>`;
         }
-        function pedLarLinhas(e) {   // por pão: encomendaram · deixaste (corrigível) · soma
+        function pedLarLinhas(e) {   // Beta 0.1.35: por pão: encomendaram · margem (corrigível) · soma
             if (!e.tem || !e.lh) return '';
             const ids = PED_ORDEM.filter(id => e.q[id] > 0);
             if (!ids.length) return '';
             const linhas = ids.map(id => {
                 const h = e.lh[id] || 0, soma = e.ef[id] || 0, nm = pedNome(id), eid = esc(e.id);
-                return `<div class="ped-lar-r"><b>${esc(PED_SIGLA[id])}</b><span>${e.q[id]}</span><span class="ped-lar-c"><button type="button" aria-label="Menos deixado ${esc(nm)}" onclick="pedLarAj('${eid}','${id}',-1)">−</button><b>${h}</b><button type="button" aria-label="Mais deixado ${esc(nm)}" onclick="pedLarAj('${eid}','${id}',1)">+</button></span><b class="soma">→ ${soma}</b></div>`;
+                return `<div class="ped-lar-r"><b>${esc(PED_SIGLA[id])}</b><span>${e.q[id]}</span><span class="ped-lar-c"><button type="button" aria-label="Menos margem ${esc(nm)}" onclick="pedLarAj('${eid}','${id}',-1)">−</button><b>${h}</b><button type="button" aria-label="Mais margem ${esc(nm)}" onclick="pedLarAj('${eid}','${id}',1)">+</button></span><b class="soma">→ ${soma}</b></div>`;
             }).join('');
-            // Beta 0.1.7 · N12 · o texto diz o que é: lista guardada, correção tua, ou nada guardado (e então o «Deixaste» escreve-se à mão)
-            const dX = esc(pedDiaCurto(e.lX)), sig = q => esc(ids.filter(i => (q[i] || 0) > 0).map(i => q[i] + ' ' + (PED_SIGLA[i] || i)).join(' · ') || 'nada');
-            let nota, dica = '';
-            if (e.lsem) {
-                nota = e.corr ? `<b>Deixaste (corrigido por ti):</b> ${sig(e.lh)} — sem lista guardada em ${dX}.`
-                    : `<span class="ped-lar-av"><b>Escreve o que deixaste.</b> Não há lista guardada em ${dX}, por isso a app não sabe o que ficou na Laranjeira. Usa o − / + da coluna «Deixaste»; enquanto estiver a 0, soma tudo.</span>`;
-                dica = ' A app só sabe o que deixas se registares a Lista de pães do cliente (ficha › Lista de pães).';
-            } else nota = e.corr ? `<b>Deixaste (corrigido por ti):</b> ${sig(e.lh)} · a lista de ${dX} dizia ${sig(e.lq || {})}. A base não muda.`
-                : '«Deixaste» = o que ficou na Laranjeira há 7 dias (' + dX + '), sem o pão do cesto cinzento' + (e.lpad ? ' nem o que a padaria acrescentou' : '') + '. Corrige aqui se não for assim; a base não muda.';
-            return `<div class="ped-lar"><div class="ped-lar-h"><span>Pão</span><span>Pedem</span><span>Deixaste</span><span style="text-align:right">Soma</span></div>${linhas}<div class="ped-dia-s">${nota}${dica}${e.corr ? ` <button type="button" class="ped-link" onclick="pedLarRepor('${esc(e.id)}')">repor</button>` : ''}</div></div>`;
+            const sig = q => esc(ids.filter(i => (q[i] || 0) > 0).map(i => q[i] + ' ' + (PED_SIGLA[i] || i)).join(' · ') || 'nada');
+            const mt = esc(pedLarMargTxt(e.lX)), dia = pedDiaSem(e.lX) === 6 ? 'ao sábado' : 'de segunda a sexta';
+            const nota = e.corr ? `<b>Margem corrigida por ti:</b> ${sig(e.lh)} · a margem ${dia} é ${mt}.`
+                : `«Margem» = o pão da Laranjeira que já está na tua base (${dia}: ${mt}; o resto só por encomenda). Só soma o que passa da margem e isso sobe a base; ao entregar, a app pergunta se o desconta.`;
+            return `<div class="ped-lar"><div class="ped-lar-h"><span>Pão</span><span>Pedem</span><span>Margem</span><span style="text-align:right">Soma</span></div>${linhas}<div class="ped-dia-s">${nota}${e.corr ? ` <button type="button" class="ped-link" onclick="pedLarRepor('${esc(e.id)}')">repor</button>` : ''}</div></div>`;
         }
         function pedLarAj(encId, id, dir) {
             const D = pedDataAtual(), c = pedCalc(D), e = c.encs.find(x => x.id === String(encId));
             if (!e || !e.lh) return;
             const p = pedPedEsc(D);
-            p.li = pedObj(p.li); p.li[e.id] = pedObj(p.li[e.id]);
-            p.li[e.id][id] = Math.max(0, Math.min(999, (e.lh[id] || 0) + dir));
+            p.lm = pedObj(p.lm); p.lm[e.id] = pedObj(p.lm[e.id]);   // Beta 0.1.35: margem corrigida só nesta encomenda
+            p.lm[e.id][id] = Math.max(0, Math.min(999, (e.lh[id] || 0) + dir));
             pedPedMudou(p); guardarEstado(); renderPedido();
         }
         function pedLarRepor(encId) {
             const D = pedDataAtual(), p = pedPedEsc(D);
-            p.li = pedObj(p.li); delete p.li[String(encId)];
+            p.lm = pedObj(p.lm); delete p.lm[String(encId)];
             pedPedMudou(p); guardarEstado(); renderPedido();
         }
 
@@ -6305,8 +6346,7 @@ var UJ = (function () {
             const gr = {};
             (encs || []).forEach(e => {
                 if (!e || !e.fecha || (!ent && e.fecha < hoje)) return;
-                if (ent && /laranjeira/.test(pedNorm(e.nombre || ''))) return;
-                const w = pedDiaSem(e.fecha), dat = pedEncDatada(e);
+                const w = pedDiaSem(e.fecha), dat = pedEncDatada(e);   // Beta 0.1.35: a Laranjeira já entra (B e PS também se descontam ao entregar)
                 if (w === 0 || (ent && dat)) return;
                 const ch = dat ? e.fecha : 'w' + w, k = ch + '|' + e.fecha;
                 if (!gr[k]) gr[k] = { w, ch, dat, fecha: e.fecha, b0: dat ? pedBaseDia(e.fecha) : pedBaseLer(w), saem: [], feitos: {} };
@@ -6377,7 +6417,7 @@ var UJ = (function () {
                             const q = x.q[id] || 0;
                             let mot;
                             if (x.fix) mot = `${x.nome} é fixo: tem ${(x.fq && x.fq[id]) || 0} ${sg} na base e encomendou ${q}. ${falta} ${sg} não estão na base.`;
-                            else if (x.lh) mot = `${x.nome} encomendou ${q} ${sg} e deixaste ${x.lh[id] || 0} (já na base). ${falta} ${sg} não estão na base.`;
+                            else if (x.lh) mot = `${x.nome} encomendou ${q} ${sg} e a margem é ${x.lh[id] || 0} (já na base). ${falta} ${sg} passam da margem: sobe a base (ao entregar, a app pergunta se desconta).`;
                             else mot = `${x.nome} não está na base: encomendou ${q} ${sg}.`;
                             const paraN = pedR5(id, atual + falta);
                             if (paraN === atual) return;   // Beta 0.1.24: arredondado a múltiplo de 5 a base fica igual
@@ -6421,7 +6461,7 @@ var UJ = (function () {
                 const gr5 = pedSoma5Grupos(encs, ent, hoje), sils = [];   // Beta 0.1.33
                 for (const e of (encs || [])) {
                     if (!e || !e.fecha || (!ent && e.fecha < hoje)) continue;
-                    if (ent && /laranjeira/.test(pedNorm(e.nombre || ''))) continue;   // Beta 0.1.24: o que a Laranjeira deixa fica na base (o +1 não se repõe ao entregar)
+                    const larE = /laranjeira/.test(pedNorm(e.nombre || ''));   // Beta 0.1.35: a Laranjeira também pergunta se desconta o pão a mais da margem
                     const w = pedDiaSem(e.fecha), b0n = pedBaseLer(w), nome = e.nombre || 'cliente', dia = pedDiaCurto(e.fecha), dat = pedEncDatada(e);
                     if (ent && dat && w !== 0 && e.fecha >= hoje) {   // Beta 0.1.34: entregue de grupo de datas (hoje ou futuras): só se informa a que valor volta a base desse dia
                         try {
@@ -6442,6 +6482,7 @@ var UJ = (function () {
                         if (bm <= 0 || atual <= 0) return;
                         const baixa = Math.min(bm, atual), sg = PED_SIGLA[id] || id;
                         const mot = dat ? `A encomenda de ${nome} (${dia}) foi anulada: a base de ${dia} volta ao normal (${baixa} ${sg}).`
+                            : (ent && larE) ? `A encomenda de ${nome} (${dia}) foi entregue: tinha subido a base ${bm} ${sg} por passar da margem. Desconta ${baixa}.`
                             : ent ? `A encomenda de ${nome} (${dia}) foi entregue e tinha subido a base ${bm} ${sg}. Se este pão não pertence à base, repõe ${baixa}.`
                             : `A encomenda de ${nome} (${dia}) foi anulada e tinha subido a base ${bm} ${sg}. Repõe ${baixa}.`;
                         const q = { w, id, de: atual, para: atual - baixa, delta: -baixa, org, d: e.fecha, dt: dat ? e.fecha : undefined, mot, comp: { d: e.fecha, id, v: (!ent && PED_M5.includes(id)) ? (pedCompJa(e, id) || baixa) : baixa }, eid: String(e.id) };
@@ -6469,6 +6510,18 @@ var UJ = (function () {
                 const ac = await baseQuestionar(org, 'Repor a base?', sub, props);
                 baseAplicar(ac);
                 ac.forEach(q => { if (q.grp) pedBmRep(q); });   // Beta 0.1.33
+                if (ent) {   // Beta 0.1.36: Laranjeira entregue e não descontaste → lembra na semana seguinte
+                    try {
+                        props.filter(q => !ac.includes(q) && q.delta < 0 && !q.dt).forEach(q => {
+                            const e = (encs || []).find(x => String(x.id) === q.eid);
+                            if (!e || !/laranjeira/.test(pedNorm(e.nombre || ''))) return;
+                            const L = Array.isArray(estado.lar_pend) ? estado.lar_pend : (estado.lar_pend = []);
+                            const k = L.findIndex(x => x.eid === q.eid && x.id === q.id);
+                            const it = { eid: q.eid, id: q.id, w: q.w, n: -q.delta, fecha: e.fecha, desde: diarioSumarDias(e.fecha, 7), nome: e.nombre || 'Laranjeira' };
+                            if (k >= 0) L[k] = it; else L.push(it);
+                        });
+                    } catch (err) {}
+                }
                 guardarEstado();
                 if (ent) {   // a encomenda continua a existir: esquece o que já repôs
                     ac.forEach(q => { if (q.grp) return; const e = (encs || []).find(x => String(x.id) === q.eid); if (!e) return; const v = Math.max(0, pedN9(e.bm[q.id]) + q.delta); if (v) e.bm[q.id] = v; else delete e.bm[q.id]; });
@@ -6551,7 +6604,7 @@ var UJ = (function () {
         function pedHistEf(D, id) {
             const r = pedSobLer(diarioSumarDias(D, -7));
             if (r.s[id] === undefined || r.nc[id] || pedVesp(diarioSumarDias(D, -7)) || pedChegDif(diarioSumarDias(D, -7), id)) return null;   // Beta 0.1.33: um dia em que o pedido chegou diferente é atípico
-            return r.s[id] - pedNlDe(diarioSumarDias(D, -7), id, r.s[id]) + (r.c[id] || 0) + pedSmBase(diarioSumarDias(D, -7), id);
+            return r.s[id] - pedNlDe(diarioSumarDias(D, -7), id, r.s[id]) + (r.c[id] || 0) + pedSmBase(diarioSumarDias(D, -7), id) + pedLarSob(diarioSumarDias(D, -7), id);   // Beta 0.1.35: + Laranjeira
         }
         function pedB0(D, id) {
             const r = pedSobLer(D);
@@ -6567,7 +6620,7 @@ var UJ = (function () {
             if (r.nc[id]) return { tipo: 'nc', delta: 0 };
             if (ped <= 0) return { tipo: 'sem', delta: 0 };
             if (pedVesp(D)) return { tipo: 'vesp', delta: 0 };
-            const bruto = s + (r.c[id] || 0) + pedSmBase(D, id), nl = pedNlDe(D, id, s), ef = bruto - nl, acabou = bruto === 0;   // v23.17: + o pão da base deixado no São Miguel · v23.23: − o que os fixos não levaram (conta como vendido)
+            const bruto = s + (r.c[id] || 0) + pedSmBase(D, id) + pedLarSob(D, id), nl = pedNlDe(D, id, s), ef = bruto - nl, acabou = bruto === 0;   // v23.17: + o pão da base deixado no São Miguel · v23.23: − o que os fixos não levaram (conta como vendido)
             let delta = 0, espera = false;
             // Beta 0.1.33 · «O pedido chegou diferente»: a base de referência é o que VENDESTE (chegou − encomendas − sobras); se a base teria esgotado, sugere-se vendido + margem
             const STEP = { grande: 1, bola: 5, agua: 5, cap: 1, bico: 1 }[cat] || 0, MARG = { grande: 2, bola: 10, agua: 10, cap: 2, bico: 2 }[cat] || 0;
@@ -6831,6 +6884,7 @@ var UJ = (function () {
         function pedSobPed(id, v) {
             const D = pedHoje(), p = pedPedEsc(D);
             if (!p.tot) p.tot = Object.assign({}, pedCalc(D).tot);
+            const antes = pedN9(p.tot[id]);   // Beta 0.1.35
             p.tot[id] = pedN9(v);
             if (p.cheg && p.cheg[id] && typeof p.cheg[id] === 'object') {   // Beta 0.1.33: o que chegou acompanha o número (e desfaz-se se voltou ao que pediste)
                 const o = p.cheg[id];
@@ -6838,6 +6892,36 @@ var UJ = (function () {
                 if (!Object.keys(p.cheg).length) delete p.cheg;
             }
             guardarEstado(); pedRenderSeg();
+            try { const r = pedSobEsc(D); r.pm = pedObj(r.pm); if (r.pm[id] === undefined) r.pm[id] = antes; if (r.pm[id] === p.tot[id]) delete r.pm[id]; if (!Object.keys(r.pm).length) delete r.pm; guardarEstado(); } catch (err) {}   // Beta 0.1.36: só se pergunta ao Guardar
+        }
+        function pedSobPedProps(D) {   // Beta 0.1.36: as correcções do pedido de hoje feitas à mão nas Sobras → propostas «Mover a base?»
+            const pm = pedObj(pedObj(pedObj(estado.pedido_sobras)[D]).pm), out = [];   // (pedSobLer não traz o .pm)
+            const w = pedDiaSem(D), base = pedBaseLer(w), p = pedPedLer(D);
+            if (w === 0 || pedVesp(D) || !Object.keys(base).length || !p || !p.tot) return out;
+            PED_ORDEM.forEach(id => {
+                if (pm[id] === undefined || !PED_AUTO_IDS.includes(id)) return;
+                const antes = pedN9(pm[id]), depois = pedN9(p.tot[id]), aj = depois - antes;
+                if (!aj) return;
+                const de = base[id] || 0, para = PED_M5.includes(id) ? pedR5(id, Math.max(0, de + aj)) : Math.max(0, de + aj), sg = PED_SIGLA[id] || id;
+                if (para === de) return;
+                let mot = 'Mudaste o pedido de hoje de ' + antes + ' para ' + depois + ' ' + sg + ' à mão.';
+                if (para - de !== aj) mot += ' A base de ' + sg + ' é sempre múltiplo de 5: ' + (para > de ? 'sobe ' : 'desce ') + Math.abs(para - de) + ' (de ' + de + ' para ' + para + ').';
+                out.push({ w, id, de, para, delta: para - de, org: 'ajuste', d: D, mot });
+            });
+            return out;
+        }
+        async function pedSobPedBase(D, id, antes, depois) {   // (0.1.35; já não é chamada: a pergunta passou para o Guardar)   // Beta 0.1.35: como o ajuste à mão do pedido de amanhã: a diferença pode passar à base desse dia da semana
+            try {
+                const w = pedDiaSem(D), base = pedBaseLer(w), aj = depois - antes;
+                if (!aj || w === 0 || pedVesp(D) || !Object.keys(base).length || !PED_AUTO_IDS.includes(id)) return;
+                const de = base[id] || 0, para = PED_M5.includes(id) ? pedR5(id, Math.max(0, de + aj)) : Math.max(0, de + aj), sg = PED_SIGLA[id] || id;
+                if (para === de) return;
+                let mot = 'Mudaste o pedido de hoje de ' + antes + ' para ' + depois + ' ' + sg + ' à mão.';
+                if (para - de !== aj) mot += ' A base de ' + sg + ' é sempre múltiplo de 5: ' + (para > de ? 'sobe ' : 'desce ') + Math.abs(para - de) + ' (de ' + de + ' para ' + para + ').';
+                const ac = await baseQuestionar('ajuste', 'Mover a base de ' + DIARIO_DIAS[w] + '?', 'Sobras de hoje · corrigiste o pedido à mão. O pedido de hoje fica ' + depois + '.', [{ w, id, de, para, delta: para - de, org: 'ajuste', d: D, mot }]);
+                baseAplicar(ac);
+                if (ac.length) { guardarEstado(); renderPedido(); }
+            } catch (err) { console.error(err); }
         }
         // Beta 0.1 · o motivo de cada sugestão da base (o que sobrou e a regra que se aplica)
         function pedSobMotivo(D, id, g) {
@@ -6848,12 +6932,13 @@ var UJ = (function () {
                     : `Pediste ${g.dif.e} ${sg} e chegaram ${g.dif.c}; sobraram ${g.ef}, vendeste ${g.dif.vend}. Base sugerida a partir do vendido (mais a margem de sempre): ${b0} → ${pa}.`;
             }
             if (g.acabou) return `Acabou o ${sg} (sem sobras): sobe ${g.delta}.`;
-            const s = r.s[id] || 0, c = r.c[id] || 0, sm = pedSmBase(D, id), nl = g.nl || 0;
+            const s = r.s[id] || 0, c = r.c[id] || 0, sm = pedSmBase(D, id), ls = pedLarSob(D, id), nl = g.nl || 0;
             let conta = `Sobraram ${s} ${sg}`;
             if (c) conta += ` + ${c} comidos`;
             if (sm) conta += ` + ${sm} deixados em São Miguel`;
+            if (ls) conta += ` + ${ls} deixados na Laranjeira`;   // Beta 0.1.35
             if (nl) conta += ` − ${nl} que os fixos não levaram`;
-            if (c || sm || nl) conta += ` = ${g.ef}`;
+            if (c || sm || ls || nl) conta += ` = ${g.ef}`;
             let regra = '';
             if (g.delta < 0) {
                 if (cat === 'grande') regra = ` Com 3 ou mais a sobrar, baixa ${-g.delta} e fica 2 de margem.`;
@@ -6917,8 +7002,11 @@ var UJ = (function () {
                         if (alvo > 0) props.push({ w, id, de: 0, para: alvo, delta: alvo, org: 'primeira', d: D, mot: 'Ainda não tens base de ' + DIARIO_DIAS[w] + ': o pedido de hoje fica como base.' });
                     });
                 }
-                const ac = await baseQuestionar('primeira', 'Mover a base de ' + DIARIO_DIAS[w] + '?', 'Sobras de hoje · ' + pedDiaTxt(D), props);
+                const pmP = vazia0 ? [] : pedSobPedProps(D);   // Beta 0.1.36: correcções do pedido feitas à mão
+                pmP.forEach(q => props.push(q));
+                const ac = await baseQuestionar(pmP.length ? 'ajuste' : 'primeira', 'Mover a base de ' + DIARIO_DIAS[w] + '?', 'Sobras de hoje · ' + pedDiaTxt(D) + (pmP.length ? ' · corrigiste o pedido à mão' : ''), props);
                 baseAplicar(ac);
+                delete r.pm;
                 PED_ORDEM.forEach(id => {
                     if (PED_SEM_SOB.includes(id)) { r.d[id] = 0; return; }
                     if (r.d[id] === undefined) r.d[id] = 0;
@@ -6961,7 +7049,7 @@ var UJ = (function () {
                 const acT = acx ? `<div class="ped-l2"><span>🍞 Acabou${acx.h ? ' às ' + esc(acx.h) : ''}${acx.a ? ' · ' + esc(acx.a) : ''}</span></div>` : '';
                 const dc = pedChegDif(D, id), chT = dc ? `<div class="ped-l2"><span>📦 Pediste ${dc.e} · chegaram ${dc.c} · dia atípico: a sugestão parte do que vendeste</span></div>` : '';   // Beta 0.1.33
                 const pdT = (est.k === 'pend' && !est.ap) ? pedPedidoVsBase(D, id) : '';   // Beta 0.1.34
-                const smL = pedSmBase(D, id), smT = smL > 0 ? `<div class="ped-l2"><span>🏪 São Miguel: deixaste ${smL} da tua base · conta como sobra</span></div>` : '';
+                const smL = pedSmBase(D, id), smT = (smL > 0 ? `<div class="ped-l2"><span>🏪 São Miguel: deixaste ${smL} da tua base · conta como sobra</span></div>` : '') + (pedLarSob(D, id) > 0 ? `<div class="ped-l2"><span>🧺 Laranjeira: deixaste ${pedLarSob(D, id)} da tua base além do que pediram e da margem · conta como sobra</span></div>` : '');   // Beta 0.1.35
                 const nlN = pedNlTot(D, id), nlT = nlN > 0 ? `<div class="ped-l2"><span>📌 Fixos que não levaram ${nlN}${s !== undefined ? ' · contam como vendidos · sobras reais ' + Math.max(0, s - nlN) : ' · contam como vendidos quando contares as sobras'}</span></div>` : '';
                 const comi = PED_COME.includes(id) ? `<div class="ped-l2" style="justify-content:space-between;"><span>Comi hoje${s !== undefined && c > 0 ? ' · sobrou ' + s + ' · podia ter sobrado ' + (s + c) : ''}</span><div class="ped-ctl peq"><button type="button" aria-label="Menos comi ${esc(nome)}" onclick="pedSobCom('${id}',-1)">−</button><span>${c}</span><button type="button" aria-label="Mais comi ${esc(nome)}" onclick="pedSobCom('${id}',1)">+</button></div></div>` : '';
                 const nc = r.nc[id] ? `<div class="ped-l2"><label class="ped-chk"><input type="checkbox" checked aria-label="Não contar ${esc(nome)}" onchange="pedSobNC('${id}')">Não contar este dia</label></div>` : '';
@@ -7337,7 +7425,7 @@ var UJ = (function () {
                 if (lay) toks.push(pedSgn(lay) + ' do grupo');
                 if (c.rd && c.rd[id]) toks.push('múltiplo de 5 ' + pedSgn(c.rd[id]));
                 const lar = semSob ? null : pedLarDeixado(D, id, c.encs);
-                if (lar !== null) toks.push('(' + lar + ' na Laranjeira)');
+                if (lar !== null) toks.push('(' + lar + ' margem Laranjeira)');
                 if (u && !semSob) {
                     if (u.nc) toks.push('*não contou');
                     else if (u.s + u.c === 0) toks.push('acabou' + (u.d ? ' ' + pedSgn(u.d) : ''));
@@ -7367,7 +7455,7 @@ var UJ = (function () {
                 + (semBase ? `<div class="ped-aviso">Ainda não tens a base de ${esc(dn)}. ${vesp ? 'Como é véspera, o pedido deste dia não fica como base.' : 'Escreve os números como na tua nota do Keep: ao marcares o pedido pergunto-te se ficam guardados como base dos próximos dias iguais.'} <button type="button" class="ped-link" onclick="pedBW = ${c.w}; pedIr('bases')">Definir as bases</button></div>` : '')
                 + encs + filas
                 + '<div class="ped-duo"><button type="button" class="ped-sec" onclick="pedBW = ' + c.w + '; pedIr(\'bases\')">Base de ' + esc(dn.split('-')[0]) + '</button><button type="button" class="ped-pri" onclick="pedMarcar()">' + (pedExtTem(D) ? 'Marcar de novo (troca o enviado)' : 'Marcar como pedido') + '</button></div>'
-                + '<p class="ped-nota">As encomendas somam-se sozinhas à base. Mudar um número aqui vale só para este dia.<br>Como ler: «*4 −2» = sobraram 4 e a base desceu 2 · «acabou +1» = acabou e a base subiu 1 · «(3 na Laranjeira)» = o que ficou lá há 7 dias, já dentro do total · «ajuste» = o que escreveste tu. O pormenor da base está no cartão 📜.</p>';
+                + '<p class="ped-nota">As encomendas somam-se sozinhas à base. Mudar um número aqui vale só para este dia.<br>Como ler: «*4 −2» = sobraram 4 e a base desceu 2 · «acabou +1» = acabou e a base subiu 1 · «(1 margem Laranjeira)» = o pão da Laranjeira que já está na base · «ajuste» = o que escreveste tu. O pormenor da base está no cartão 📜.</p>';
         }
 
         // ===== Beta 0.1.19 · «Pedido para amanhã» de um vistazo =====
@@ -7417,8 +7505,7 @@ var UJ = (function () {
             const nd = nomeDiaDe(D);
             const clis = regClientes().filter(pedEhLar).filter(k => !(Array.isArray(k.days) && k.days.length) || k.days.includes(nd));
             if (!clis.length) return null;
-            let t = 0; clis.forEach(k => { t += pedIncl7(k, D).inc[id] || 0; });
-            const mn = PED_LAR_MIN[id] || 0, enc = (encs || []).some(e => e.lar && (e.q[id] || 0) > 0), v = Math.max(t, mn);
+            const enc = (encs || []).some(e => e.lar && (e.q[id] || 0) > 0), v = pedLarMarg(D, id);   // Beta 0.1.35: a margem do dia
             return (v > 0 || enc) ? v : null;
         }
         function pedBaseMovCard(D, mv) {
